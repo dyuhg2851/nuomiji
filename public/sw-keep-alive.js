@@ -9,7 +9,7 @@
  * 手工 bump。前端 BuildBadge 通过 GET_SW_VERSION postMessage 协议读取并显示，
  * 用来确认线上跑的是哪一版 SW（PWA 缓存了旧 SW 时一眼能看出来）。
  */
-const SW_VERSION = '1.1.0';
+const SW_VERSION = '1.2.0';
 
 const PING_INTERVAL = 15_000;
 const MAX_MANUAL_ALIVE_MS = 5 * 60_000;
@@ -309,28 +309,21 @@ self.addEventListener('push', function (event) {
   // Branch B: instant push / ActiveMsg 2.0 — server included the generated
   // message body; save + notify.
   //
-  // 前台 (有 focused client) 时复用 proactive-wake 的"silent empty + immediate
-  // close"模式：通知不渲染（iOS 锁屏不闪、桌面不弹 toast），但满足"每个 push
-  // 必须 showNotification"配额，订阅不掉权。消息本身由 OSContext 的 in-app
-  // toast + unread badge 兜底。
-  // 不在前台才弹真实通知。
+  // 有 focused client (用户在前台) 时直接跳过 showNotification —— Push spec
+  // 明确 "if any client is focused" 满足 user-visible 要求, 不算 silent push,
+  // 配额不扣权重不掉。proactive-wake 分支同模式 (line 244-250) 已在线跑数月
+  // 验证。之前用 silent empty + close 模式 iOS 会渲染 "xxx from xxx" 默认
+  // 内容（因为 iOS 不允许真正空通知, 会自动填 site name + origin），所以
+  // 改成"有 client 就完全不调 showNotification"。
+  // 消息由 OSContext 的 in-app toast + unread badge + 聊天页气泡兜底。
+  // 不在前台才弹真实系统通知。
   var title = (payload && payload.contactName) || '新消息';
   var body = String((payload && payload.message) || (payload && payload.body) || '').trim();
   event.waitUntil((async function () {
     var clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     var hasFocused = clients.some(function (c) { return c.focused; });
     await saveIncomingActiveMessage(payload);
-    if (hasFocused) {
-      var silentTag = 'instant-silent-' + ((payload && payload.messageId) || Date.now());
-      await self.registration.showNotification('', {
-        body: '',
-        silent: true,
-        tag: silentTag,
-        requireInteraction: false,
-      });
-      var ghosts = await self.registration.getNotifications({ tag: silentTag });
-      for (var i = 0; i < ghosts.length; i++) ghosts[i].close();
-    } else {
+    if (!hasFocused) {
       await self.registration.showNotification(title, {
         body: body,
         icon: './icons/icon-192.png',
@@ -338,6 +331,7 @@ self.addEventListener('push', function (event) {
         data: { payload: payload },
       });
     }
+    // hasFocused === true: 直接跳过通知, 由 in-app UI 兜底
   })());
 });
 
