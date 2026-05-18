@@ -861,6 +861,125 @@ const LIKE520_CSS = `
   border: 0.5px solid var(--gold);
 }
 .l520-item.used::after { content: '✓'; position: absolute; inset: 0; background: rgba(255,248,236,0.85); display: grid; place-items: center; color: var(--gold-deep); font-size: 18px; font-family: 'Cinzel', serif; border: none; width: auto; height: auto; }
+
+/* ===== Letter ===== */
+.l520-letter-stage {
+  flex: 1; overflow-y: auto;
+  padding: 14px 18px 18px;
+  position: relative; z-index: 5;
+}
+.l520-letter-paper {
+  position: relative;
+  background: linear-gradient(180deg, #fffcf3 0%, #f9efd9 100%);
+  border-radius: 4px;
+  padding: 32px 26px 28px;
+  box-shadow: 0 12px 32px rgba(74,36,24,0.18), 0 0 0 1px var(--gold), 0 0 0 4px var(--ivory), 0 0 0 5px var(--gold-light);
+  background-image: repeating-linear-gradient(transparent, transparent 28px, rgba(184,146,63,0.05) 28px, rgba(184,146,63,0.05) 29px);
+}
+.l520-letter-paper::before, .l520-letter-paper::after,
+.l520-letter-paper .lp-tl, .l520-letter-paper .lp-tr {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  border: 1px solid var(--burgundy);
+}
+.l520-letter-paper::before { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.l520-letter-paper::after  { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.l520-letter-paper .lp-tl  { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.l520-letter-paper .lp-tr  { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+.l520-letter-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.l520-letter-eyebrow {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--gold-deep);
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+}
+.l520-letter-title {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 500;
+  font-size: 22px;
+  color: var(--burgundy);
+  letter-spacing: 8px;
+  text-indent: 8px;
+  margin: 4px 0 10px;
+}
+.l520-letter-divider {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 10px;
+}
+.l520-letter-body {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14.5px;
+  line-height: 2.1;
+  color: var(--ink);
+  letter-spacing: 0.6px;
+  text-indent: 2em;
+  white-space: pre-wrap;
+  margin-bottom: 24px;
+}
+.l520-letter-foot {
+  text-align: right;
+  padding-top: 8px;
+  border-top: 0.5px dashed rgba(184,146,63,0.3);
+}
+.l520-letter-flourish {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 6px;
+  margin: 6px 0 8px;
+}
+.l520-letter-signature {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  color: var(--burgundy);
+  letter-spacing: 4px;
+  text-indent: 4px;
+  margin-bottom: 8px;
+}
+.l520-letter-seal {
+  display: inline-block;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--burgundy-grad);
+  color: var(--gold-light);
+  line-height: 36px;
+  text-align: center;
+  font-size: 16px;
+  box-shadow: 0 3px 6px rgba(74,36,24,0.4), inset 0 1px 0 rgba(255,255,255,0.18);
+  transform: rotate(-8deg);
+  border: 1px solid var(--gold);
+}
+.l520-letter-accept {
+  display: block;
+  margin: 16px auto 8px;
+  padding: 11px 30px;
+  background: var(--burgundy-grad);
+  color: #fff8ec;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13.5px;
+  letter-spacing: 4px;
+  text-indent: 4px;
+  border: 1px solid var(--gold);
+  border-radius: 2px;
+  cursor: pointer;
+  box-shadow: 0 5px 12px rgba(74,36,24,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  transition: transform .15s ease;
+  position: relative;
+}
+.l520-letter-accept:active { transform: translateY(2px); }
+.l520-letter-accept::before, .l520-letter-accept::after {
+  content: '';
+  position: absolute;
+  width: 6px; height: 6px;
+}
+.l520-letter-accept::before { top: 3px; left: 3px; border-top: 1px solid var(--gold-light); border-left: 1px solid var(--gold-light); }
+.l520-letter-accept::after  { bottom: 3px; right: 3px; border-bottom: 1px solid var(--gold-light); border-right: 1px solid var(--gold-light); }
 `;
 
 const CornerOrnamentSVG: React.FC = () => (
@@ -1593,25 +1712,29 @@ const EndingScreen: React.FC<{
 // 信
 // ============================================================
 
-const LetterView: React.FC<{ text: string; onNext: () => void; charName: string }> = ({ text, onNext, charName }) => (
-    <div className="flex flex-col items-center min-h-full px-6 py-10 max-w-md mx-auto overflow-y-auto">
-        <div className="text-[10px] tracking-[6px] text-[#C76182] mb-4">从 {charName} 的信</div>
-        <div
-            className="w-full bg-[#FFF8F1] rounded-2xl px-7 py-8 shadow-lg text-[#5C3A4A] text-[15px] leading-[2.05] whitespace-pre-wrap"
-            style={{
-                fontFamily: '"Hiragino Sans GB", "PingFang SC", "Microsoft YaHei", sans-serif',
-                backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, rgba(199, 97, 130, 0.05) 31px, rgba(199, 97, 130, 0.05) 32px)',
-                boxShadow: '0 12px 32px rgba(199, 97, 130, 0.15), inset 0 0 0 1px rgba(212, 165, 116, 0.2)',
-            }}
-        >
-            {text}
+const LetterView: React.FC<{ text: string; onNext: () => void; charName: string; userName: string }> = ({ text, onNext, charName, userName }) => (
+    <div className="l520-root">
+        <Like520StyleTag />
+        <CornerOrnaments />
+        <AmbientLayer />
+        <div className="l520-letter-stage">
+            <div className="l520-letter-paper">
+                <span className="lp-tl" />
+                <span className="lp-tr" />
+                <div className="l520-letter-header">
+                    <div className="l520-letter-eyebrow">致 · 我的</div>
+                    <div className="l520-letter-title">{userName}</div>
+                    <div className="l520-letter-divider">❦ ⸙ ❦</div>
+                </div>
+                <div className="l520-letter-body">{text}</div>
+                <div className="l520-letter-foot">
+                    <div className="l520-letter-flourish">~ ❦ ~</div>
+                    <div className="l520-letter-signature">— {charName}</div>
+                    <div className="l520-letter-seal">♡</div>
+                </div>
+            </div>
+            <button className="l520-letter-accept" onClick={onNext}>收&nbsp;下</button>
         </div>
-        <button
-            onClick={onNext}
-            className="mt-8 px-8 py-3 rounded-full bg-gradient-to-r from-[#FFB6C8] to-[#F18AAA] text-white font-bold shadow-lg active:scale-95 transition-transform"
-        >
-            收下 ♥
-        </button>
     </div>
 );
 
@@ -2162,6 +2285,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
                 <LetterView
                     text={callB.letter}
                     charName={char.name}
+                    userName={userProfile.name || '你'}
                     onNext={() => {
                         saveRecord();
                         setPhase('puzzle');
