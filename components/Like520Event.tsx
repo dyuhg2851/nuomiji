@@ -143,49 +143,1419 @@ const CreatorIframe: React.FC<CreatorIframeProps> = ({ mode, charName, presets, 
 };
 
 // ============================================================
-// 小工具：galgame 风格对白盒（白底 + 名牌 + ▽）
+// 「珍重」 视觉系统 — 全局 CSS（cream/gold/burgundy + 飘瓣金粉 + ornate）
 // ============================================================
 
-const DialogueBox: React.FC<{
+const LIKE520_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600&display=swap');
+
+.l520-root {
+  --ivory: #faf3e7;
+  --cream: #f5ead4;
+  --champagne: #e8d5a8;
+  --gold-light: #d4b16a;
+  --gold: #b8923f;
+  --gold-deep: #8b6914;
+  --rose-pale: #f3dcd8;
+  --rose: #d4a59a;
+  --rose-deep: #b27566;
+  --burgundy: #7a2e3a;
+  --burgundy-deep: #5a1d28;
+  --pearl: #fff8ec;
+  --ink: #3a2418;
+  --ink-soft: #6b4a3a;
+  --gold-grad: linear-gradient(135deg, #f4e0a8 0%, #d4b16a 35%, #b8923f 65%, #8b6914 100%);
+  --rose-grad: linear-gradient(135deg, #f3dcd8 0%, #d4a59a 50%, #b27566 100%);
+  --burgundy-grad: linear-gradient(135deg, #a04050 0%, #7a2e3a 50%, #5a1d28 100%);
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Noto Serif SC', 'Cormorant Garamond', serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 50% -10%, #fff5e0 0%, transparent 50%),
+    radial-gradient(circle at 50% 110%, #efc9b8 0%, transparent 50%),
+    linear-gradient(180deg, #faf3e7 0%, #f5ead4 40%, #f3dcd8 100%);
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+.l520-root::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(139,105,20,0.04) 1px, transparent 0);
+  background-size: 4px 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.l520-corner { position: absolute; width: 48px; height: 48px; z-index: 3; pointer-events: none; }
+.l520-corner.tl { top: 4px; left: 4px; }
+.l520-corner.tr { top: 4px; right: 4px; transform: scaleX(-1); }
+.l520-corner.bl { bottom: 4px; left: 4px; transform: scaleY(-1); }
+.l520-corner.br { bottom: 4px; right: 4px; transform: scale(-1,-1); }
+.l520-corner svg { width: 100%; height: 100%; }
+
+.l520-ornaments { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.l520-petal {
+  position: absolute;
+  width: 10px; height: 14px;
+  background: var(--rose-grad);
+  border-radius: 100% 0 100% 0;
+  opacity: 0.35;
+  filter: blur(0.3px);
+  animation: l520-petalFall linear infinite;
+}
+@keyframes l520-petalFall {
+  0%   { transform: translateY(-40px) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.4; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
+}
+.l520-sparkle {
+  position: absolute;
+  width: 5px; height: 5px;
+  background: radial-gradient(circle, #fff5d0 0%, #d4b16a 50%, transparent 80%);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(212,177,106,0.8);
+  animation: l520-twinkle 4s ease-in-out infinite;
+}
+@keyframes l520-twinkle {
+  0%,100% { opacity: 0.2; transform: scale(0.6); }
+  50%     { opacity: 1;   transform: scale(1.2); }
+}
+.l520-flourish {
+  position: absolute;
+  color: rgba(184,146,63,0.18);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 64px;
+  font-style: italic;
+  font-weight: 300;
+  pointer-events: none;
+}
+
+.l520-topbar {
+  position: relative; z-index: 5;
+  padding: 14px 18px 6px;
+  display: flex; flex-direction: column; gap: 8px;
+  flex-shrink: 0;
+}
+.l520-header-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.l520-occasion {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--gold-grad);
+  padding: 3px 12px 3px 5px;
+  border-radius: 999px;
+  color: #fff;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 0 rgba(0,0,0,0.15), 0 3px 8px rgba(139,105,20,0.3);
+  text-shadow: 0 1px 1px rgba(139,105,20,0.3);
+}
+.l520-occasion .num {
+  background: rgba(255,255,255,0.95);
+  color: var(--burgundy);
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  font-size: 9px;
+  letter-spacing: -0.5px;
+}
+.l520-charpill {
+  display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(180deg, #fff8ec, #f5ead4);
+  border: 1px solid var(--gold-light);
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+  color: var(--gold-deep);
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.l520-charpill img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+.l520-charpill-emoji { width: 20px; height: 20px; border-radius: 50%; background: var(--cream); display: grid; place-items: center; font-size: 12px; }
+
+.l520-title-strip {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  color: var(--burgundy);
+}
+.l520-title-strip .line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  max-width: 70px;
+}
+.l520-title-strip .title {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 3px;
+}
+
+.l520-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; margin-top: 2px; }
+.l520-stat { display: flex; align-items: center; gap: 6px; }
+.l520-stat-label {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 10px;
+  color: var(--burgundy);
+  font-weight: 500;
+  letter-spacing: 1px;
+  width: 12px;
+  flex-shrink: 0;
+}
+.l520-bar-wrap { flex: 1; position: relative; padding-right: 22px; }
+.l520-bar {
+  height: 7px;
+  background: linear-gradient(180deg, #e8dcc0, #f0e3c4);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(139,105,20,0.2);
+  border: 0.5px solid rgba(184,146,63,0.4);
+}
+.l520-bar > i {
+  display: block; height: 100%;
+  border-radius: 999px;
+  transition: width .8s cubic-bezier(.5,1.5,.5,1);
+}
+.l520-bar.mood > i { background: linear-gradient(90deg, #e8b5a8, #b27566 60%, #7a2e3a); }
+.l520-bar.love > i { background: linear-gradient(90deg, #d4a59a, #a04050 60%, #5a1d28); }
+.l520-bar.food > i { background: linear-gradient(90deg, #f0d9a0, #d4b16a 60%, #b8923f); }
+.l520-bar.energy > i { background: linear-gradient(90deg, #d4c5a0, #b8923f 60%, #8b6914); }
+.l520-bar-num {
+  position: absolute; right: 0; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Cinzel', serif;
+  font-weight: 500;
+  font-size: 9px;
+  color: var(--gold-deep);
+  letter-spacing: 0.5px;
+  min-width: 18px;
+  text-align: right;
+}
+
+.l520-stage {
+  position: relative;
+  flex: 1; min-height: 0;
+  margin: 4px 22px 0;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0 0 8px;
+  z-index: 3;
+}
+.l520-char-wrap {
+  position: relative;
+  width: 70%;
+  max-width: 230px;
+  cursor: pointer;
+  transform-origin: bottom center;
+  animation: l520-idle 4s ease-in-out infinite;
+  z-index: 2;
+}
+@keyframes l520-idle {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-5px); }
+}
+.l520-char-wrap.petting { animation: l520-petbounce .7s ease; }
+@keyframes l520-petbounce {
+  0%   { transform: translateY(0) scale(1); }
+  30%  { transform: translateY(-8px) scale(1.04); }
+  60%  { transform: translateY(2px) scale(.98); }
+  100% { transform: translateY(0) scale(1); }
+}
+.l520-char-img {
+  width: 100%;
+  display: block;
+  filter: drop-shadow(0 16px 18px rgba(122,46,58,0.3)) drop-shadow(0 4px 8px rgba(139,105,20,0.2));
+  pointer-events: none;
+}
+.l520-halo {
+  position: absolute;
+  bottom: 5%; left: 50%;
+  transform: translateX(-50%);
+  width: 110%; height: 80%;
+  background: radial-gradient(ellipse at 50% 60%, rgba(255,235,180,0.6) 0%, rgba(212,177,106,0.3) 30%, transparent 60%);
+  z-index: -1;
+  filter: blur(8px);
+  animation: l520-halo 3s ease-in-out infinite;
+}
+@keyframes l520-halo {
+  0%,100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  50%     { opacity: 0.8; transform: translateX(-50%) scale(1.05); }
+}
+.l520-ring {
+  position: absolute;
+  bottom: -2px; left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(184,146,63,0.3);
+  z-index: -2;
+}
+.l520-ring::before {
+  content: '';
+  position: absolute; inset: -8px;
+  border-radius: 50%;
+  border: 0.5px dashed rgba(184,146,63,0.4);
+}
+.l520-nameplate {
+  position: absolute;
+  top: -28px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--burgundy-grad);
+  padding: 3px 22px;
+  color: #fff8ec;
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 4px;
+  text-indent: 4px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -2px 0 rgba(0,0,0,0.25), 0 4px 8px rgba(122,46,58,0.4);
+  white-space: nowrap;
+  z-index: 4;
+  border: 0.5px solid rgba(212,177,106,0.6);
+}
+.l520-nameplate::before, .l520-nameplate::after {
+  content: '';
+  position: absolute; top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border: 6px solid transparent;
+}
+.l520-nameplate::before { left: -10px; border-right-color: var(--burgundy-deep); border-left-width: 4px; }
+.l520-nameplate::after { right: -10px; border-left-color: var(--burgundy-deep); border-right-width: 4px; }
+.l520-nameplate .deco { color: var(--gold-light); margin: 0 4px; font-size: 10px; }
+
+.l520-tap-hint {
+  position: absolute;
+  bottom: 62%; right: 6%;
+  background: rgba(255, 248, 236, 0.95);
+  color: var(--burgundy);
+  padding: 5px 12px;
+  border-radius: 16px 16px 4px 16px;
+  border: 1px solid var(--gold-light);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(122,46,58,0.2);
+  animation: l520-hint 3s ease-in-out infinite;
+  z-index: 4;
+  pointer-events: none;
+}
+@keyframes l520-hint {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-4px); }
+}
+.l520-scene-narration {
+  position: absolute;
+  top: 8px; left: 0; right: 0;
+  text-align: center;
+  z-index: 4;
+  pointer-events: none;
+}
+.l520-scene-narration > span {
+  display: inline-block;
+  background: rgba(255,248,236,0.95);
+  color: var(--burgundy);
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-light);
+  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(122,46,58,0.18);
+}
+
+.l520-particle {
+  position: absolute;
+  pointer-events: none;
+  font-size: 14px;
+  animation: l520-pop 1.6s ease-out forwards;
+  z-index: 6;
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(212,177,106,0.8);
+}
+@keyframes l520-pop {
+  0%   { transform: translate(0,0) scale(0.4); opacity: 0; }
+  20%  { opacity: 1; transform: translate(var(--tx, 0), -15px) scale(1.2) rotate(var(--rot,10deg)); }
+  100% { opacity: 0; transform: translate(var(--tx, 0), -90px) scale(0.6) rotate(var(--rot,30deg)); }
+}
+.l520-floatscore {
+  position: absolute;
+  pointer-events: none;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--burgundy);
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.8), 0 2px 4px rgba(122,46,58,0.3);
+  animation: l520-scoreup 1.6s ease-out forwards;
+  z-index: 7;
+  white-space: nowrap;
+}
+@keyframes l520-scoreup {
+  0%   { opacity: 0; transform: translateY(0) scale(0.7); }
+  20%  { opacity: 1; transform: translateY(-10px) scale(1.05); }
+  100% { opacity: 0; transform: translateY(-55px) scale(1); }
+}
+.l520-react {
+  position: absolute;
+  background: rgba(255,248,236,0.98);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--burgundy);
+  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+  font-style: italic;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(122,46,58,0.2);
+  pointer-events: none;
+  animation: l520-react 1.8s ease-out forwards;
+  z-index: 7;
+  white-space: nowrap;
+}
+@keyframes l520-react {
+  0%   { opacity: 0; transform: scale(0.6) translateY(10px); }
+  20%  { opacity: 1; transform: scale(1.02) translateY(0); }
+  80%  { opacity: 1; transform: scale(1) translateY(-15px); }
+  100% { opacity: 0; transform: scale(0.95) translateY(-35px); }
+}
+
+.l520-dialog {
+  position: relative;
+  margin: 0 18px;
+  background: linear-gradient(180deg, rgba(255,248,236,0.96), rgba(245,234,212,0.96));
+  border: 1px solid var(--gold-light);
+  border-radius: 4px;
+  padding: 14px 16px 14px 58px;
+  min-height: 70px;
+  color: var(--ink);
+  box-shadow: 0 6px 18px rgba(122,46,58,0.18), inset 0 1px 0 rgba(255,255,255,0.8);
+  font-size: 13px;
+  line-height: 1.7;
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  z-index: 3;
+}
+.l520-dialog.tall { padding: 16px 16px 18px 58px; min-height: 110px; }
+.l520-dialog.clickable { cursor: pointer; }
+.l520-dialog.clickable:active { opacity: 0.9; }
+.l520-dialog::before, .l520-dialog::after,
+.l520-dialog .corner-tl, .l520-dialog .corner-tr {
+  content: '';
+  position: absolute;
+  width: 11px; height: 11px;
+  border: 1px solid var(--gold);
+}
+.l520-dialog::before { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+.l520-dialog::after  { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+.l520-dialog .corner-tl { top: 4px; right: 4px; border-left: none; border-bottom: none; }
+.l520-dialog .corner-tr { bottom: 4px; left: 4px; border-right: none; border-top: none; }
+.l520-dialog .speaker {
+  position: absolute;
+  top: -9px; left: 50px;
+  background: var(--burgundy-grad);
+  color: #fff8ec;
+  padding: 2px 12px;
+  font-size: 10.5px;
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-indent: 3px;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(122,46,58,0.3);
+  border: 0.5px solid var(--gold);
+}
+.l520-dialog .avatar-mini {
+  position: absolute;
+  left: 6px; top: 50%;
+  transform: translateY(-50%);
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--gold-grad);
+  padding: 2px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(139,105,20,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+.l520-dialog .avatar-mini-inner {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: var(--cream);
+  overflow: hidden;
+  position: relative;
+  display: grid; place-items: center;
+  font-size: 18px;
+}
+.l520-dialog .avatar-mini img { width: 100%; height: 100%; object-fit: cover; }
+.l520-dialog .pageinfo {
+  position: absolute;
+  top: -9px; right: 14px;
+  background: #fff8ec;
+  border: 1px solid var(--gold-light);
+  color: var(--gold-deep);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 500;
+  padding: 1px 8px;
+  border-radius: 2px;
+  letter-spacing: 1px;
+}
+.l520-dialog .next-arrow {
+  position: absolute; right: 14px; bottom: 10px;
+  color: var(--gold);
+  font-size: 11px;
+  font-style: italic;
+  font-family: 'Cormorant Garamond', serif;
+  letter-spacing: 1px;
+  animation: l520-blink 1.4s infinite;
+}
+@keyframes l520-blink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+.l520-dialog .body-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.l520-dialog .hint-text {
+  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  opacity: 0.75;
+}
+
+.l520-actions {
+  position: relative; z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 10px 18px 16px;
+  flex-shrink: 0;
+}
+.l520-act {
+  background: linear-gradient(180deg, rgba(255,248,236,0.95) 0%, rgba(245,234,212,0.9) 100%);
+  border: 1px solid var(--gold-light);
+  border-radius: 2px;
+  padding: 10px 4px 8px;
+  color: var(--burgundy);
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 500;
+  font-size: 10.5px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(122,46,58,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+  transition: transform .2s ease, opacity .2s ease;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative;
+  letter-spacing: 2px;
+  text-indent: 2px;
+}
+.l520-act::before, .l520-act::after {
+  content: '';
+  position: absolute;
+  width: 5px; height: 5px;
+}
+.l520-act::before { top: 3px; left: 3px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+.l520-act::after  { bottom: 3px; right: 3px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+.l520-act:active:not(:disabled) { transform: translateY(2px); }
+.l520-act:disabled { opacity: 0.35; cursor: not-allowed; }
+.l520-act svg { width: 22px; height: 22px; stroke-width: 1.3; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.l520-act.primary {
+  background: var(--burgundy-grad);
+  color: #fff8ec;
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px rgba(74,36,24,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.l520-act.primary::before, .l520-act.primary::after { border-color: var(--gold-light); }
+.l520-act .badge {
+  position: absolute;
+  top: -5px; right: -3px;
+  background: var(--gold-grad);
+  color: var(--burgundy-deep);
+  border: 1px solid var(--ivory);
+  border-radius: 999px;
+  font-family: 'Cinzel', serif;
+  font-size: 8.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  min-width: 16px;
+  height: 16px;
+  display: grid; place-items: center;
+  box-shadow: 0 2px 4px rgba(139,105,20,0.4);
+}
+.l520-act.pulse { animation: l520-actpulse 1.6s ease-in-out infinite; }
+@keyframes l520-actpulse {
+  0%,100% { box-shadow: 0 4px 12px rgba(74,36,24,0.4), inset 0 1px 0 rgba(255,255,255,0.15); }
+  50%     { box-shadow: 0 4px 18px rgba(212,177,106,0.7), inset 0 1px 0 rgba(255,255,255,0.15); }
+}
+
+.l520-mask {
+  position: absolute; inset: 0;
+  background: rgba(74,36,24,0.4);
+  backdrop-filter: blur(8px);
+  z-index: 20;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 24px;
+  animation: l520-maskin .25s ease;
+}
+@keyframes l520-maskin { from { opacity: 0; } to { opacity: 1; } }
+
+.l520-choice-card {
+  width: 100%;
+  background: linear-gradient(180deg, #fffaef 0%, #f8edd2 100%);
+  border-radius: 2px;
+  padding: 24px 18px 18px;
+  box-shadow: 0 20px 60px rgba(74,36,24,0.4), 0 0 0 1px var(--gold), 0 0 0 4px var(--ivory), 0 0 0 5px var(--gold-light);
+  position: relative;
+  animation: l520-cardin .45s cubic-bezier(.4,1.4,.5,1);
+}
+@keyframes l520-cardin { from { opacity: 0; transform: scale(0.85) translateY(15px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.l520-choice-card::before, .l520-choice-card::after,
+.l520-choice-card .cc-tl, .l520-choice-card .cc-tr {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  border: 1px solid var(--burgundy);
+}
+.l520-choice-card::before { top: 6px; left: 6px; border-right: none; border-bottom: none; }
+.l520-choice-card::after  { top: 6px; right: 6px; border-left: none; border-bottom: none; }
+.l520-choice-card .cc-tl  { bottom: 6px; left: 6px; border-right: none; border-top: none; }
+.l520-choice-card .cc-tr  { bottom: 6px; right: 6px; border-left: none; border-top: none; }
+
+.l520-choice-head { text-align: center; margin-bottom: 14px; }
+.l520-choice-head .ornament { color: var(--gold); font-size: 12px; letter-spacing: 6px; margin-bottom: 5px; }
+.l520-choice-head h3 {
+  margin: 0;
+  color: var(--burgundy);
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 500;
+  font-size: 14.5px;
+  letter-spacing: 3px;
+  text-indent: 3px;
+}
+.l520-choice-head .sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  color: var(--gold-deep);
+  font-size: 10.5px;
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+.l520-choice-row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(245,234,212,0.4));
+  border: 1px solid rgba(184,146,63,0.4);
+  border-radius: 2px;
+  margin-bottom: 8px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all .25s ease;
+  text-align: left;
+  letter-spacing: 1px;
+}
+.l520-choice-row:hover { background: linear-gradient(180deg, #fff8ec, #f5ead4); border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(122,46,58,0.15); }
+.l520-choice-row:active { transform: translateY(1px); }
+.l520-choice-row .num {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--burgundy-grad);
+  color: #fff8ec;
+  display: grid; place-items: center;
+  font-family: 'Cinzel', serif;
+  font-weight: 500;
+  font-size: 11px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(122,46,58,0.3);
+  border: 1px solid var(--gold);
+}
+.l520-choice-row .text { flex: 1; }
+
+.l520-drawer-mask {
+  position: absolute; inset: 0;
+  background: rgba(74,36,24,0.45);
+  backdrop-filter: blur(8px);
+  z-index: 25;
+  animation: l520-maskin .25s ease;
+}
+.l520-drawer {
+  position: absolute;
+  left: 8px; right: 8px; bottom: 8px;
+  background: linear-gradient(180deg, #fffaef 0%, #f5ead4 100%);
+  border-radius: 4px;
+  padding: 14px 14px 18px;
+  z-index: 26;
+  box-shadow: 0 -10px 40px rgba(74,36,24,0.3), 0 0 0 1px var(--gold), 0 0 0 4px var(--ivory), 0 0 0 5px var(--gold-light);
+  animation: l520-drawerin .4s cubic-bezier(.4,1.3,.5,1);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+@keyframes l520-drawerin { from { transform: translateY(110%); } to { transform: translateY(0); } }
+.l520-drawer-handle {
+  width: 38px; height: 3px;
+  background: var(--gold);
+  border-radius: 999px;
+  margin: 0 auto 10px;
+  opacity: 0.6;
+}
+.l520-drawer-head { text-align: center; margin-bottom: 12px; }
+.l520-drawer-head h4 {
+  margin: 0;
+  color: var(--burgundy);
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 6px;
+  text-indent: 6px;
+}
+.l520-drawer-head .sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  color: var(--gold-deep);
+  font-size: 9.5px;
+  letter-spacing: 3px;
+  margin-top: 2px;
+}
+.l520-drawer-head .line {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px;
+  color: var(--gold);
+  font-size: 10px;
+  margin-top: 5px;
+}
+.l520-drawer-head .line::before, .l520-drawer-head .line::after {
+  content: '';
+  width: 45px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.l520-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.l520-item {
+  aspect-ratio: 1;
+  background: linear-gradient(180deg, rgba(255,248,236,0.9), rgba(245,234,212,0.7));
+  border: 1px solid var(--gold-light);
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+  position: relative;
+  transition: all .2s ease;
+  overflow: hidden;
+  padding: 6px;
+}
+.l520-item::before, .l520-item::after {
+  content: '';
+  position: absolute;
+  width: 7px; height: 7px;
+}
+.l520-item::before { top: 4px; left: 4px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+.l520-item::after  { bottom: 4px; right: 4px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+.l520-item:hover:not(:disabled) { background: linear-gradient(180deg, #fff8ec, #f5ead4); border-color: var(--gold); transform: translateY(-2px); }
+.l520-item:active:not(:disabled) { transform: translateY(1px); }
+.l520-item:disabled { opacity: 0.3; cursor: not-allowed; }
+.l520-item .emoji {
+  font-size: 24px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(139,105,20,0.3));
+}
+.l520-item .label {
+  font-size: 10px;
+  color: var(--burgundy);
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+.l520-item.rare { background: linear-gradient(180deg, #fff5d8, #e8d5a8); border-color: var(--gold); }
+.l520-item.rare::before, .l520-item.rare::after { border-color: var(--burgundy); }
+.l520-item.rare .ribbon {
+  position: absolute;
+  top: 3px; left: 3px;
+  background: var(--burgundy-grad);
+  color: var(--gold-light);
+  font-family: 'Cinzel', serif;
+  font-size: 7.5px;
+  letter-spacing: 1px;
+  padding: 1px 4px;
+  border-radius: 1px;
+  border: 0.5px solid var(--gold);
+}
+.l520-item.used::after { content: '✓'; position: absolute; inset: 0; background: rgba(255,248,236,0.85); display: grid; place-items: center; color: var(--gold-deep); font-size: 18px; font-family: 'Cinzel', serif; border: none; width: auto; height: auto; }
+`;
+
+const CornerOrnamentSVG: React.FC = () => (
+    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="#b8923f" strokeWidth="0.8" fill="none">
+            <path d="M4 4 L4 22 M4 4 L22 4" strokeWidth="1.2" />
+            <path d="M4 4 C 14 4, 22 12, 22 22" />
+            <path d="M8 8 C 14 8, 18 12, 18 18" opacity="0.5" />
+            <circle cx="22" cy="22" r="2.2" fill="#d4b16a" stroke="none" />
+            <circle cx="22" cy="22" r="1" fill="#fff8ec" stroke="none" />
+            <path d="M16 4 L20 4 M4 16 L4 20" stroke="#d4b16a" strokeWidth="0.5" />
+        </g>
+    </svg>
+);
+
+const Like520StyleTag: React.FC = () => (
+    <style dangerouslySetInnerHTML={{ __html: LIKE520_CSS }} />
+);
+
+const AmbientLayer: React.FC = () => (
+    <div className="l520-ornaments">
+        {[...Array(8)].map((_, i) => (
+            <span
+                key={`p${i}`}
+                className="l520-petal"
+                style={{
+                    left: `${5 + Math.random() * 90}%`,
+                    top: '-20px',
+                    animationDuration: `${10 + Math.random() * 8}s`,
+                    animationDelay: `${Math.random() * 10}s`,
+                }}
+            />
+        ))}
+        {[...Array(10)].map((_, i) => (
+            <span
+                key={`s${i}`}
+                className="l520-sparkle"
+                style={{
+                    left: `${Math.random() * 95}%`,
+                    top: `${Math.random() * 75}%`,
+                    animationDelay: `${Math.random() * 4}s`,
+                    width: `${3 + Math.random() * 5}px`,
+                    height: `${3 + Math.random() * 5}px`,
+                }}
+            />
+        ))}
+        <span className="l520-flourish" style={{ left: '8%', top: '15%', fontSize: 60 }}>❦</span>
+        <span className="l520-flourish" style={{ left: '88%', top: '45%', fontSize: 40 }}>❀</span>
+    </div>
+);
+
+const CornerOrnaments: React.FC = () => (
+    <>
+        <span className="l520-corner tl"><CornerOrnamentSVG /></span>
+        <span className="l520-corner tr"><CornerOrnamentSVG /></span>
+        <span className="l520-corner bl"><CornerOrnamentSVG /></span>
+        <span className="l520-corner br"><CornerOrnamentSVG /></span>
+    </>
+);
+
+// ============================================================
+// OrnateDialog — galgame 风格对白盒（带角描金 + 名牌 + mini 头像）
+// ============================================================
+
+const OrnateDialog: React.FC<{
     charName: string;
+    charAvatar?: string;
     text?: string;
     children?: React.ReactNode;
     onAdvance?: () => void;
     showArrow?: boolean;
-    arrowGlyph?: string;
-    minHeight?: number;
+    arrowText?: string;
     pageInfo?: string;
-}> = ({ charName, text, children, onAdvance, showArrow, arrowGlyph = '▽', minHeight = 110, pageInfo }) => (
+    tall?: boolean;
+}> = ({ charName, charAvatar, text, children, onAdvance, showArrow, arrowText = '— next —', pageInfo, tall }) => (
     <div
+        className={`l520-dialog ${tall ? 'tall' : ''} ${onAdvance ? 'clickable' : ''}`}
         onClick={onAdvance}
-        className={`relative rounded-2xl p-5 pb-4 ${onAdvance ? 'cursor-pointer active:opacity-90' : ''}`}
-        style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,248,241,0.97) 100%)',
-            boxShadow: '0 8px 24px rgba(199, 97, 130, 0.2), inset 0 0 0 2px rgba(212, 165, 116, 0.25)',
-            minHeight: `${minHeight}px`,
-        }}
     >
-        <div className="absolute -top-2 left-4 bg-[#5C3A2E] text-white text-[11px] font-bold px-3 py-1 rounded-lg shadow tracking-wider">
-            {charName}
+        <span className="corner-tl" />
+        <span className="corner-tr" />
+        <div className="speaker">{charName}</div>
+        <div className="avatar-mini">
+            <div className="avatar-mini-inner">
+                {charAvatar?.startsWith('http') || charAvatar?.startsWith('data:')
+                    ? <img src={charAvatar} alt={charName} />
+                    : <span>{charAvatar || '🌸'}</span>}
+            </div>
         </div>
-        {pageInfo && (
-            <div className="absolute -top-2 right-4 bg-white/95 text-[#9D7585] text-[10px] font-bold px-2.5 py-0.5 rounded-lg shadow border border-[#FCEDD9]">
-                {pageInfo}
-            </div>
-        )}
+        {pageInfo && <div className="pageinfo">{pageInfo}</div>}
         {children}
-        {text !== undefined && (
-            <div className="text-[#5C3A4A] text-[14px] leading-[1.85] pt-2 whitespace-pre-wrap animate-fade-in">
-                {text}
-            </div>
-        )}
-        {showArrow && (
-            <div className="absolute bottom-2 right-3 text-[#C76182]/70 text-sm animate-pulse">
-                {arrowGlyph}
-            </div>
-        )}
+        {text !== undefined && <div className="body-text">{text}</div>}
+        {showArrow && <span className="next-arrow">{arrowText}</span>}
     </div>
 );
+
+// ============================================================
+// OrnateChoice — 居中浮层（ornate card 风格，Roman numeral）
+// ============================================================
+
+interface OrnateChoiceProps {
+    title: string;
+    sub?: string;
+    options: { key: string; label: string }[];
+    onPick: (key: string) => void;
+}
+
+const ROMANS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+
+const OrnateChoice: React.FC<OrnateChoiceProps> = ({ title, sub, options, onPick }) => (
+    <div className="l520-mask">
+        <div className="l520-choice-card">
+            <span className="cc-tl" />
+            <span className="cc-tr" />
+            <div className="l520-choice-head">
+                <div className="ornament">❦ ⸙ ❦</div>
+                <h3>{title}</h3>
+                {sub && <div className="sub">{sub}</div>}
+            </div>
+            {options.map((opt, i) => (
+                <button
+                    key={opt.key}
+                    className="l520-choice-row"
+                    onClick={() => onPick(opt.key)}
+                >
+                    <span className="num">{ROMANS[i] || String(i + 1)}</span>
+                    <span className="text">{opt.label}</span>
+                </button>
+            ))}
+        </div>
+    </div>
+);
+
+// ============================================================
+// Y520Scene — 持久化养成场景（珍重 风格）
+// 覆盖 opening → 吐槽 → free（锚点+抚摸）→ reveal → 自我意识
+// ============================================================
+
+type Y520Stage =
+    | 'opening'
+    | 'tucao_choose'
+    | 'tucao_reply'
+    | 'free'
+    | 'anchor_action_choose'
+    | 'anchor_playing'
+    | 'touch_playing'
+    | 'reveal'
+    | 'self_reveal_hint'
+    | 'self_reveal_choose';
+
+const SELF_REVEAL_HINT_LINES = ['（你下意识低头看了看自己——）'];
+const SELF_REVEAL_OPTIONS: { key: string; label: string }[] = [
+    { key: 'eh', label: '「诶？」' },
+    { key: 'silence', label: '「……」' },
+    { key: 'look', label: '（你仔细看了看）' },
+];
+
+interface Y520SceneProps {
+    callA: Like520CallAResult;
+    charName: string;
+    charAvatar?: string;
+    charChibiUrl: string;
+    onTucaoSelected: (key: Like520TucaoKey) => void;
+    onComplete: () => void;
+}
+
+const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, charChibiUrl, onTucaoSelected, onComplete }) => {
+    const [stage, setStage] = useState<Y520Stage>('opening');
+    const [queue, setQueue] = useState<string[]>(callA.opening);
+    const [lineIdx, setLineIdx] = useState(0);
+    const [usedAnchors, setUsedAnchors] = useState<Set<number>>(new Set());
+    const [activeAnchorIdx, setActiveAnchorIdx] = useState<number | null>(null);
+    const [chosenUserAction, setChosenUserAction] = useState<string | null>(null);
+    const [touchIdx, setTouchIdx] = useState(0);
+    const [showHint, setShowHint] = useState(true);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [petting, setPetting] = useState(false);
+    const [stats, setStats] = useState({ mood: 62, love: 48, food: 50, energy: 78 });
+
+    const stageRef = useRef<HTMLDivElement>(null);
+    const fxRef = useRef<HTMLDivElement>(null);
+
+    const allAnchorsUsed = usedAnchors.size >= callA.anchors.length;
+    const currentLine = queue[lineIdx];
+    const hasMoreLines = lineIdx < queue.length - 1;
+    const activeAnchor = activeAnchorIdx !== null ? callA.anchors[activeAnchorIdx] : null;
+    const showSceneNarration = stage === 'anchor_playing' && chosenUserAction;
+    const nameTag = stage === 'self_reveal_hint' ? '——' : charName;
+
+    // free + 全部锚点用完 → 自动 reveal
+    useEffect(() => {
+        if (stage === 'free' && allAnchorsUsed) {
+            const t = setTimeout(() => {
+                setQueue(callA.reveal_transition);
+                setLineIdx(0);
+                setStage('reveal');
+            }, 800);
+            return () => clearTimeout(t);
+        }
+    }, [stage, allAnchorsUsed, callA.reveal_transition]);
+
+    const spawnParticles = (x: number, y: number, count: number) => {
+        const fx = fxRef.current;
+        if (!fx) return;
+        const glyphs = ['✦', '✧', '⋆', '❀', '❦', '·'];
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('div');
+            el.className = 'l520-particle';
+            el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+            el.style.setProperty('--tx', `${Math.random() * 140 - 70}px`);
+            el.style.setProperty('--rot', `${Math.random() * 60 - 30}deg`);
+            el.style.left = `${x - 7}px`;
+            el.style.top = `${y - 7}px`;
+            el.style.animationDelay = `${Math.random() * 0.2}s`;
+            el.style.fontSize = `${10 + Math.random() * 10}px`;
+            if (Math.random() > 0.6) el.style.color = '#b27566';
+            fx.appendChild(el);
+            setTimeout(() => el.remove(), 1700);
+        }
+    };
+    const spawnReact = (text: string, x: number, y: number) => {
+        const fx = fxRef.current;
+        if (!fx) return;
+        const el = document.createElement('div');
+        el.className = 'l520-react';
+        el.textContent = text;
+        el.style.left = `${x - 40}px`;
+        el.style.top = `${y}px`;
+        fx.appendChild(el);
+        setTimeout(() => el.remove(), 1800);
+    };
+    const spawnScore = (text: string, x: number, y: number) => {
+        const fx = fxRef.current;
+        if (!fx) return;
+        const el = document.createElement('div');
+        el.className = 'l520-floatscore';
+        el.textContent = text;
+        el.style.left = `${x - 30}px`;
+        el.style.top = `${y}px`;
+        fx.appendChild(el);
+        setTimeout(() => el.remove(), 1600);
+    };
+
+    const advance = () => {
+        if (!queue.length) return;
+        if (hasMoreLines) {
+            setLineIdx(i => i + 1);
+            return;
+        }
+        if (stage === 'opening') {
+            setStage('tucao_choose'); setQueue([]); setLineIdx(0);
+        } else if (stage === 'tucao_reply') {
+            setStage('free'); setQueue([]); setLineIdx(0);
+        } else if (stage === 'anchor_playing') {
+            if (activeAnchorIdx !== null) setUsedAnchors(prev => new Set(prev).add(activeAnchorIdx));
+            setActiveAnchorIdx(null);
+            setChosenUserAction(null);
+            // 数值波动（纯装饰）
+            setStats(s => ({
+                mood: Math.min(100, s.mood + 4 + Math.floor(Math.random() * 4)),
+                love: Math.min(100, s.love + 5 + Math.floor(Math.random() * 5)),
+                food: Math.min(100, s.food + 3 + Math.floor(Math.random() * 4)),
+                energy: Math.max(0, Math.min(100, s.energy + Math.floor(Math.random() * 6) - 2)),
+            }));
+            setStage('free'); setQueue([]); setLineIdx(0);
+        } else if (stage === 'touch_playing') {
+            setStage('free'); setQueue([]); setLineIdx(0);
+        } else if (stage === 'reveal') {
+            setQueue(SELF_REVEAL_HINT_LINES); setLineIdx(0); setStage('self_reveal_hint');
+        } else if (stage === 'self_reveal_hint') {
+            setQueue([]); setLineIdx(0); setStage('self_reveal_choose');
+        }
+    };
+
+    const pickTucao = (key: Like520TucaoKey) => {
+        if (stage !== 'tucao_choose') return;
+        onTucaoSelected(key);
+        setQueue(callA.tucao_responses[key]);
+        setLineIdx(0);
+        setStage('tucao_reply');
+    };
+
+    const startAnchor = (idx: number) => {
+        if (stage !== 'free' || usedAnchors.has(idx)) return;
+        setDrawerOpen(false);
+        setActiveAnchorIdx(idx);
+        setChosenUserAction(null);
+        setStage('anchor_action_choose');
+    };
+
+    const pickUserAction = (action: string) => {
+        if (stage !== 'anchor_action_choose' || activeAnchorIdx === null) return;
+        setChosenUserAction(action);
+        setQueue(callA.anchors[activeAnchorIdx].dialogue);
+        setLineIdx(0);
+        setStage('anchor_playing');
+    };
+
+    const pickSelfReveal = (_k: string) => {
+        if (stage !== 'self_reveal_choose') return;
+        onComplete();
+    };
+
+    const petCharacter = (ev?: { clientX?: number; clientY?: number }) => {
+        if (stage !== 'free' || callA.touch_lines.length === 0) return;
+        setShowHint(false);
+        setPetting(true);
+        setTimeout(() => setPetting(false), 750);
+
+        const stageEl = stageRef.current;
+        if (stageEl && ev) {
+            const rect = stageEl.getBoundingClientRect();
+            const cx = (ev.clientX ?? rect.left + rect.width / 2) - rect.left;
+            const cy = (ev.clientY ?? rect.top + rect.height * 0.4) - rect.top;
+            spawnParticles(cx, cy, 7);
+            const triggerReact = (touchIdx + 1) % 3 === 0;
+            if (triggerReact) {
+                setStats(s => ({ ...s, mood: Math.min(100, s.mood + 3), love: Math.min(100, s.love + 2) }));
+                spawnScore('+ 悦 · 情', cx, cy - 40);
+                const reacts = ['…心动了', '再一次嘛', '你的手好温', '♡', '…嗯'];
+                spawnReact(reacts[Math.floor(Math.random() * reacts.length)], cx, cy - 80);
+            } else {
+                setStats(s => ({ ...s, mood: Math.min(100, s.mood + 1) }));
+                spawnScore('+1', cx, cy - 30);
+            }
+        }
+
+        const line = callA.touch_lines[touchIdx % callA.touch_lines.length];
+        setQueue([line]);
+        setLineIdx(0);
+        setStage('touch_playing');
+        setTouchIdx(i => i + 1);
+    };
+
+    const isChoiceStage = stage === 'tucao_choose' || stage === 'anchor_action_choose' || stage === 'self_reveal_choose';
+    const remainingAnchors = callA.anchors.length - usedAnchors.size;
+
+    const renderHint = () => {
+        if (stage === 'tucao_choose') return '请于上方做出抉择';
+        if (stage === 'anchor_action_choose') return '请于上方做出抉择';
+        if (stage === 'self_reveal_choose') return '……';
+        if (stage === 'free' && !allAnchorsUsed) return `轻拥${charName}，或自礼匣中取一件`;
+        if (stage === 'free' && allAnchorsUsed) return '……';
+        return '……';
+    };
+
+    return (
+        <div className="l520-root">
+            <Like520StyleTag />
+            <CornerOrnaments />
+            <AmbientLayer />
+
+            {/* Top bar */}
+            <div className="l520-topbar">
+                <div className="l520-header-row">
+                    <div className="l520-occasion">
+                        <span className="num">520</span>
+                        <span style={{ fontFamily: "'Noto Serif SC', serif", fontSize: 11, letterSpacing: 2 }}>限定典藏</span>
+                    </div>
+                    <div className="l520-charpill">
+                        {charAvatar?.startsWith('http') || charAvatar?.startsWith('data:')
+                            ? <img src={charAvatar} alt={charName} />
+                            : <span className="l520-charpill-emoji">{charAvatar || '🌸'}</span>}
+                        <span>{charName}</span>
+                    </div>
+                </div>
+                <div className="l520-title-strip">
+                    <span className="line" />
+                    <span className="title">Mon Trésor</span>
+                    <span className="line" />
+                </div>
+                <div className="l520-stats">
+                    {([
+                        { k: 'mood', label: '悦', cls: 'mood' },
+                        { k: 'love', label: '情', cls: 'love' },
+                        { k: 'food', label: '膳', cls: 'food' },
+                        { k: 'energy', label: '神', cls: 'energy' },
+                    ] as const).map(s => (
+                        <div key={s.k} className="l520-stat">
+                            <span className="l520-stat-label">{s.label}</span>
+                            <div className="l520-bar-wrap">
+                                <div className={`l520-bar ${s.cls}`}>
+                                    <i style={{ width: `${stats[s.k as keyof typeof stats]}%` }} />
+                                </div>
+                                <span className="l520-bar-num">{stats[s.k as keyof typeof stats]}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Stage */}
+            <div className="l520-stage" ref={stageRef}>
+                {showHint && stage === 'free' && (
+                    <div className="l520-tap-hint">touch me ♡</div>
+                )}
+                {showSceneNarration && (
+                    <div className="l520-scene-narration">
+                        <span>（{chosenUserAction}）</span>
+                    </div>
+                )}
+                <div
+                    className={`l520-char-wrap ${petting ? 'petting' : ''}`}
+                    onClick={(e) => {
+                        if (stage === 'free') petCharacter({ clientX: e.clientX, clientY: e.clientY });
+                    }}
+                >
+                    <div className="l520-nameplate">
+                        <span className="deco">❦</span>
+                        <span style={{ marginLeft: 4, marginRight: 4 }}>{charName}</span>
+                        <span className="deco">❦</span>
+                    </div>
+                    <div className="l520-halo" />
+                    <div className="l520-ring" />
+                    <img className="l520-char-img" src={charChibiUrl} alt={charName} />
+                </div>
+            </div>
+
+            {/* Dialog */}
+            <div style={{ position: 'relative', zIndex: 3, paddingTop: 4 }}>
+                <OrnateDialog
+                    charName={nameTag}
+                    charAvatar={charAvatar}
+                    onAdvance={!isChoiceStage && queue.length > 0 ? advance : undefined}
+                    showArrow={!isChoiceStage && queue.length > 0}
+                    arrowText={stage === 'self_reveal_hint' && !hasMoreLines ? '— continue —' : '— next —'}
+                >
+                    {currentLine
+                        ? <div className="body-text">{currentLine}</div>
+                        : <div className="body-text hint-text">（{renderHint()}）</div>}
+                </OrnateDialog>
+            </div>
+
+            {/* Actions */}
+            <div className="l520-actions">
+                <button
+                    className="l520-act"
+                    disabled={isChoiceStage}
+                    onClick={() => {
+                        if (queue.length > 0) advance();
+                        else petCharacter();
+                    }}
+                >
+                    <svg viewBox="0 0 24 24"><path d="M4 6 C4 5, 5 4, 6 4 L18 4 C19 4, 20 5, 20 6 L20 14 C20 15, 19 16, 18 16 L9 16 L5 19 L5 16 C4.5 16, 4 15.5, 4 15 Z" /></svg>
+                    <span>絮&nbsp;语</span>
+                </button>
+                <button
+                    className="l520-act primary"
+                    disabled={stage !== 'free'}
+                    onClick={(e) => petCharacter({ clientX: (e as any).clientX, clientY: (e as any).clientY })}
+                >
+                    <svg viewBox="0 0 24 24"><path d="M12 20 C 6 16, 3 12, 3 9 C 3 6, 5 4, 7.5 4 C 9.5 4, 11 5, 12 7 C 13 5, 14.5 4, 16.5 4 C 19 4, 21 6, 21 9 C 21 12, 18 16, 12 20 Z" /></svg>
+                    <span>轻&nbsp;拥</span>
+                </button>
+                <button
+                    className="l520-act"
+                    disabled={stage !== 'free'}
+                    onClick={() => setDrawerOpen(true)}
+                >
+                    <svg viewBox="0 0 24 24"><path d="M3 8 L21 8 L21 20 L3 20 Z M3 8 L12 4 L21 8 M12 4 L12 20 M8 14 L16 14" /></svg>
+                    <span>礼&nbsp;匣</span>
+                    {remainingAnchors > 0 && <span className="badge">{remainingAnchors}</span>}
+                </button>
+                <button
+                    className={`l520-act ${isChoiceStage ? 'pulse primary' : ''}`}
+                    disabled={!isChoiceStage}
+                    onClick={() => { /* 选项已自动浮出，按钮仅作视觉提示 */ }}
+                >
+                    <svg viewBox="0 0 24 24"><path d="M5 4 L19 4 L19 20 L5 20 Z M9 8 L15 8 M9 12 L15 12 M9 16 L13 16" /></svg>
+                    <span>抉&nbsp;择</span>
+                </button>
+            </div>
+
+            {/* FX layer */}
+            <div ref={fxRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 7 }} />
+
+            {/* Drawer (items / 礼匣) */}
+            {drawerOpen && (
+                <>
+                    <div className="l520-drawer-mask" onClick={() => setDrawerOpen(false)} />
+                    <div className="l520-drawer">
+                        <div className="l520-drawer-handle" />
+                        <div className="l520-drawer-head">
+                            <h4>礼&nbsp;匣</h4>
+                            <div className="sub">L A &nbsp; B O Î T E &nbsp; À &nbsp; T R É S O R</div>
+                            <div className="line">❦</div>
+                        </div>
+                        <div className="l520-items">
+                            {callA.anchors.map((a, i) => {
+                                const used = usedAnchors.has(i);
+                                return (
+                                    <button
+                                        key={i}
+                                        className={`l520-item ${a.is_photo_anchor ? 'rare' : ''} ${used ? 'used' : ''}`}
+                                        disabled={used}
+                                        onClick={() => startAnchor(i)}
+                                    >
+                                        {a.is_photo_anchor && <span className="ribbon">RARE</span>}
+                                        <span className="emoji">{a.item_icon}</span>
+                                        <span className="label">{a.item_label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Centered choice overlays */}
+            {stage === 'tucao_choose' && (
+                <OrnateChoice
+                    title="今日，你的反应是"
+                    sub="— Choose Thy Reaction —"
+                    options={TUCAO_OPTIONS.map(o => ({ key: o.key, label: `「${o.label}」` }))}
+                    onPick={(k) => pickTucao(k as Like520TucaoKey)}
+                />
+            )}
+            {stage === 'anchor_action_choose' && activeAnchor && (
+                <OrnateChoice
+                    title={`你 要 ${activeAnchor.item_label}`}
+                    sub="— Choose Thy Gesture —"
+                    options={activeAnchor.user_action_options.map((label, i) => ({ key: String(i), label }))}
+                    onPick={(k) => pickUserAction(activeAnchor.user_action_options[Number(k)])}
+                />
+            )}
+            {stage === 'self_reveal_choose' && (
+                <OrnateChoice
+                    title="你 的 反 应"
+                    sub="— Choose Thy Awakening —"
+                    options={SELF_REVEAL_OPTIONS}
+                    onPick={pickSelfReveal}
+                />
+            )}
+        </div>
+    );
+};
+
+// ============================================================
+// LineQueueView — 短数组对白序列（wake_up 用）
+// ============================================================
+
+const LineQueueView: React.FC<{
+    lines: string[];
+    charName: string;
+    charAvatar?: string;
+    onComplete: () => void;
+}> = ({ lines, charName, charAvatar, onComplete }) => {
+    const [idx, setIdx] = useState(0);
+    const isLast = idx >= lines.length - 1;
+    return (
+        <div className="l520-root">
+            <Like520StyleTag />
+            <CornerOrnaments />
+            <AmbientLayer />
+            <div style={{ flex: 1 }} />
+            <div style={{ position: 'relative', zIndex: 3, paddingBottom: 24 }}>
+                <OrnateDialog
+                    charName={charName}
+                    charAvatar={charAvatar}
+                    onAdvance={() => { if (isLast) onComplete(); else setIdx(i => i + 1); }}
+                    showArrow
+                    arrowText={isLast ? '— continue —' : '— next —'}
+                    tall
+                >
+                    <div key={idx} className="body-text">{lines[idx]}</div>
+                </OrnateDialog>
+            </div>
+        </div>
+    );
+};
+
+// ============================================================
+// UncoveredLineView — 第二次捏脸后的长篇真心话
+// 双 chibi 居中、user chibi 摇摆挪入
+// ============================================================
+
+const UncoveredLineView: React.FC<{
+    lines: string[];
+    charName: string;
+    charAvatar?: string;
+    charChibi: string;
+    userChibi: string;
+    onComplete: () => void;
+}> = ({ lines, charName, charAvatar, charChibi, userChibi, onComplete }) => {
+    const [idx, setIdx] = useState(0);
+    const isLast = idx >= lines.length - 1;
+
+    return (
+        <div className="l520-root">
+            <Like520StyleTag />
+            <CornerOrnaments />
+            <AmbientLayer />
+            <style>{`
+                @keyframes l520-userwaddle {
+                    0%   { transform: translateX(160%) rotate(0deg); opacity: 0; }
+                    20%  { transform: translateX(120%) rotate(-6deg); opacity: 1; }
+                    35%  { transform: translateX(80%) rotate(6deg); }
+                    50%  { transform: translateX(45%) rotate(-5deg); }
+                    65%  { transform: translateX(18%) rotate(4deg); }
+                    80%  { transform: translateX(0) rotate(-3deg); }
+                    90%  { transform: translateX(0) rotate(2deg); }
+                    100% { transform: translateX(0) rotate(0); }
+                }
+            `}</style>
+            <div className="l520-topbar" style={{ paddingBottom: 0 }}>
+                <div className="l520-header-row">
+                    <div className="l520-charpill">
+                        {charAvatar?.startsWith('http') || charAvatar?.startsWith('data:')
+                            ? <img src={charAvatar} alt={charName} />
+                            : <span className="l520-charpill-emoji">{charAvatar || '🌸'}</span>}
+                        <span>{charName}</span>
+                    </div>
+                    <div style={{ flex: 1 }} />
+                </div>
+            </div>
+            <div className="l520-stage" style={{ paddingBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12, height: '100%', width: '100%' }}>
+                    <img
+                        src={charChibi}
+                        alt="char"
+                        style={{
+                            maxHeight: '100%',
+                            maxWidth: '42%',
+                            objectFit: 'contain',
+                            objectPosition: 'bottom',
+                            filter: 'drop-shadow(0 12px 18px rgba(122,46,58,0.3))',
+                        }}
+                    />
+                    <img
+                        src={userChibi}
+                        alt="user"
+                        style={{
+                            maxHeight: '100%',
+                            maxWidth: '42%',
+                            objectFit: 'contain',
+                            objectPosition: 'bottom',
+                            filter: 'drop-shadow(0 12px 18px rgba(122,46,58,0.3))',
+                            animation: 'l520-userwaddle 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+                            transformOrigin: 'bottom center',
+                        }}
+                    />
+                </div>
+            </div>
+            <div style={{ position: 'relative', zIndex: 3, paddingBottom: 18 }}>
+                <OrnateDialog
+                    charName={charName}
+                    charAvatar={charAvatar}
+                    onAdvance={() => { if (isLast) onComplete(); else setIdx(i => i + 1); }}
+                    showArrow
+                    arrowText={isLast ? '— continue —' : '— next —'}
+                    pageInfo={`${idx + 1} / ${lines.length}`}
+                    tall
+                >
+                    <div key={idx} className="body-text">{lines[idx]}</div>
+                </OrnateDialog>
+            </div>
+        </div>
+    );
+};
 
 // ============================================================
 // ChoiceOverlay — 居中浮层选项（galgame 选择菜单）
@@ -226,384 +1596,6 @@ const ChoiceOverlay: React.FC<ChoiceOverlayProps> = ({ prompt, options, onPick }
         `}</style>
     </div>
 );
-
-// ============================================================
-// Y520Scene — 持久化养成场景容器
-// 覆盖 opening → 吐槽选择 → 吐槽回应 → free（锚点+抚摸）→ reveal_transition → 自我意识
-// ============================================================
-
-type Y520Stage =
-    | 'opening'
-    | 'tucao_choose'
-    | 'tucao_reply'
-    | 'free'
-    | 'anchor_action_choose'   // 道具点击后弹居中选项
-    | 'anchor_playing'         // 选完动作后 char 回应
-    | 'touch_playing'
-    | 'reveal'
-    | 'self_reveal_hint'       // "你下意识低头看了看自己——"
-    | 'self_reveal_choose';    // 选项浮层："诶？" 等
-
-const SELF_REVEAL_HINT_LINES = ['（你下意识低头看了看自己——）'];
-const SELF_REVEAL_OPTIONS: { key: string; label: string }[] = [
-    { key: 'eh', label: '「诶？」' },
-    { key: 'silence', label: '「……」' },
-    { key: 'look', label: '（你仔细看了看）' },
-];
-
-interface Y520SceneProps {
-    callA: Like520CallAResult;
-    charName: string;
-    charAvatar?: string;
-    charChibiUrl: string;
-    onTucaoSelected: (key: Like520TucaoKey) => void;
-    onComplete: () => void;
-}
-
-const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, charChibiUrl, onTucaoSelected, onComplete }) => {
-    const [stage, setStage] = useState<Y520Stage>('opening');
-    const [queue, setQueue] = useState<string[]>(callA.opening);
-    const [lineIdx, setLineIdx] = useState(0);
-    const [usedAnchors, setUsedAnchors] = useState<Set<number>>(new Set());
-    const [activeAnchorIdx, setActiveAnchorIdx] = useState<number | null>(null);
-    const [touchIdx, setTouchIdx] = useState(0);
-
-    const allAnchorsUsed = usedAnchors.size >= callA.anchors.length;
-    const currentLine = queue[lineIdx];
-    const hasMoreLines = lineIdx < queue.length - 1;
-    const moodPct = Math.min(100, Math.round((usedAnchors.size / Math.max(callA.anchors.length, 1)) * 100));
-
-    // free 阶段 + 所有锚点用完 → 自动进入 reveal
-    useEffect(() => {
-        if (stage === 'free' && allAnchorsUsed) {
-            const t = setTimeout(() => {
-                setQueue(callA.reveal_transition);
-                setLineIdx(0);
-                setStage('reveal');
-            }, 700);
-            return () => clearTimeout(t);
-        }
-    }, [stage, allAnchorsUsed, callA.reveal_transition]);
-
-    const advance = () => {
-        if (!queue.length) return;
-        if (hasMoreLines) {
-            setLineIdx(i => i + 1);
-            return;
-        }
-        // 最后一行 → 阶段切换
-        if (stage === 'opening') {
-            setStage('tucao_choose');
-            setQueue([]);
-            setLineIdx(0);
-        } else if (stage === 'tucao_reply') {
-            setStage('free');
-            setQueue([]);
-            setLineIdx(0);
-        } else if (stage === 'anchor_playing') {
-            if (activeAnchorIdx !== null) {
-                setUsedAnchors(prev => new Set(prev).add(activeAnchorIdx));
-            }
-            setActiveAnchorIdx(null);
-            setChosenUserAction(null);
-            setStage('free');
-            setQueue([]);
-            setLineIdx(0);
-        } else if (stage === 'touch_playing') {
-            setStage('free');
-            setQueue([]);
-            setLineIdx(0);
-        } else if (stage === 'reveal') {
-            setQueue(SELF_REVEAL_HINT_LINES);
-            setLineIdx(0);
-            setStage('self_reveal_hint');
-        } else if (stage === 'self_reveal_hint') {
-            // 唯一一行播完 → 弹选项（不让 char 替 user 说"诶？"）
-            setQueue([]);
-            setLineIdx(0);
-            setStage('self_reveal_choose');
-        }
-    };
-
-    const pickSelfReveal = (_key: string) => {
-        if (stage !== 'self_reveal_choose') return;
-        onComplete();
-    };
-
-    const pickTucao = (key: Like520TucaoKey) => {
-        if (stage !== 'tucao_choose') return;
-        onTucaoSelected(key);
-        setQueue(callA.tucao_responses[key]);
-        setLineIdx(0);
-        setStage('tucao_reply');
-    };
-
-    const [chosenUserAction, setChosenUserAction] = useState<string | null>(null);
-
-    const startAnchor = (idx: number) => {
-        if (stage !== 'free' || usedAnchors.has(idx)) return;
-        setActiveAnchorIdx(idx);
-        setChosenUserAction(null);
-        setStage('anchor_action_choose');
-    };
-
-    const pickUserAction = (action: string) => {
-        if (stage !== 'anchor_action_choose' || activeAnchorIdx === null) return;
-        setChosenUserAction(action);
-        setQueue(callA.anchors[activeAnchorIdx].dialogue);
-        setLineIdx(0);
-        setStage('anchor_playing');
-    };
-
-    const touchChibi = () => {
-        if (stage !== 'free' || callA.touch_lines.length === 0) return;
-        const line = callA.touch_lines[touchIdx % callA.touch_lines.length];
-        setQueue([line]);
-        setLineIdx(0);
-        setStage('touch_playing');
-        setTouchIdx(i => i + 1);
-    };
-
-    // 当锚点回应播完，scene 旁白也要清掉
-    const activeAnchor = activeAnchorIdx !== null ? callA.anchors[activeAnchorIdx] : null;
-    const showSceneNarration = stage === 'anchor_playing' && activeAnchor;
-    const nameTag = stage === 'self_reveal_hint' ? '——' : charName;
-    const itemsCols = callA.anchors.length > 6 ? 'grid-cols-4' : 'grid-cols-3';
-
-    return (
-        <div className="relative flex flex-col h-full max-w-md mx-auto overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center gap-2 px-3 pt-3 pb-2 shrink-0 relative z-10">
-                <div className="flex items-center gap-2 bg-[#5C3A2E]/90 rounded-full pl-1 pr-3 py-1 shadow">
-                    {charAvatar?.startsWith('http') || charAvatar?.startsWith('data:') ? (
-                        <img src={charAvatar} alt={charName} className="w-7 h-7 rounded-full object-cover border-2 border-[#FFE4D5]" />
-                    ) : (
-                        <div className="w-7 h-7 rounded-full bg-[#FFE4D5] flex items-center justify-center text-sm">{charAvatar || '🌸'}</div>
-                    )}
-                    <span className="text-white text-xs font-bold tracking-wider">{charName}</span>
-                </div>
-                <div className="flex-1 flex items-center gap-2 bg-[#5C3A2E]/90 rounded-full px-3 py-1.5 shadow">
-                    <span className="text-[#FF6B7A] text-sm">❤</span>
-                    <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-[#FFB6C8] to-[#F18AAA] transition-all duration-700" style={{ width: `${moodPct}%` }} />
-                    </div>
-                </div>
-            </div>
-
-            {/* Shelf (items) */}
-            <div className="px-3 pt-1 pb-1 shrink-0 relative z-10">
-                <div className={`grid gap-1.5 ${itemsCols}`}>
-                    {callA.anchors.map((a, i) => {
-                        const used = usedAnchors.has(i);
-                        const tappable = stage === 'free' && !used;
-                        return (
-                            <button
-                                key={i}
-                                onClick={() => startAnchor(i)}
-                                disabled={!tappable}
-                                className={`aspect-square flex flex-col items-center justify-center rounded-xl border-2 transition-all ${
-                                    used
-                                        ? 'bg-white/30 border-white/30 opacity-30'
-                                        : tappable
-                                            ? 'bg-white border-[#FCEDD9] active:scale-95 hover:bg-[#FFF8F1] shadow'
-                                            : 'bg-white/60 border-[#FCEDD9]/40 cursor-not-allowed'
-                                }`}
-                            >
-                                <span className="text-2xl leading-none">{a.item_icon}</span>
-                                <span className="text-[9px] mt-0.5 text-[#5C3A4A] font-bold tracking-wider truncate w-full px-0.5">
-                                    {used ? '·' : a.item_label}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Chibi area */}
-            <div className="flex-1 flex items-center justify-center min-h-0 relative z-10">
-                <button
-                    onClick={touchChibi}
-                    disabled={stage !== 'free'}
-                    className={`relative h-full max-h-full flex items-center justify-center ${stage === 'free' ? 'cursor-pointer active:scale-95' : ''} transition-transform`}
-                    title={stage === 'free' ? '摸摸 ta' : ''}
-                >
-                    <img src={charChibiUrl} alt="chibi" className="max-h-full max-w-[70%] object-contain drop-shadow-md" />
-                </button>
-                {showSceneNarration && chosenUserAction && (
-                    <div className="absolute top-1 left-0 right-0 px-4 animate-fade-in pointer-events-none">
-                        <div className="text-center text-[12px] italic text-[#5C3A4A] bg-white/70 backdrop-blur rounded-full px-4 py-1.5 inline-block mx-auto shadow">
-                            （{chosenUserAction}）
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Galgame dialogue box */}
-            <div className="px-3 pb-3 pt-2 shrink-0 relative z-10">
-                <DialogueBox
-                    charName={nameTag}
-                    onAdvance={stage === 'tucao_choose' || stage === 'anchor_action_choose' || stage === 'self_reveal_choose' ? undefined : (queue.length > 0 ? advance : undefined)}
-                    showArrow={!!(queue.length > 0 && stage !== 'tucao_choose' && stage !== 'anchor_action_choose' && stage !== 'self_reveal_choose')}
-                    arrowGlyph={stage === 'self_reveal_hint' && !hasMoreLines ? '→' : '▽'}
-                >
-                    {currentLine ? (
-                        <div key={`${stage}-${lineIdx}`} className="text-[#5C3A4A] text-[14px] leading-[1.85] pt-2 whitespace-pre-wrap animate-fade-in">
-                            {currentLine}
-                        </div>
-                    ) : (
-                        <div className="text-[#9D7585]/70 text-[12px] italic pt-2">
-                            （{
-                                stage === 'tucao_choose' ? '你的反应是——'
-                                : stage === 'anchor_action_choose' ? '你要做什么呢——'
-                                : stage === 'self_reveal_choose' ? '……'
-                                : stage === 'free' && !allAnchorsUsed ? `摸摸 ${charName}，或者从架子上拿一样`
-                                : '……'
-                            }）
-                        </div>
-                    )}
-                </DialogueBox>
-            </div>
-
-            {/* 居中浮层选项 */}
-            {stage === 'tucao_choose' && (
-                <ChoiceOverlay
-                    prompt="你 的 反 应"
-                    options={TUCAO_OPTIONS.map(o => ({ key: o.key, label: `「${o.label}」` }))}
-                    onPick={(k) => pickTucao(k as Like520TucaoKey)}
-                />
-            )}
-            {stage === 'anchor_action_choose' && activeAnchor && (
-                <ChoiceOverlay
-                    prompt={`你 要 ${activeAnchor.item_label}`}
-                    options={activeAnchor.user_action_options.map((label, i) => ({ key: String(i), label }))}
-                    onPick={(k) => pickUserAction(activeAnchor.user_action_options[Number(k)])}
-                />
-            )}
-            {stage === 'self_reveal_choose' && (
-                <ChoiceOverlay
-                    prompt="你 的 反 应"
-                    options={SELF_REVEAL_OPTIONS}
-                    onPick={pickSelfReveal}
-                />
-            )}
-        </div>
-    );
-};
-
-// ============================================================
-// LineQueueView — 短数组对白序列（用于 wake_up）
-// ============================================================
-
-const LineQueueView: React.FC<{
-    lines: string[];
-    charName: string;
-    onComplete: () => void;
-    bgGradient?: string;
-}> = ({ lines, charName, onComplete, bgGradient }) => {
-    const [idx, setIdx] = useState(0);
-    const isLast = idx >= lines.length - 1;
-    return (
-        <div className="flex flex-col h-full max-w-md mx-auto justify-end px-3 pb-8" style={bgGradient ? { background: bgGradient } : undefined}>
-            <DialogueBox
-                charName={charName}
-                onAdvance={() => { if (isLast) onComplete(); else setIdx(i => i + 1); }}
-                showArrow={true}
-                arrowGlyph={isLast ? '→' : '▽'}
-            >
-                <div key={idx} className="text-[#5C3A4A] text-[15px] leading-[1.9] pt-2 whitespace-pre-wrap animate-fade-in">
-                    {lines[idx]}
-                </div>
-            </DialogueBox>
-        </div>
-    );
-};
-
-// ============================================================
-// UncoveredLineView — 第二次捏脸后那段长篇真心话
-// 双 chibi 居中 + galgame 长对白盒推进
-// ============================================================
-
-const UncoveredLineView: React.FC<{
-    lines: string[];
-    charName: string;
-    charAvatar?: string;
-    charChibi: string;
-    userChibi: string;
-    onComplete: () => void;
-}> = ({ lines, charName, charAvatar, charChibi, userChibi, onComplete }) => {
-    const [idx, setIdx] = useState(0);
-    const isLast = idx >= lines.length - 1;
-
-    const advance = () => {
-        if (isLast) onComplete();
-        else setIdx(i => i + 1);
-    };
-
-    return (
-        <div
-            className="relative flex flex-col h-full w-full max-w-md mx-auto overflow-hidden"
-            style={{ background: 'linear-gradient(180deg, #FFF1E6 0%, #FFE4EC 45%, #FFD1DC 100%)' }}
-        >
-            {/* Header (name tag) */}
-            <div className="px-3 pt-3 pb-1 shrink-0">
-                <div className="flex items-center gap-2 bg-[#5C3A2E]/90 rounded-full pl-1 pr-4 py-1 shadow w-fit">
-                    {charAvatar?.startsWith('http') || charAvatar?.startsWith('data:') ? (
-                        <img src={charAvatar} alt={charName} className="w-7 h-7 rounded-full object-cover border-2 border-[#FFE4D5]" />
-                    ) : (
-                        <div className="w-7 h-7 rounded-full bg-[#FFE4D5] flex items-center justify-center text-sm">{charAvatar || '🌸'}</div>
-                    )}
-                    <span className="text-white text-xs font-bold tracking-wider">{charName}</span>
-                </div>
-            </div>
-
-            {/* Chibi 区——独占 60% 高度，user chibi 摇摆挪进 */}
-            <div className="flex-1 flex items-end justify-center gap-3 px-4 pb-2 min-h-0 relative">
-                <img
-                    src={charChibi}
-                    alt="char"
-                    className="max-h-full max-w-[42%] object-contain object-bottom drop-shadow-[0_8px_20px_rgba(199,97,130,0.3)]"
-                />
-                <img
-                    src={userChibi}
-                    alt="user"
-                    className="max-h-full max-w-[42%] object-contain object-bottom drop-shadow-[0_8px_20px_rgba(199,97,130,0.3)]"
-                    style={{
-                        animation: 'userChibiWaddle 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) both',
-                        transformOrigin: 'bottom center',
-                    }}
-                />
-                <style>{`
-                    @keyframes userChibiWaddle {
-                        0%   { transform: translateX(160%) rotate(0deg); opacity: 0; }
-                        20%  { transform: translateX(120%) rotate(-6deg); opacity: 1; }
-                        35%  { transform: translateX(80%) rotate(6deg); }
-                        50%  { transform: translateX(45%) rotate(-5deg); }
-                        65%  { transform: translateX(18%) rotate(4deg); }
-                        80%  { transform: translateX(0) rotate(-3deg); }
-                        90%  { transform: translateX(0) rotate(2deg); }
-                        100% { transform: translateX(0) rotate(0); }
-                    }
-                `}</style>
-            </div>
-
-            {/* 对白盒——独立占下方，绝对不遮 chibi */}
-            <div className="px-3 pb-3 pt-2 shrink-0">
-                <DialogueBox
-                    charName={charName}
-                    onAdvance={advance}
-                    showArrow={true}
-                    arrowGlyph={isLast ? '✓' : '▽'}
-                    pageInfo={`${idx + 1} / ${lines.length}`}
-                    minHeight={140}
-                >
-                    <div key={idx} className="text-[#5C3A4A] text-[14px] leading-[1.95] pt-2 whitespace-pre-wrap animate-fade-in">
-                        {lines[idx]}
-                    </div>
-                </DialogueBox>
-            </div>
-        </div>
-    );
-};
 
 // ============================================================
 // 结局画面（黑屏 → 合照 → 标题 → TRUE HAPPY END → description）
