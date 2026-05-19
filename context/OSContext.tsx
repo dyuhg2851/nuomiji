@@ -212,6 +212,12 @@ interface OSContextType {
   toasts: Toast[];
   addToast: (message: string, type?: Toast['type']) => void;
 
+  // 长报错弹窗：toast 一行装不下 / 手机没法开 console 时, 用 showError 弹一个
+  // 多行预览框 + 复制按钮, 方便用户把原文反馈过来。
+  errorDialog: { title: string; details: string } | null;
+  showError: (title: string, details: string) => void;
+  dismissError: () => void;
+
   // Icons
   customIcons: Record<string, string>;
   setCustomIcon: (appId: string, iconUrl: string | undefined) => void;
@@ -553,6 +559,7 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [customIcons, setCustomIcons] = useState<Record<string, string>>({});
   const [appearancePresets, setAppearancePresets] = useState<AppearancePreset[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [errorDialog, setErrorDialog] = useState<{ title: string; details: string } | null>(null);
   
   const [lastMsgTimestamp, setLastMsgTimestamp] = useState<number>(0);
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
@@ -1148,28 +1155,15 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
           if (!isChattingWithThisChar) {
               const isVisible = document.visibilityState === 'visible';
               if (isVisible) {
-                  addToast(`${charName} 发来了一条主动消息 2.0`, 'success');
+                  addToast(`${charName} 给你发了消息`, 'success');
               } else {
                   awayActiveMsgCount += 1;
               }
               setUnreadMessages(prev => ({ ...prev, [charId]: (prev[charId] || 0) + 1 }));
               const preview = (body || `${charName} sent an active message`).replace(/\s+/g, ' ').trim() || `${charName} sent an active message`;
               void sendProactiveNativeNotification(charId, charName, preview);
-
-              // 同主动消息 1.0 — 必须走 SW registration.showNotification，页面级 Notification 在
-              // 后台 / PWA / 移动端会静默失败。
-              if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator && window.Notification && Notification.permission === 'granted') {
-                  const char = characters.find(c => c.id === charId);
-                  navigator.serviceWorker.ready.then(reg => {
-                      reg.showNotification(charName, {
-                          body: preview,
-                          icon: char?.avatar || './icons/icon-192.png',
-                          badge: './icons/icon-192.png',
-                          tag: `proactive-${charId}`,
-                          data: { charId, kind: 'active-msg-2.0' },
-                      }).catch(() => { /* notification failed */ });
-                  }).catch(() => { /* SW not ready */ });
-              }
+              // SW push handler 已经 fire 过系统通知（不在前台时露出真实内容、在前台时
+              // silent + close 静默），这里不再补一次，避免重复弹窗。
           }
       };
 
@@ -1183,7 +1177,7 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       const onVisible = () => {
           if (document.visibilityState !== 'visible') return;
           if (awayActiveMsgCount > 0) {
-              addToast(`你离开期间收到 ${awayActiveMsgCount} 条主动消息 2.0`, 'success');
+              addToast(`你离开期间收到 ${awayActiveMsgCount} 条新消息`, 'success');
               awayActiveMsgCount = 0;
           }
       };
@@ -1196,7 +1190,7 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
           window.removeEventListener('active-msg-open', openHandler);
           document.removeEventListener('visibilitychange', onVisible);
       };
-  }, [characters, sendProactiveNativeNotification]);
+  }, [sendProactiveNativeNotification]);
 
   const proactiveRunningRef = useRef(false);
   const proactiveQueueRef = useRef<string[]>([]);
@@ -2001,6 +1995,8 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const removeCustomTheme = async (id: string) => { setCustomThemes(prev => prev.filter(t => t.id !== id)); await DB.deleteTheme(id); };
   const setCustomIcon = async (appId: string, iconUrl: string | undefined) => { setCustomIcons(prev => { const next = { ...prev }; if (iconUrl) next[appId] = iconUrl; else delete next[appId]; return next; }); if (iconUrl) { await DB.saveAsset(`icon_${appId}`, iconUrl); } else { await DB.deleteAsset(`icon_${appId}`); } };
   const addToast = (message: string, type: Toast['type'] = 'info') => { const id = Date.now().toString(); setToasts(prev => [...prev, { id, message, type }]); setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 3000); };
+  const showError = (title: string, details: string) => { setErrorDialog({ title, details }); };
+  const dismissError = () => { setErrorDialog(null); };
 
   // --- APPEARANCE PRESETS ---
   const saveAppearancePreset = async (name: string) => {
@@ -3057,6 +3053,9 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     importAppearancePreset,
     toasts,
     addToast,
+    errorDialog,
+    showError,
+    dismissError,
     customIcons,
     setCustomIcon,
     resetAppearance,

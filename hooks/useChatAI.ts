@@ -24,6 +24,12 @@ import type { DigestResult } from '../utils/memoryPalace';
 import { MCD_PROPOSE_TOOL, autoFixProposalCodesByName } from '../utils/mcdToolBridge';
 import { extractHtmlBlocks } from '../utils/htmlPrompt';
 import { buildChatRequestPayload } from '../utils/chatRequestPayload';
+import {
+    isInstantConfigReady,
+    sendInstantPushAndAwaitReply,
+    formatDiagnostics,
+    type InstantPushPayload,
+} from '../utils/instantPushClient';
 
 // ─── 情绪评估（副API，fire & forget）───
 
@@ -493,6 +499,8 @@ interface UseChatAIProps {
     emojis: Emoji[];
     categories: EmojiCategory[];
     addToast: (msg: string, type: 'info'|'success'|'error') => void;
+    /** 长报错走弹窗 (toast 一行装不下), 手机用户能看清并复制反馈 */
+    showError?: (title: string, details: string) => void;
     setMessages: (msgs: Message[]) => void; // Callback to update UI messages
     realtimeConfig?: RealtimeConfig; // 新增：实时配置
     translationConfig?: { enabled: boolean; sourceLang: string; targetLang: string };
@@ -511,6 +519,7 @@ export const useChatAI = ({
     emojis,
     categories,
     addToast,
+    showError,
     setMessages,
     realtimeConfig,  // 新增
     translationConfig,
@@ -610,7 +619,11 @@ export const useChatAI = ({
         }
     };
 
-    const triggerAI = async (currentMsgs: Message[], overrideApiConfig?: { baseUrl: string; apiKey: string; model: string }) => {
+    const triggerAI = async (
+        currentMsgs: Message[],
+        overrideApiConfig?: { baseUrl: string; apiKey: string; model: string },
+        onInstantPosted?: () => void,
+    ) => {
         if (isTyping || !char) return;
         const effectiveApi = overrideApiConfig || apiConfig;
         if (!effectiveApi.baseUrl) { alert("请先在设置中配置 API URL"); return; }
@@ -778,6 +791,52 @@ export const useChatAI = ({
                 baseReqBody.tools = [MCD_PROPOSE_TOOL];
                 baseReqBody.tool_choice = 'auto';
             }
+
+            // ─── Instant Push 分支 ───
+            // 与本地 fetch 对称：sendInstantPushAndAwaitReply 内部完成 sub 获取 / push 监听 /
+            // 90s 超时兜底，返回时 push 已落库（或失败）。外层 finally 统一清 isTyping /
+            // KeepAlive / 跑 memory palace 后处理，与本地路径完全对齐。
+            // worker 端跑完 LLM → push → SW → activeMsgRuntime.flushInboxToChat 写 DB 并刷 UI。
+            if (isInstantConfigReady()) {
+                const instantResult = await sendInstantPushAndAwaitReply({
+                    contactName: char.name,
+                    messages: fullMessages as InstantPushPayload['messages'],
+                    apiUrl: effectiveApi.baseUrl,
+                    apiKey: effectiveApi.apiKey,
+                    primaryModel: effectiveApi.model,
+                    maxTokens: 8000,
+                    temperature: userTemp,
+                    // amsg-instant 0.6+ 端 validateAvatarUrl 拒 data: / >2KB,
+                    // 这里按 contract 只传 https URL, data URL 本地头像直接不传
+                    // (SW 显示通知时回退到默认 app icon, 不影响推送成功率).
+                    avatarUrl: /^https?:\/\//i.test(char.avatar || '') ? char.avatar : undefined,
+                    metadata: { source: 'sullyos-chat', charId: char.id },
+                }, char.id, undefined, onInstantPosted);
+                if (!instantResult.ok) {
+                    // 长报错 (worker 400 校验信息 + CF 错误页可能很长) 走弹窗, 手机用户能
+                    // 看清并复制反馈; 没注入 showError 时降级到 toast.
+                    // 完整诊断由 instantPushClient 的 formatDiagnostics 输出 —— 涵盖
+                    // http (status/bodyBytes/keepalive/cf-ray/response 截断) / fetchError /
+                    // config / subscription / timeout / context / env 各段, 已主动 mask
+                    // worker / api host, 不含 apiKey / apiUrl / workerUrl / push endpoint.
+                    const errMsg = instantResult.error || '未知错误';
+                    if (showError && instantResult.diagnostics) {
+                        showError(
+                            'Instant Push 发送失败',
+                            formatDiagnostics(instantResult.diagnostics, {
+                                outcome: instantResult.outcome,
+                                reason: errMsg,
+                            }),
+                        );
+                    } else if (showError) {
+                        showError('Instant Push 发送失败', `outcome: ${instantResult.outcome}\nreason: ${errMsg}`);
+                    } else {
+                        addToast(`Instant Push: ${errMsg}`, 'error');
+                    }
+                }
+                return;
+            }
+
             let data = await safeFetchJson(`${baseUrl}/chat/completions`, {
                 method: 'POST', headers,
                 body: JSON.stringify(baseReqBody)

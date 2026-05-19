@@ -61,6 +61,10 @@ const Character: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CharacterProfile | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
+  // 头像 URL 输入的 draft, 不逐字 commit 到 formData.avatar —— 否则每输入一个字符,
+  // 所有引用 char.avatar 的 <img> 都会拿到不完整字符串当相对路径请求根目录,
+  // 导致打字时疯狂 GET / 和满屏破图. 失焦 / 回车才校验 + commit.
+  const [avatarUrlDraft, setAvatarUrlDraft] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cardImportRef = useRef<HTMLInputElement>(null);
   
@@ -168,6 +172,15 @@ const Character: React.FC = () => {
         }
     }
   }, [editingId, view]);
+
+  // 切换角色时把 URL draft 同步成该角色当前 https 头像 (若有), 否则清空.
+  // 不监听 formData.avatar 的每次变化 —— 文件上传走 data URL 路径时 draft 应保持原样.
+  useEffect(() => {
+    if (!editingId) return;
+    const target = characters.find(c => c.id === editingId);
+    const av = target?.avatar || '';
+    setAvatarUrlDraft(/^https?:\/\/.+/i.test(av) ? av : '');
+  }, [editingId]);
 
   // EXTERNAL-UPDATE SYNC: pull in memories/refinedMemories written by other apps
   // (e.g. Chat archive calling updateCharacter) so stale formData doesn't overwrite them.
@@ -291,6 +304,10 @@ const Character: React.FC = () => {
               setIsCompressing(true);
               const processedBase64 = await processImage(file);
               handleChange('avatar', processedBase64);
+              // 清空 URL draft, 否则用户之后再触发 URL input 的 onBlur 会用脏旧 URL
+              // 把刚上传的 data URL 头像盖掉. 不走 effect 监听 avatar 的方案 —— 那会
+              // 在用户正在打 URL 时吃掉 draft.
+              setAvatarUrlDraft('');
               addToast('头像上传成功', 'success');
           } catch (error: any) { 
               addToast(error.message || '图片处理失败', 'error'); 
@@ -998,6 +1015,42 @@ ${isInitialGeneration ? `
                                <div className="flex-1 space-y-3">
                                    <input value={formData.name} onChange={(e) => handleChange('name', e.target.value)} className="w-full bg-transparent py-1 text-xl font-medium text-slate-800 border-b border-slate-200" placeholder="名称" />
                                    <input value={formData.description} onChange={(e) => handleChange('description', e.target.value)} className="w-full bg-transparent py-1 text-sm text-slate-500 border-b border-slate-200" placeholder="描述" />
+                                   {/* 头像 URL 入口: 与左侧上传文件平级. 走 draft -> 失焦/回车 commit,
+                                       避免逐字 commit 导致所有引用 char.avatar 的 <img> 在打字时疯狂
+                                       请求不完整 URL. https URL 会作为 Instant Push 通知图标传到 worker;
+                                       本地上传 (data URL) 仅本地显示, 不进 push payload (data: 被 0.6+ 拒). */}
+                                   <input
+                                       type="url"
+                                       value={avatarUrlDraft}
+                                       onChange={(e) => setAvatarUrlDraft(e.target.value)}
+                                       onBlur={() => {
+                                           const v = avatarUrlDraft.trim();
+                                           // 空 draft 分两种情况:
+                                           //  - 当前 avatar 是 https URL: 用户清空 = 想移除这个 URL, commit '' 让头像清空
+                                           //  - 当前 avatar 是 data URL / emoji / 空: input 本就为空, 不动 (避免误清已上传的图)
+                                           if (!v) {
+                                               if (/^https?:\/\//i.test(formData.avatar || '')) {
+                                                   handleChange('avatar', '');
+                                                   addToast('头像 URL 已移除', 'info');
+                                               }
+                                               return;
+                                           }
+                                           try {
+                                               const u = new URL(v);
+                                               if (!/^https?:$/.test(u.protocol)) throw new Error();
+                                           } catch {
+                                               addToast('请填写有效的 http(s) 图片链接', 'error');
+                                               return;
+                                           }
+                                           if (v !== formData.avatar) {
+                                               handleChange('avatar', v);
+                                               addToast('头像 URL 已保存', 'success');
+                                           }
+                                       }}
+                                       onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                       placeholder="或粘贴图片 URL（回车确认）"
+                                       className="w-full bg-transparent py-1 text-xs text-slate-400 border-b border-slate-200 placeholder:text-slate-300"
+                                   />
                                </div>
                            </div>
                            

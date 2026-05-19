@@ -10,8 +10,11 @@ import { NotionManager, FeishuManager } from '../utils/realtimeContext';
 import { XhsMcpClient } from '../utils/xhsMcpClient';
 import { getMcdToken, setMcdToken as saveMcdToken, isMcdEnabled, setMcdEnabled as saveMcdEnabled, testMcdConnection, resetMcdSession } from '../utils/mcdMcpClient';
 import { Sun, Newspaper, NotePencil, Notebook, Book, ForkKnife } from '@phosphor-icons/react';
-import { loadPushConfig, savePushConfig, registerScheduleOnWorker, startHeartbeat, stopHeartbeat, isPushConfigAvailable, ensureSubscribed, sendTestPush, getPushDiagnostics, resetSubscription, type PushDiagnostics } from '../utils/proactivePushConfig';
+import { loadPushConfig, savePushConfig, registerScheduleOnWorker, startHeartbeat, stopHeartbeat, isPushConfigAvailable, ensureSubscribed, sendTestPush, getPushDiagnostics, resetSubscription, deepResetSubscription, type PushDiagnostics } from '../utils/proactivePushConfig';
 import { ProactiveChat } from '../utils/proactiveChat';
+import { InstantPushSettingsModal } from '../components/settings/InstantPushSettingsModal';
+import { PushVapidSettingsModal } from '../components/settings/PushVapidSettingsModal';
+import { isPushVapidReady } from '../utils/pushVapid';
 
 const DiagRow: React.FC<{ label: string; value: string; bad?: boolean }> = ({ label, value, bad }) => (
     <div className="flex items-start justify-between gap-3">
@@ -119,6 +122,13 @@ const Settings: React.FC = () => {
   const [ppDiag, setPpDiag] = useState<PushDiagnostics | null>(null);
   const [ppTestBusy, setPpTestBusy] = useState(false);
   const [ppResetBusy, setPpResetBusy] = useState(false);
+  const [ppDeepResetBusy, setPpDeepResetBusy] = useState(false);
+  // 连续 zombie 重置失败次数 — 累计 >= 3 时, "重置订阅" 按钮自动 morph 成
+  // "深度重置". 不持久化, 刷新页面归零 (用户原话: "刷新页面正常消失").
+  const [ppZombieStreak, setPpZombieStreak] = useState(0);
+  const [showInstantModal, setShowInstantModal] = useState(false);
+  const [showVapidModal, setShowVapidModal] = useState(false);
+  const [vapidReadyTick, setVapidReadyTick] = useState(0); // 关闭 VAPID 弹窗后刷新顶层徽标
 
   // 模型选择 Modal 的过滤 + 公共前缀（memo 掉，避免每次 Settings 重渲染都重算）
   const modelPickerView = useMemo(() => {
@@ -216,16 +226,41 @@ const Settings: React.FC = () => {
   };
 
   const doResetSubscription = async () => {
-      if (ppResetBusy) return;
+      if (ppResetBusy || ppDeepResetBusy) return;
       setPpResetBusy(true);
       setPpStatus('正在重置订阅…');
       const res = await resetSubscription();
       if (res.ok) {
+          setPpZombieStreak(0);
           setPpStatus('订阅已重建。可以再点"发一条测试推送"试一下。');
       } else {
-          setPpStatus(`重置失败：${res.reason || '未知错误'}`);
+          const reason = res.reason || '';
+          // 失败原因指向 zombie endpoint 时累计, 达到 3 次后按钮自动 morph 成深度重置
+          if (/permanently-removed|zombie/i.test(reason)) {
+              setPpZombieStreak(c => c + 1);
+          }
+          setPpStatus(`重置失败：${reason || '未知错误'}`);
       }
       setPpResetBusy(false);
+      await refreshPpDiag();
+  };
+
+  const doDeepResetSubscription = async () => {
+      if (ppDeepResetBusy || ppResetBusy) return;
+      setPpDeepResetBusy(true);
+      setPpStatus('正在深度重置…');
+      const res = await deepResetSubscription();
+      // 无论成败, 按钮都回归"重置订阅" — 下次出问题再次累计触发 morph
+      setPpZombieStreak(0);
+      if (res.ok) {
+          // ProactiveChat.resume() 把所有 schedule 推回新 SW. deepResetSubscription 内部
+          // 不调它是为了避免循环依赖 (ProactiveChat 反向依赖 proactivePushConfig).
+          try { ProactiveChat.resume(); } catch (e) { console.warn('[Settings] ProactiveChat.resume failed', e); }
+          setPpStatus('订阅已重建。可以再点"发一条测试推送"试一下。');
+      } else {
+          setPpStatus(`深度重置失败：${res.reason || '未知错误'}`);
+      }
+      setPpDeepResetBusy(false);
       await refreshPpDiag();
   };
 
@@ -1219,6 +1254,37 @@ const Settings: React.FC = () => {
             </div>
         </section>
 
+        {/* ───────── 推送凭据 (VAPID) ───────── */}
+        {/* VAPID 公私钥, 与 Proactive / Instant Push 共用一份 — 独立成块, 避免再被当成 */}
+        {/* Instant Push 的子配置, 也避免两边 key 不一致互相抢同一个 pushManager 订阅. */}
+        {/* vapidReadyTick: VAPID 弹窗关闭后 +1, 让本节点 re-render 重读 isPushVapidReady(). */}
+        <section data-vapid-tick={vapidReadyTick} className="bg-white/80 rounded-3xl p-5 shadow-sm border border-white/50">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <div className="p-2 bg-violet-100/60 rounded-xl text-violet-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-sm font-semibold text-slate-600 tracking-wider">推送凭据 (VAPID)</h2>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isPushVapidReady() ? 'bg-violet-100 text-violet-600' : 'bg-rose-100 text-rose-600'}`}>
+                    {isPushVapidReady() ? '已配置' : '未配置'}
+                </span>
+            </div>
+            <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                Proactive Push 和 Instant Push <b>共用同一份 VAPID 密钥对</b>。两边 key 不一致时会反复 unsubscribe 抢同一个 pushManager 订阅 ——
+                "推送成功但收不到"的常见原因。
+            </p>
+            <button
+                type="button"
+                onClick={() => setShowVapidModal(true)}
+                className={`w-full py-2.5 rounded-xl text-xs font-bold ${isPushVapidReady() ? 'bg-white text-violet-700 border border-violet-200 hover:bg-violet-50' : 'bg-violet-500 text-white hover:bg-violet-600 shadow-md shadow-violet-200'}`}
+            >
+                {isPushVapidReady() ? '查看 / 重新生成' : '生成 VAPID 密钥对 →'}
+            </button>
+        </section>
+
         {/* ───────── 主动消息 Push 加速器（开关） ───────── */}
         {ppAvailable && (
         <section className="bg-white/80 rounded-3xl p-5 shadow-sm border border-white/50">
@@ -1361,29 +1427,62 @@ const Settings: React.FC = () => {
                     <p className="text-[10px] text-slate-400">加载中…</p>
                 )}
 
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                    <button
-                        disabled={ppTestBusy || ppResetBusy || !ppDiag?.endpoint || ppDiag?.endpointDead || ppDiag?.capacitorNative}
-                        onClick={() => void doSendTestPush()}
-                        className={`py-2 rounded-xl text-xs font-bold ${ppTestBusy || ppResetBusy || !ppDiag?.endpoint || ppDiag?.endpointDead || ppDiag?.capacitorNative ? 'bg-slate-200 text-slate-400' : 'bg-teal-500 text-white hover:bg-teal-600'}`}
-                    >
-                        {ppTestBusy ? '测试中…' : '发一条测试推送'}
-                    </button>
-                    <button
-                        disabled={ppResetBusy || ppTestBusy || ppDiag?.capacitorNative}
-                        onClick={() => void doResetSubscription()}
-                        className={`py-2 rounded-xl text-xs font-bold border ${ppResetBusy || ppTestBusy || ppDiag?.capacitorNative ? 'bg-slate-100 text-slate-400 border-slate-200' : ppDiag?.endpointDead ? 'bg-rose-500 text-white border-rose-500 hover:bg-rose-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
-                    >
-                        {ppResetBusy ? '重置中…' : '重置订阅'}
-                    </button>
-                </div>
+                {(() => {
+                    const inDeepMode = ppZombieStreak >= 3;
+                    const resetLabel = inDeepMode
+                        ? (ppDeepResetBusy ? '深度重置中…' : '深度重置')
+                        : (ppResetBusy ? '重置中…' : '重置订阅');
+                    const resetBusy = ppResetBusy || ppDeepResetBusy;
+                    return (
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                            <button
+                                disabled={ppTestBusy || resetBusy || !ppDiag?.endpoint || ppDiag?.endpointDead || ppDiag?.capacitorNative}
+                                onClick={() => void doSendTestPush()}
+                                className={`py-2 rounded-xl text-xs font-bold ${ppTestBusy || resetBusy || !ppDiag?.endpoint || ppDiag?.endpointDead || ppDiag?.capacitorNative ? 'bg-slate-200 text-slate-400' : 'bg-teal-500 text-white hover:bg-teal-600'}`}
+                            >
+                                {ppTestBusy ? '测试中…' : '发一条测试推送'}
+                            </button>
+                            <button
+                                disabled={resetBusy || ppTestBusy || ppDiag?.capacitorNative}
+                                onClick={() => inDeepMode ? void doDeepResetSubscription() : void doResetSubscription()}
+                                className={`py-2 rounded-xl text-xs font-bold border ${resetBusy || ppTestBusy || ppDiag?.capacitorNative ? 'bg-slate-100 text-slate-400 border-slate-200' : inDeepMode || ppDiag?.endpointDead ? 'bg-rose-500 text-white border-rose-500 hover:bg-rose-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                            >
+                                {resetLabel}
+                            </button>
+                        </div>
+                    );
+                })()}
                 <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
                     "测试推送"会让 Worker 立刻给你这台设备发一条 push，5 秒内系统通知里出现"推送测试成功"= 链路通。
-                    "重置订阅"会清掉本机的旧订阅 + 通知 Worker 删 D1 里的对应记录，重新走一遍权限/订阅流程；适合订阅失效或换浏览器后用。
+                    "重置订阅"会清掉旧订阅再建一个，适合订阅失效或换浏览器后用。
+                    {ppZombieStreak >= 3 && <><br/>连续几次都没成，已切到"深度重置"——点一下做一次更彻底的清理。</>}
                 </p>
             </div>
         </section>
         )}
+
+        {/* ───────── Instant Push ───────── */}
+        <section className="bg-white/80 rounded-3xl p-5 shadow-sm border border-white/50">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <div className="p-2 bg-indigo-100/60 rounded-xl text-indigo-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.348 14.651a3.75 3.75 0 0 1 0-5.303m5.304 0a3.75 3.75 0 0 1 0 5.303m-7.425 2.122a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.981 0 13.789M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-sm font-semibold text-slate-600 tracking-wider">Instant Push</h2>
+                </div>
+                <button
+                    onClick={() => setShowInstantModal(true)}
+                    className="text-[10px] bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-full font-bold shadow-sm active:scale-95 transition-transform"
+                >
+                    配置
+                </button>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+                与上方 Push 加速器不同：前端发 prompt 到你自部署的 Worker，Worker 调你自己的 LLM 生成回复后分句逐条 Web Push。零数据库、零 cron。
+            </p>
+        </section>
 
         <div className="text-center text-[10px] text-slate-300 pb-8 font-mono tracking-widest uppercase">
             v2.2 (Realtime Awareness)
@@ -2019,6 +2118,16 @@ const Settings: React.FC = () => {
               </p>
           </div>
       </Modal>
+
+      <InstantPushSettingsModal
+        open={showInstantModal}
+        onClose={() => setShowInstantModal(false)}
+        onOpenVapid={() => { setShowInstantModal(false); setShowVapidModal(true); }}
+      />
+      <PushVapidSettingsModal
+        open={showVapidModal}
+        onClose={() => { setShowVapidModal(false); setVapidReadyTick((n) => n + 1); }}
+      />
 
     </div>
   );
