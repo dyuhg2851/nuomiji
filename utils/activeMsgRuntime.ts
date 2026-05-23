@@ -319,6 +319,16 @@ async function runPushTailPipeline(
 }
 
 const flushInboxToChat = async () => {
+  // 可见性闸门: 页面不可见 (切后台 / PWA 被冻结) 时不消费 inbox.
+  // 写日记类副作用 (notion_write_diary / feishu_write_diary directive → applyAssistantPostProcessing
+  // 内 await NotionManager.createDiaryPage 等网络 fetch) 在后台会被浏览器节流 / 冻结打断,
+  // 而失败被 applyAssistantPostProcessing 内层 try/catch 静默吞掉 (只 console.error, 不重试不持久化),
+  // 偏偏 inbox 是"先 ack 后处理"原子 consume → 这条副作用永久丢失 (用户报: 角色说"写好了"实际没写,
+  // 文字 chunk 因为先落库所以照常显示, 唯独网络副作用没了).
+  // 留在 inbox 不动, 等 visibilitychange→visible (见 init) 再 flush, 保证 fetch 在前台可靠执行.
+  // 用户回前台的提示由 SW notifyClosedClientForContent 系统通知负责. 仅 instant push 路径, 不影响本地 fetch.
+  if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+
   const pendingMessages = await ActiveMsgStore.consumeInboxMessages();
   // consumeInboxMessages 是 "先 ack 后处理" 语义 —— inbox 已经原子地清空。
   // 这里 per-message try/catch: 单条处理抛错 (quota / DB 故障 / postprocess 异常) 不连累
@@ -462,6 +472,17 @@ export const ActiveMsgRuntime = {
           // 时 SW 走的通知支线), 顺手消费一次.
           void runPendingToolCallsSafely();
         }
+      });
+    }
+
+    // 回到前台兜底: 后台期间被可见性闸门 defer 掉的 inbox (写日记等网络副作用) + 累积的
+    // pending tool calls 在 visibilitychange→visible 时排空, 保证 fetch 在前台可靠执行.
+    // 这条是修"切后台后日记丢失"的关键 — 没有它, defer 掉的 inbox 永远等不到下一次 push 才 flush.
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') return;
+        void flushInboxToChat();
+        void runPendingToolCallsSafely();
       });
     }
 
