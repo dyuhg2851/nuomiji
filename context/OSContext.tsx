@@ -1718,7 +1718,7 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       });
 
       // 「彼方」自主登入 —— 独立调度，复用同一批 refs 拿最新状态
-      const runVR = async (charId: string, room?: string) => {
+      const runVR = async (charId: string, room?: string, letterId?: string) => {
           const char = charactersRef.current.find(c => c.id === charId);
           if (!char || !char.vrState?.enabled) return;
           if (!userProfileRef.current) return;
@@ -1733,12 +1733,13 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
                   memoryPalaceConfig: memoryPalaceConfigRef.current,
                   updateCharacter,
                   forcedRoom: room as any,
+                  forcedLetterId: letterId,
               });
           } catch (e) {
               console.error('[VRWorld] runVR error', e);
           }
       };
-      VRScheduler.onTrigger((charId: string, room?: string) => { void runVR(charId, room); });
+      VRScheduler.onTrigger((charId: string, room?: string, letterId?: string) => { void runVR(charId, room, letterId); });
 
       return () => {
           // Cleanup: detach proactive listeners when OSContext unmounts (unlikely but safe)

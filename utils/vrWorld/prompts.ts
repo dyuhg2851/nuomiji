@@ -408,6 +408,7 @@ export const POSTOFFICE_OUTPUT_FORMAT = [
 export function buildPostOfficeRoomTurn(
     replyTarget: { pen: string; content: string } | null,
     selfName: string,
+    mustReply = false,
 ): string {
     const lines: string[] = [];
     lines.push(`你的化身走进邮局，面前是一排信格。`);
@@ -416,7 +417,11 @@ export function buildPostOfficeRoomTurn(
         lines.push(`信格里躺着一封陌生人寄来的漂流信——笔名「${replyTarget.pen}」：`);
         lines.push(`『${replyTarget.content}』`);
         lines.push('');
-        lines.push(`你可以回这封信（写 <回信>），也可以无视它、自己写一封新的漂流信寄给别的陌生人（写 <写信>）。`);
+        if (mustReply) {
+            lines.push(`你被这封信叫住了，决定亲自回它——请写 <回信>，顺着对方的话真诚地接住、回应或反问，带上你自己的态度与味道。这次别写新信。`);
+        } else {
+            lines.push(`你可以回这封信（写 <回信>），也可以无视它、自己写一封新的漂流信寄给别的陌生人（写 <写信>）。`);
+        }
     } else {
         lines.push(`信格里暂时没有别人的来信。写一封寄给陌生人的漂流信吧（写 <写信>）。`);
     }

@@ -54,6 +54,8 @@ export interface VRSessionDeps {
     updateCharacter: (id: string, updates: Partial<CharacterProfile>) => Promise<void> | void;
     /** 用户手动触发时指定的房间；省略 = 随机。不可用（如指定图书馆但无书）时自动回退随机。 */
     forcedRoom?: VRRoomId;
+    /** 用户在邮局指定要让该角色回复的来信 id（forcedRoom 应为 postoffice）。 */
+    forcedLetterId?: string;
 }
 
 export interface VRSessionResult {
@@ -107,7 +109,7 @@ function rollRoom(char: CharacterProfile, novels: VRWorldNovel[], musicState: VR
 }
 
 export async function runVRSession(deps: VRSessionDeps): Promise<VRSessionResult> {
-    const { char, characters, apiConfig, userProfile, groups, realtimeConfig, memoryPalaceConfig, updateCharacter, forcedRoom } = deps;
+    const { char, characters, apiConfig, userProfile, groups, realtimeConfig, memoryPalaceConfig, updateCharacter, forcedRoom, forcedLetterId } = deps;
 
     if (running.has(char.id)) return { ok: false, reason: 'busy' };
 
@@ -194,7 +196,15 @@ export async function runVRSession(deps: VRSessionDeps): Promise<VRSessionResult
             // 优先：认领自己寄出、已收到回信、还没读过的信 → 读回信、写感触、封存
             poReadTarget = letters.find(l => l.box === 'outbox' && l.status === 'archived'
                 && l.charId === char.id && (l.repliesReceived?.length || 0) > 0 && !l.reaction) || null;
-            if (poReadTarget) {
+            // 用户在邮局指定了某封来信让该角色回 → 直接锁定这封，要求回信
+            const forcedTarget = forcedLetterId
+                ? letters.find(l => l.id === forcedLetterId && l.box === 'inbox' && (l.replyStatus ?? 'none') === 'none' && l.remoteLetterId)
+                : undefined;
+            if (forcedTarget) {
+                poTarget = forcedTarget;
+                poReadTarget = null; // 强制回信优先于"读自己收到的回信"
+                roomTurn = buildPostOfficeRoomTurn({ pen: forcedTarget.pen, content: forcedTarget.content }, char.name, true);
+            } else if (poReadTarget) {
                 roomTurn = buildPostOfficeReadTurn(
                     poReadTarget.content,
                     (poReadTarget.repliesReceived || []).map(r => ({ pen: r.pen, content: r.content })),

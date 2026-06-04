@@ -636,6 +636,62 @@ const HelpModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     );
 };
 
+// 邮局分组（可折叠的大区间）。定义在模块级，避免随父组件重渲染而重挂、丢失展开状态。
+const LETTER_TONE: Record<string, string> = { amber: '#f3d08a', sky: '#7dd3fc', blue: '#93b8ff', green: '#86e3b0', grey: '#9aa0b0' };
+const LetterSection: React.FC<{ title: string; count: number; tone?: keyof typeof LETTER_TONE; badge?: string; defaultOpen?: boolean; children: React.ReactNode }> = ({ title, count, tone = 'amber', badge, defaultOpen = true, children }) => {
+    const [open, setOpen] = useState(defaultOpen);
+    const c = LETTER_TONE[tone];
+    return (
+        <div className="mb-3.5 rounded-xl p-2.5" style={{ background: 'rgba(0,0,0,0.18)', border: `1px solid ${c}22` }}>
+            <button onClick={() => setOpen(o => !o)} className="w-full flex items-center gap-1.5 active:opacity-70">
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ background: c, boxShadow: `0 0 6px ${c}99` }} />
+                <span className="text-[11px] tracking-[0.12em] font-medium" style={{ color: c, fontFamily: `'Noto Serif SC',serif` }}>{title}</span>
+                {count > 0 && <span className="text-[9.5px] text-white/45 rounded-full px-1.5 leading-tight" style={{ background: 'rgba(255,255,255,.08)' }}>{count}</span>}
+                {badge && <span className="text-[8.5px] tracking-wide rounded-full px-1.5 py-0.5 leading-none" style={{ color: c, border: `1px solid ${c}44` }}>{badge}</span>}
+                <CaretRight size={12} weight="bold" className="ml-auto shrink-0 transition-transform" style={{ color: `${c}cc`, transform: open ? 'rotate(90deg)' : 'none' }} />
+            </button>
+            {open && <div className="mt-2">{children}</div>}
+        </div>
+    );
+};
+
+// 来信行（长按弹出：指定角色回 / 亲自回 / 删除）
+const InboxLetterRow: React.FC<{ l: VRLetter; onMenu: (l: VRLetter) => void }> = ({ l, onMenu }) => {
+    const { pressing, handlers } = useLongPress(() => onMenu(l), 500);
+    return (
+        <div {...handlers} className={`rounded-lg p-2 mb-1.5 text-[11px] text-white/80 leading-snug transition-transform ${pressing ? 'scale-[0.97]' : ''}`}
+            style={{ background: pressing ? 'rgba(125,211,252,0.16)' : 'rgba(255,255,255,.04)', border: `1px solid ${pressing ? 'rgba(125,211,252,0.4)' : 'transparent'}` }}>
+            <div className="flex items-center gap-1.5 mb-0.5"><span className="text-sky-200/80 font-bold text-[10.5px]">{l.pen}</span><span className="ml-auto text-white/25 text-[9px]">长按回信</span></div>
+            <ExpandText text={l.content} limit={90} />
+        </div>
+    );
+};
+
+// 亲自回信（不调用 LLM）
+const ReplyComposeModal: React.FC<{ letter: VRLetter; defaultPen: string; onSave: (pen: string, content: string) => void; onCancel: () => void }> = ({ letter, defaultPen, onSave, onCancel }) => {
+    const [pen, setPen] = useState(defaultPen);
+    const [content, setContent] = useState('');
+    return (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center px-6 bg-black/55 backdrop-blur-sm" onClick={onCancel}>
+            <div className="w-full max-w-[340px] rounded-2xl p-4" onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(180deg,#221b12,#15100a)', border: '1px solid rgba(220,190,120,.28)', boxShadow: '0 16px 50px rgba(0,0,0,.6)' }}>
+                <div className="text-[13px] font-semibold text-amber-100 mb-2" style={{ fontFamily: `'Noto Serif SC',serif` }}>亲自回这封信</div>
+                <div className="rounded-lg bg-black/25 px-3 py-2 mb-3 text-[10.5px] text-white/55 leading-snug max-h-24 overflow-y-auto vr-reader-scroll" style={{ border: '1px solid rgba(255,255,255,.08)' }}>
+                    原信（{letter.pen}）：{letter.content}
+                </div>
+                <label className="text-[10px] text-amber-200/60">你的笔名（寄出时匿名）</label>
+                <input value={pen} onChange={e => setPen(e.target.value)} className="w-full mt-1 mb-2.5 rounded-lg bg-black/25 px-3 py-2 text-[12.5px] text-amber-50 outline-none" style={{ border: '1px solid rgba(220,190,120,.2)' }} />
+                <label className="text-[10px] text-amber-200/60">回信正文</label>
+                <textarea value={content} onChange={e => setContent(e.target.value)} rows={5} autoFocus placeholder="写下你想对这位陌生人说的话…"
+                    className="w-full mt-1 rounded-lg bg-black/25 px-3 py-2 text-[12.5px] text-amber-50 placeholder-white/25 outline-none resize-none vr-reader-scroll" style={{ border: '1px solid rgba(220,190,120,.2)' }} />
+                <div className="flex gap-2 mt-3.5">
+                    <button onClick={onCancel} className="flex-1 rounded-full py-2 text-[12.5px] text-white/70" style={{ border: '1px solid rgba(255,255,255,.16)' }}>取消</button>
+                    <button onClick={() => onSave(pen, content)} disabled={!content.trim()} className="flex-1 rounded-full py-2 text-[12.5px] font-semibold text-black disabled:opacity-40" style={{ background: 'linear-gradient(120deg,#f3d08a,#e8b75e)' }}>写好，排入待发送</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ============ 世界视图 ============
 const WorldView: React.FC<{
     occupantsByRoom: Record<string, CharacterProfile[]>;
@@ -797,12 +853,16 @@ const ExpandText: React.FC<{ text: string; limit?: number }> = ({ text, limit = 
 };
 
 // ============ 邮局信件管理面板 ============
-const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = ({ addToast }) => {
+const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void; characters: CharacterProfile[]; userName: string }> = ({ addToast, characters, userName }) => {
     const [letters, setLetters] = useState<VRLetter[]>([]);
     const [busy, setBusy] = useState<string | null>(null);
     const [menuFor, setMenuFor] = useState<VRLetter | null>(null);
     const [editing, setEditing] = useState<VRLetter | null>(null);
     const [confirmDel, setConfirmDel] = useState<VRLetter | null>(null);
+    const [inboxMenu, setInboxMenu] = useState<VRLetter | null>(null);   // 来信长按菜单
+    const [assignFor, setAssignFor] = useState<VRLetter | null>(null);   // 指定角色回信的选人面板
+    const [replyFor, setReplyFor] = useState<VRLetter | null>(null);     // 亲自回信编辑器
+    const enabledChars = characters.filter(c => c.vrState?.enabled);
 
     const load = useCallback(async () => setLetters(await DB.getVRLetters()), []);
     useEffect(() => {
@@ -880,19 +940,22 @@ const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = (
         const next = { ...editing, pen: pen.trim() || editing.pen, content: content.trim() };
         await DB.saveVRLetter(next); setEditing(null); await load();
     };
-
-    const TONE: Record<string, string> = { amber: '#f3d08a', sky: '#7dd3fc', blue: '#93b8ff', green: '#86e3b0', grey: '#9aa0b0' };
-    const Section: React.FC<{ title: string; count: number; tone?: keyof typeof TONE; badge?: string; children: React.ReactNode }> = ({ title, count, tone = 'amber', badge, children }) => (
-        <div className="mb-3.5 rounded-xl p-2.5" style={{ background: 'rgba(0,0,0,0.18)', border: `1px solid ${TONE[tone]}22` }}>
-            <div className="flex items-center gap-1.5 mb-2">
-                <span className="h-2 w-2 rounded-full shrink-0" style={{ background: TONE[tone], boxShadow: `0 0 6px ${TONE[tone]}99` }} />
-                <span className="text-[11px] tracking-[0.12em] font-medium" style={{ color: TONE[tone], fontFamily: `'Noto Serif SC',serif` }}>{title}</span>
-                {count > 0 && <span className="text-[9.5px] text-white/45 rounded-full px-1.5 leading-tight" style={{ background: 'rgba(255,255,255,.08)' }}>{count}</span>}
-                {badge && <span className="ml-auto text-[8.5px] tracking-wide rounded-full px-1.5 py-0.5 leading-none" style={{ color: TONE[tone], border: `1px solid ${TONE[tone]}44` }}>{badge}</span>}
-            </div>
-            {children}
-        </div>
-    );
+    // 指定某角色去邮局回这封来信（走 LLM）
+    const assignReply = (charId: string) => {
+        if (!assignFor) return;
+        VRScheduler.triggerNow(charId, 'postoffice', assignFor.id);
+        const cname = enabledChars.find(c => c.id === charId)?.name;
+        addToast?.(`${cname ?? '角色'} 正在去邮局回这封信…`, 'info');
+        setAssignFor(null);
+        setTimeout(() => void load(), 5000);
+    };
+    // 用户亲自回信（不调用 LLM），排入"待发送的回信"
+    const saveManualReply = async (pen: string, content: string) => {
+        if (!replyFor) return;
+        const next: VRLetter = { ...replyFor, replyStatus: 'queued', reply: { charId: 'user', pen: pen.trim() || userName, content: content.trim(), createdAt: Date.now() } };
+        await DB.saveVRLetter(next); setReplyFor(null); await load();
+        addToast?.('回信已写好，去「待发送的回信」一键发送', 'success');
+    };
 
     return (
         <div className="absolute top-14 left-3 right-3 bottom-3 z-20 rounded-2xl overflow-hidden flex flex-col backdrop-blur-md"
@@ -906,18 +969,18 @@ const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = (
 
             <div className="flex-1 overflow-y-auto vr-reader-scroll px-3 py-2.5">
                 {/* 待寄出 */}
-                <Section title="待寄出" count={outQueued.length} tone="amber" badge={outQueued.length ? '等你寄出' : undefined}>
+                <LetterSection title="待寄出" count={outQueued.length} tone="amber" badge={outQueued.length ? '等你寄出' : undefined}>
                     {outQueued.length === 0 ? <p className="text-[10.5px] text-white/35">角色在邮局写的漂流信会排在这里，你确认后一键寄出。寄出时笔名会自动匿名。</p> : (
                         <>
                             <PagedList items={outQueued} perPage={4} render={l => <PendingLetterRow key={l.id} l={l} onMenu={setMenuFor} />} />
                             <button onClick={sendOutbox} disabled={!!busy} className="w-full mt-1 rounded-full py-2 text-[12px] font-semibold text-black disabled:opacity-40" style={{ background: 'linear-gradient(120deg,#f3d08a,#e8b75e)' }}>{busy === 'send' ? '寄出中…' : `一键寄出（${outQueued.length}）`}</button>
                         </>
                     )}
-                </Section>
+                </LetterSection>
 
                 {/* 待发送的回信 */}
                 {replyQueued.length > 0 && (
-                    <Section title="待发送的回信" count={replyQueued.length} tone="amber" badge="等你发出">
+                    <LetterSection title="待发送的回信" count={replyQueued.length} tone="amber" badge="等你发出">
                         <PagedList items={replyQueued} perPage={4} render={l => (
                             <div key={l.id} className="rounded-lg p-2 mb-1.5" style={{ background: 'rgba(255,255,255,.05)' }}>
                                 <p className="text-[10.5px] text-white/55 leading-snug mb-1">原信（{l.pen}）：<ExpandText text={l.content} limit={80} /></p>
@@ -927,34 +990,31 @@ const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = (
                             </div>
                         )} />
                         <button onClick={sendReplies} disabled={!!busy} className="w-full mt-1 rounded-full py-2 text-[12px] font-semibold text-black disabled:opacity-40" style={{ background: 'linear-gradient(120deg,#f3d08a,#e8b75e)' }}>{busy === 'reply' ? '发送中…' : `一键发送回信（${replyQueued.length}）`}</button>
-                    </Section>
+                    </LetterSection>
                 )}
 
                 {/* 收件箱（待角色回信） */}
                 {inboxWaiting.length > 0 && (
-                    <Section title="收件箱" count={inboxWaiting.length} tone="sky" badge="等角色回信">
-                        <PagedList items={inboxWaiting} perPage={5} render={l => (
-                            <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11px] text-white/80 leading-snug" style={{ background: 'rgba(255,255,255,.04)' }}>
-                                <span className="text-sky-200/80 font-bold text-[10.5px]">{l.pen}</span>：<ExpandText text={l.content} limit={90} />
-                            </div>
-                        )} />
-                    </Section>
+                    <LetterSection title="收件箱" count={inboxWaiting.length} tone="sky" badge="等角色回信">
+                        <p className="text-[9.5px] text-white/35 mb-1.5 leading-snug">陌生人寄来的信。等角色逛到邮局会自己回，也可以<b className="text-sky-200/80">长按某封信</b>，指定角色去回、或你亲自回。</p>
+                        <PagedList items={inboxWaiting} perPage={5} render={l => <InboxLetterRow key={l.id} l={l} onMenu={setInboxMenu} />} />
+                    </LetterSection>
                 )}
 
                 {/* 已寄出·等回复中 */}
                 {sentAwaiting.length > 0 && (
-                    <Section title="漂流中" count={sentAwaiting.length} tone="blue" badge="已寄出·等回复">
+                    <LetterSection title="漂流中" count={sentAwaiting.length} tone="blue" badge="已寄出·等回复">
                         <PagedList items={sentAwaiting} perPage={5} render={l => (
                             <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11px]" style={{ background: 'rgba(255,255,255,.04)' }}>
                                 <div className="text-white/70 leading-snug"><ExpandText text={l.content} limit={70} /></div>
                             </div>
                         )} />
-                    </Section>
+                    </LetterSection>
                 )}
 
                 {/* 信匣·留档（已收到回复） */}
                 {archived.length > 0 && (
-                    <Section title="信匣" count={archived.length} tone="green" badge="已收到回复">
+                    <LetterSection title="信匣" count={archived.length} tone="green" badge="已收到回复">
                         <PagedList items={archived} perPage={4} render={l => (
                             <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11px]" style={{ background: 'rgba(255,255,255,.05)' }}>
                                 <div className="flex items-center gap-1.5 mb-1">
@@ -970,7 +1030,7 @@ const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = (
                                 )}
                             </div>
                         )} />
-                    </Section>
+                    </LetterSection>
                 )}
             </div>
 
@@ -983,6 +1043,19 @@ const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = (
             {editing && <LetterEditModal letter={editing} onSave={saveEdit} onCancel={() => setEditing(null)} />}
             <ConfirmDialog open={!!confirmDel} title="删除这封信？" message={confirmDel ? '这封还没寄出的漂流信将被丢弃。' : ''}
                 onConfirm={() => { if (confirmDel) void del(confirmDel.id); setConfirmDel(null); }} onCancel={() => setConfirmDel(null)} />
+
+            {/* 来信长按菜单：指定角色回 / 亲自回 / 删除 */}
+            <ActionSheet open={!!inboxMenu} title={inboxMenu ? `回「${inboxMenu.pen}」的来信` : ''}
+                actions={[
+                    { label: '🤖 指定角色去回（用 AI）', onClick: () => { if (enabledChars.length === 0) { addToast?.('先在「接入」里启用角色', 'info'); setInboxMenu(null); return; } setAssignFor(inboxMenu); setInboxMenu(null); } },
+                    { label: '✍️ 我亲自回（不用 AI）', onClick: () => { setReplyFor(inboxMenu); setInboxMenu(null); } },
+                    { label: '删除这封来信', danger: true, onClick: () => { setConfirmDel(inboxMenu); setInboxMenu(null); } },
+                ]} onClose={() => setInboxMenu(null)} />
+            {/* 选哪个角色去回 */}
+            <ActionSheet open={!!assignFor} title={assignFor ? `让谁去回「${assignFor.pen}」的信？` : ''}
+                actions={enabledChars.map(c => ({ label: c.name, onClick: () => assignReply(c.id) }))}
+                onClose={() => setAssignFor(null)} />
+            {replyFor && <ReplyComposeModal letter={replyFor} defaultPen={userName} onSave={saveManualReply} onCancel={() => setReplyFor(null)} />}
         </div>
     );
 };
@@ -1159,7 +1232,7 @@ const RoomScene: React.FC<{
                 })()}
 
                 {/* 邮局：信件管理面板 */}
-                {isPostOffice && <PostOfficePanel addToast={addToast} />}
+                {isPostOffice && <PostOfficePanel addToast={addToast} characters={characters} userName={userName} />}
 
                 {/* chibi 站位 */}
                 {occupants.map((c, i) => {
