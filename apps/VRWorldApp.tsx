@@ -460,6 +460,111 @@ const Chibi: React.FC<{ char: CharacterProfile; bubble?: string; onTap?: () => v
     );
 };
 
+// ============ 通用：长按 hook + 确认弹窗（统一替代原生 confirm/alert） ============
+const useLongPress = (onLong: () => void, ms = 500) => {
+    const timer = useRef<number | null>(null);
+    const [pressing, setPressing] = useState(false);
+    const cancel = useCallback(() => { setPressing(false); if (timer.current) { clearTimeout(timer.current); timer.current = null; } }, []);
+    const start = useCallback(() => { setPressing(true); timer.current = window.setTimeout(() => { setPressing(false); timer.current = null; onLong(); }, ms); }, [onLong, ms]);
+    return { pressing, handlers: { onPointerDown: start, onPointerUp: cancel, onPointerLeave: cancel, onPointerCancel: cancel } };
+};
+
+const ConfirmDialog: React.FC<{
+    open: boolean; title: string; message?: string;
+    confirmText?: string; cancelText?: string;
+    onConfirm: () => void; onCancel: () => void;
+}> = ({ open, title, message, confirmText = '删除', cancelText = '取消', onConfirm, onCancel }) => {
+    if (!open) return null;
+    return (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center px-8 bg-black/55 backdrop-blur-sm" onClick={onCancel}>
+            <div className="w-full max-w-[300px] rounded-2xl p-4 text-center" onClick={e => e.stopPropagation()}
+                style={{ background: 'linear-gradient(180deg,#1b1830 0%,#100d20 100%)', border: '1px solid rgba(255,255,255,.12)', boxShadow: '0 16px 50px rgba(0,0,0,.6)' }}>
+                <div className="text-[14px] font-semibold text-white tracking-wide" style={{ fontFamily: `'Noto Serif SC',serif` }}>{title}</div>
+                {message && <p className="text-[11.5px] text-white/55 mt-1.5 leading-relaxed whitespace-pre-wrap">{message}</p>}
+                <div className="flex gap-2 mt-4">
+                    <button onClick={onCancel} className="flex-1 rounded-full py-2 text-[12.5px] text-white/75 active:bg-white/5" style={{ border: '1px solid rgba(255,255,255,.16)' }}>{cancelText}</button>
+                    <button onClick={onConfirm} className="flex-1 rounded-full py-2 text-[12.5px] font-semibold text-white active:opacity-85" style={{ background: 'linear-gradient(120deg,#f43f5e,#e11d48)' }}>{confirmText}</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// 长按弹出的动作菜单（编辑 / 删除等）
+const ActionSheet: React.FC<{
+    open: boolean; title?: string;
+    actions: { label: string; onClick: () => void; danger?: boolean }[];
+    onClose: () => void;
+}> = ({ open, title, actions, onClose }) => {
+    if (!open) return null;
+    return (
+        <div className="fixed inset-0 z-[300] flex items-end justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+            <div className="w-full max-w-md p-3" onClick={e => e.stopPropagation()}>
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(180deg,#1b1830,#120f22)', border: '1px solid rgba(255,255,255,.12)' }}>
+                    {title && <div className="px-4 py-2.5 text-[11px] text-white/45 text-center border-b border-white/8 whitespace-pre-wrap leading-snug">{title}</div>}
+                    {actions.map((a, i) => (
+                        <button key={i} onClick={() => { a.onClick(); }} className={`w-full py-3 text-[13.5px] active:bg-white/5 ${i > 0 ? 'border-t border-white/8' : ''} ${a.danger ? 'text-rose-400 font-semibold' : 'text-white/90'}`}>{a.label}</button>
+                    ))}
+                </div>
+                <button onClick={onClose} className="w-full mt-2 rounded-2xl py-3 text-[13.5px] text-white/80 font-medium" style={{ background: 'rgba(40,36,60,.9)', border: '1px solid rgba(255,255,255,.1)' }}>取消</button>
+            </div>
+        </div>
+    );
+};
+
+// 分页列表（每页 perPage 条，超出翻页）
+function PagedList<T>({ items, perPage, render }: { items: T[]; perPage: number; render: (it: T, idx: number) => React.ReactNode }) {
+    const [p, setP] = useState(0);
+    const total = Math.max(1, Math.ceil(items.length / perPage));
+    const cur = Math.min(p, total - 1);
+    const slice = items.slice(cur * perPage, cur * perPage + perPage);
+    return (
+        <>
+            {slice.map(render)}
+            {total > 1 && (
+                <div className="flex items-center justify-center gap-3 mb-1">
+                    <button onClick={() => setP(Math.max(0, cur - 1))} disabled={cur === 0} className="h-6 w-6 rounded-full flex items-center justify-center text-white/60 disabled:opacity-25 active:bg-white/10" style={{ border: '1px solid rgba(255,255,255,.14)' }}><CaretLeft size={11} weight="bold" /></button>
+                    <span className="text-[10px] text-white/45 tabular-nums">{cur + 1}/{total}</span>
+                    <button onClick={() => setP(Math.min(total - 1, cur + 1))} disabled={cur >= total - 1} className="h-6 w-6 rounded-full flex items-center justify-center text-white/60 disabled:opacity-25 active:bg-white/10" style={{ border: '1px solid rgba(255,255,255,.14)' }}><CaretRight size={11} weight="bold" /></button>
+                </div>
+            )}
+        </>
+    );
+}
+
+// 待寄出信件行（长按弹出 编辑/删除）
+const PendingLetterRow: React.FC<{ l: VRLetter; onMenu: (l: VRLetter) => void }> = ({ l, onMenu }) => {
+    const { pressing, handlers } = useLongPress(() => onMenu(l), 500);
+    return (
+        <div {...handlers} className={`rounded-lg p-2 mb-1.5 text-[11.5px] text-amber-50/90 transition-transform ${pressing ? 'scale-[0.97]' : ''}`}
+            style={{ background: pressing ? 'rgba(244,180,90,0.16)' : 'rgba(255,255,255,.05)', border: `1px solid ${pressing ? 'rgba(244,180,90,0.4)' : 'transparent'}` }}>
+            <div className="flex items-center gap-1.5 mb-0.5"><span className="text-amber-200/90 font-bold text-[10.5px]">{l.pen}</span><span className="ml-auto text-white/25 text-[9px]">长按编辑/删除</span></div>
+            <p className="leading-snug whitespace-pre-wrap">{l.content}</p>
+        </div>
+    );
+};
+
+// 信件编辑弹窗
+const LetterEditModal: React.FC<{ letter: VRLetter; onSave: (pen: string, content: string) => void; onCancel: () => void }> = ({ letter, onSave, onCancel }) => {
+    const [pen, setPen] = useState(letter.pen);
+    const [content, setContent] = useState(letter.content);
+    return (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center px-6 bg-black/55 backdrop-blur-sm" onClick={onCancel}>
+            <div className="w-full max-w-[340px] rounded-2xl p-4" onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(180deg,#221b12,#15100a)', border: '1px solid rgba(220,190,120,.28)', boxShadow: '0 16px 50px rgba(0,0,0,.6)' }}>
+                <div className="text-[13px] font-semibold text-amber-100 mb-2.5" style={{ fontFamily: `'Noto Serif SC',serif` }}>编辑这封信</div>
+                <label className="text-[10px] text-amber-200/60">笔名</label>
+                <input value={pen} onChange={e => setPen(e.target.value)} className="w-full mt-1 mb-2.5 rounded-lg bg-black/25 px-3 py-2 text-[12.5px] text-amber-50 outline-none" style={{ border: '1px solid rgba(220,190,120,.2)' }} />
+                <label className="text-[10px] text-amber-200/60">正文</label>
+                <textarea value={content} onChange={e => setContent(e.target.value)} rows={5} className="w-full mt-1 rounded-lg bg-black/25 px-3 py-2 text-[12.5px] text-amber-50 outline-none resize-none vr-reader-scroll" style={{ border: '1px solid rgba(220,190,120,.2)' }} />
+                <div className="flex gap-2 mt-3.5">
+                    <button onClick={onCancel} className="flex-1 rounded-full py-2 text-[12.5px] text-white/70" style={{ border: '1px solid rgba(255,255,255,.16)' }}>取消</button>
+                    <button onClick={() => onSave(pen, content)} disabled={!content.trim()} className="flex-1 rounded-full py-2 text-[12.5px] font-semibold text-black disabled:opacity-40" style={{ background: 'linear-gradient(120deg,#f3d08a,#e8b75e)' }}>保存</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ============ 世界视图 ============
 const WorldView: React.FC<{
     occupantsByRoom: Record<string, CharacterProfile[]>;
@@ -469,9 +574,12 @@ const WorldView: React.FC<{
     onJump: (novelId: string | undefined, segIdx: number) => void;
     onDeleteFeed: (msgId: number) => void; onClearFeed: () => void;
 }> = ({ occupantsByRoom, feed, novelCount, poBadge, onEnterRoom, onGoLibrary, onJump, onDeleteFeed, onClearFeed }) => {
-    const FEED_LIMIT = 12;
-    const [showAll, setShowAll] = useState(false);
-    const shown = showAll ? feed : feed.slice(0, FEED_LIMIT);
+    const FEED_PER_PAGE = 20;
+    const [page, setPage] = useState(0);
+    const totalPages = Math.max(1, Math.ceil(feed.length / FEED_PER_PAGE));
+    const curPage = Math.min(page, totalPages - 1);
+    const shown = feed.slice(curPage * FEED_PER_PAGE, curPage * FEED_PER_PAGE + FEED_PER_PAGE);
+    const [confirmDel, setConfirmDel] = useState<FeedItem | null>(null);
     return (
     <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -502,7 +610,7 @@ const WorldView: React.FC<{
                         )}
                         {!room.implemented && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-[11px] tracking-[0.3em] text-white/55" style={{ fontFamily: `'Noto Serif SC',serif` }}>开发中…</span>
+                                <span className="text-[11px] tracking-[0.3em] text-white/55" style={{ fontFamily: `'Noto Serif SC',serif` }}>蒸笼预热中…</span>
                             </div>
                         )}
                         {/* 角色小头像缩影 */}
@@ -542,34 +650,32 @@ const WorldView: React.FC<{
                 <>
                     <p className="text-[9px] text-white/25 text-center mb-2">长按动态可删除</p>
                     <div className="space-y-2.5">
-                        {shown.map(item => <FeedCard key={item.msgId} item={item} onJump={onJump} onDelete={onDeleteFeed} />)}
+                        {shown.map(item => <FeedCard key={item.msgId} item={item} onJump={onJump} onRequestDelete={setConfirmDel} />)}
                     </div>
-                    {!showAll && feed.length > FEED_LIMIT && (
-                        <button onClick={() => setShowAll(true)} className="w-full mt-2.5 rounded-full py-2 text-[11px] text-white/55 active:bg-white/5" style={{ border: '1px solid rgba(255,255,255,.12)' }}>
-                            展开剩余 {feed.length - FEED_LIMIT} 条
-                        </button>
-                    )}
-                    {showAll && feed.length > FEED_LIMIT && (
-                        <button onClick={() => setShowAll(false)} className="w-full mt-2.5 rounded-full py-2 text-[11px] text-white/45 active:bg-white/5" style={{ border: '1px solid rgba(255,255,255,.1)' }}>
-                            收起
-                        </button>
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-3 mt-3">
+                            <button onClick={() => setPage(p => Math.max(0, Math.min(p, totalPages - 1) - 1))} disabled={curPage === 0}
+                                className="h-7 w-7 rounded-full flex items-center justify-center text-white/70 disabled:opacity-25 active:bg-white/10" style={{ border: '1px solid rgba(255,255,255,.14)' }}><CaretLeft size={13} weight="bold" /></button>
+                            <span className="text-[11px] text-white/50 tracking-wider tabular-nums">{curPage + 1} / {totalPages}</span>
+                            <button onClick={() => setPage(p => Math.min(totalPages - 1, Math.min(p, totalPages - 1) + 1))} disabled={curPage >= totalPages - 1}
+                                className="h-7 w-7 rounded-full flex items-center justify-center text-white/70 disabled:opacity-25 active:bg-white/10" style={{ border: '1px solid rgba(255,255,255,.14)' }}><CaretRight size={13} weight="bold" /></button>
+                        </div>
                     )}
                 </>
             )}
         </div>
+        <ConfirmDialog open={!!confirmDel} title="删除这条动态？" message={confirmDel ? `${confirmDel.charName} 在${getRoom(confirmDel.meta.room).name}的这条记录将被移除。` : ''}
+            onConfirm={() => { if (confirmDel) onDeleteFeed(confirmDel.msgId); setConfirmDel(null); }} onCancel={() => setConfirmDel(null)} />
     </div>
     );
 };
 
 // 单条动态卡片（长按删除）
-const FeedCard: React.FC<{ item: FeedItem; onJump: (novelId: string | undefined, segIdx: number) => void; onDelete: (msgId: number) => void }> = ({ item, onJump, onDelete }) => {
+const FeedCard: React.FC<{ item: FeedItem; onJump: (novelId: string | undefined, segIdx: number) => void; onRequestDelete: (item: FeedItem) => void }> = ({ item, onJump, onRequestDelete }) => {
     const room = getRoom(item.meta.room);
-    const timer = useRef<number | null>(null);
-    const [pressing, setPressing] = useState(false);
-    const cancel = () => { setPressing(false); if (timer.current) { clearTimeout(timer.current); timer.current = null; } };
-    const start = () => { setPressing(true); timer.current = window.setTimeout(() => { setPressing(false); timer.current = null; onDelete(item.msgId); }, 600); };
+    const { pressing, handlers } = useLongPress(() => onRequestDelete(item), 550);
     return (
-        <div onPointerDown={start} onPointerUp={cancel} onPointerLeave={cancel} onPointerCancel={cancel}
+        <div {...handlers}
             className={`rounded-2xl p-3 flex gap-3 backdrop-blur-sm transition-transform ${pressing ? 'scale-[0.97]' : ''}`}
             style={{ background: pressing ? 'rgba(244,63,94,0.14)' : 'rgba(255,255,255,0.05)', border: `1px solid ${pressing ? 'rgba(244,63,94,0.4)' : 'rgba(255,255,255,0.07)'}`, boxShadow: '0 4px 18px rgba(0,0,0,.22)' }}>
             {item.avatar ? <img src={item.avatar} className="h-8 w-8 rounded-full object-cover shrink-0" alt="" /> : <div className="h-8 w-8 rounded-full bg-indigo-400/40 shrink-0" />}
@@ -623,6 +729,9 @@ const ExpandText: React.FC<{ text: string; limit?: number }> = ({ text, limit = 
 const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = ({ addToast }) => {
     const [letters, setLetters] = useState<VRLetter[]>([]);
     const [busy, setBusy] = useState<string | null>(null);
+    const [menuFor, setMenuFor] = useState<VRLetter | null>(null);
+    const [editing, setEditing] = useState<VRLetter | null>(null);
+    const [confirmDel, setConfirmDel] = useState<VRLetter | null>(null);
 
     const load = useCallback(async () => setLetters(await DB.getVRLetters()), []);
     useEffect(() => {
@@ -695,10 +804,21 @@ const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = (
         await DB.saveVRLetter(next);
     };
     const del = async (id: string) => { await DB.deleteVRLetter(id); await load(); };
+    const saveEdit = async (pen: string, content: string) => {
+        if (!editing) return;
+        const next = { ...editing, pen: pen.trim() || editing.pen, content: content.trim() };
+        await DB.saveVRLetter(next); setEditing(null); await load();
+    };
 
-    const Section: React.FC<{ title: string; count: number; children: React.ReactNode }> = ({ title, count, children }) => (
-        <div className="mb-3">
-            <div className="text-[10px] tracking-[0.2em] text-amber-200/70 mb-1.5" style={{ fontFamily: `'Noto Serif SC',serif` }}>{title}{count > 0 ? ` · ${count}` : ''}</div>
+    const TONE: Record<string, string> = { amber: '#f3d08a', sky: '#7dd3fc', blue: '#93b8ff', green: '#86e3b0', grey: '#9aa0b0' };
+    const Section: React.FC<{ title: string; count: number; tone?: keyof typeof TONE; badge?: string; children: React.ReactNode }> = ({ title, count, tone = 'amber', badge, children }) => (
+        <div className="mb-3.5 rounded-xl p-2.5" style={{ background: 'rgba(0,0,0,0.18)', border: `1px solid ${TONE[tone]}22` }}>
+            <div className="flex items-center gap-1.5 mb-2">
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ background: TONE[tone], boxShadow: `0 0 6px ${TONE[tone]}99` }} />
+                <span className="text-[11px] tracking-[0.12em] font-medium" style={{ color: TONE[tone], fontFamily: `'Noto Serif SC',serif` }}>{title}</span>
+                {count > 0 && <span className="text-[9.5px] text-white/45 rounded-full px-1.5 leading-tight" style={{ background: 'rgba(255,255,255,.08)' }}>{count}</span>}
+                {badge && <span className="ml-auto text-[8.5px] tracking-wide rounded-full px-1.5 py-0.5 leading-none" style={{ color: TONE[tone], border: `1px solid ${TONE[tone]}44` }}>{badge}</span>}
+            </div>
             {children}
         </div>
     );
@@ -715,57 +835,56 @@ const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = (
 
             <div className="flex-1 overflow-y-auto vr-reader-scroll px-3 py-2.5">
                 {/* 待寄出 */}
-                <Section title="待寄出" count={outQueued.length}>
+                <Section title="待寄出" count={outQueued.length} tone="amber" badge={outQueued.length ? '等你寄出' : undefined}>
                     {outQueued.length === 0 ? <p className="text-[10.5px] text-white/35">角色在邮局写的漂流信会排在这里，你确认后一键寄出。寄出时笔名会自动匿名。</p> : (
                         <>
-                            {outQueued.map(l => (
-                                <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11.5px] text-amber-50/90" style={{ background: 'rgba(255,255,255,.05)' }}>
-                                    <div className="flex items-center gap-1.5 mb-0.5"><span className="text-amber-200/90 font-bold text-[10.5px]">{l.pen}</span><button onClick={() => del(l.id)} className="ml-auto text-white/30 text-[10px]">删</button></div>
-                                    <p className="leading-snug whitespace-pre-wrap">{l.content}</p>
-                                </div>
-                            ))}
+                            <PagedList items={outQueued} perPage={4} render={l => <PendingLetterRow key={l.id} l={l} onMenu={setMenuFor} />} />
                             <button onClick={sendOutbox} disabled={!!busy} className="w-full mt-1 rounded-full py-2 text-[12px] font-semibold text-black disabled:opacity-40" style={{ background: 'linear-gradient(120deg,#f3d08a,#e8b75e)' }}>{busy === 'send' ? '寄出中…' : `一键寄出（${outQueued.length}）`}</button>
                         </>
                     )}
                 </Section>
 
-                {/* 待回复 */}
-                <Section title="待发送的回信" count={replyQueued.length}>
-                    {replyQueued.length === 0 ? <p className="text-[10.5px] text-white/35">角色回的信会排在这里，你可补充几句一起发。</p> : (
-                        <>
-                            {replyQueued.map(l => (
-                                <div key={l.id} className="rounded-lg p-2 mb-1.5" style={{ background: 'rgba(255,255,255,.05)' }}>
-                                    <p className="text-[10.5px] text-white/55 leading-snug mb-1">原信（{l.pen}）：<ExpandText text={l.content} limit={80} /></p>
-                                    <p className="text-[11.5px] text-amber-50/90 leading-snug whitespace-pre-wrap">回信：{l.reply!.content}</p>
-                                    <input value={l.reply!.userNote || ''} onChange={e => setUserNote(l, e.target.value)} placeholder="想补充几句一起回？（选填）"
-                                        className="w-full mt-1.5 rounded-md bg-black/20 px-2 py-1 text-[11px] text-white placeholder-white/30 outline-none" />
-                                </div>
-                            ))}
-                            <button onClick={sendReplies} disabled={!!busy} className="w-full mt-1 rounded-full py-2 text-[12px] font-semibold text-black disabled:opacity-40" style={{ background: 'linear-gradient(120deg,#f3d08a,#e8b75e)' }}>{busy === 'reply' ? '发送中…' : `一键发送回信（${replyQueued.length}）`}</button>
-                        </>
-                    )}
-                </Section>
-
-                {/* 收件箱（待角色回信） */}
-                {inboxWaiting.length > 0 && (
-                    <Section title="收件箱（等角色来回信）" count={inboxWaiting.length}>
-                        {inboxWaiting.map(l => (
-                            <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11px] text-white/80 leading-snug" style={{ background: 'rgba(255,255,255,.04)' }}>
-                                <span className="text-sky-200/80 font-bold text-[10.5px]">{l.pen}</span>：<ExpandText text={l.content} limit={90} />
+                {/* 待发送的回信 */}
+                {replyQueued.length > 0 && (
+                    <Section title="待发送的回信" count={replyQueued.length} tone="amber" badge="等你发出">
+                        <PagedList items={replyQueued} perPage={4} render={l => (
+                            <div key={l.id} className="rounded-lg p-2 mb-1.5" style={{ background: 'rgba(255,255,255,.05)' }}>
+                                <p className="text-[10.5px] text-white/55 leading-snug mb-1">原信（{l.pen}）：<ExpandText text={l.content} limit={80} /></p>
+                                <p className="text-[11.5px] text-amber-50/90 leading-snug whitespace-pre-wrap">回信：{l.reply!.content}</p>
+                                <input value={l.reply!.userNote || ''} onChange={e => setUserNote(l, e.target.value)} placeholder="想补充几句一起回？（选填）"
+                                    className="w-full mt-1.5 rounded-md bg-black/20 px-2 py-1 text-[11px] text-white placeholder-white/30 outline-none" />
                             </div>
-                        ))}
+                        )} />
+                        <button onClick={sendReplies} disabled={!!busy} className="w-full mt-1 rounded-full py-2 text-[12px] font-semibold text-black disabled:opacity-40" style={{ background: 'linear-gradient(120deg,#f3d08a,#e8b75e)' }}>{busy === 'reply' ? '发送中…' : `一键发送回信（${replyQueued.length}）`}</button>
                     </Section>
                 )}
 
-                {/* 信匣（已寄出待回复 + 留档） */}
-                {(sentAwaiting.length > 0 || archived.length > 0) && (
-                    <Section title="信匣" count={sentAwaiting.length + archived.length}>
-                        {sentAwaiting.map(l => (
-                            <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11px]" style={{ background: 'rgba(255,255,255,.04)' }}>
-                                <div className="text-white/70 leading-snug">寄出·等回复：<ExpandText text={l.content} limit={70} /></div>
+                {/* 收件箱（待角色回信） */}
+                {inboxWaiting.length > 0 && (
+                    <Section title="收件箱" count={inboxWaiting.length} tone="sky" badge="等角色回信">
+                        <PagedList items={inboxWaiting} perPage={5} render={l => (
+                            <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11px] text-white/80 leading-snug" style={{ background: 'rgba(255,255,255,.04)' }}>
+                                <span className="text-sky-200/80 font-bold text-[10.5px]">{l.pen}</span>：<ExpandText text={l.content} limit={90} />
                             </div>
-                        ))}
-                        {archived.map(l => (
+                        )} />
+                    </Section>
+                )}
+
+                {/* 已寄出·等回复中 */}
+                {sentAwaiting.length > 0 && (
+                    <Section title="漂流中" count={sentAwaiting.length} tone="blue" badge="已寄出·等回复">
+                        <PagedList items={sentAwaiting} perPage={5} render={l => (
+                            <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11px]" style={{ background: 'rgba(255,255,255,.04)' }}>
+                                <div className="text-white/70 leading-snug"><ExpandText text={l.content} limit={70} /></div>
+                            </div>
+                        )} />
+                    </Section>
+                )}
+
+                {/* 信匣·留档（已收到回复） */}
+                {archived.length > 0 && (
+                    <Section title="信匣" count={archived.length} tone="green" badge="已收到回复">
+                        <PagedList items={archived} perPage={4} render={l => (
                             <div key={l.id} className="rounded-lg p-2 mb-1.5 text-[11px]" style={{ background: 'rgba(255,255,255,.05)' }}>
                                 <div className="flex items-center gap-1.5 mb-1">
                                     <span className="text-amber-200/70 text-[9.5px]">{l.pen}的信</span>
@@ -779,10 +898,20 @@ const PostOfficePanel: React.FC<{ addToast?: (m: string, t?: any) => void }> = (
                                     <div className="text-[10.5px] text-pink-200/80 mt-1.5 pl-2 border-l-2 border-pink-300/40 leading-snug">读后：{l.reaction.content}</div>
                                 )}
                             </div>
-                        ))}
+                        )} />
                     </Section>
                 )}
             </div>
+
+            {/* 长按菜单 / 编辑 / 删除确认 */}
+            <ActionSheet open={!!menuFor} title={menuFor ? `「${menuFor.pen}」的待寄信` : ''}
+                actions={[
+                    { label: '编辑', onClick: () => { setEditing(menuFor); setMenuFor(null); } },
+                    { label: '删除', danger: true, onClick: () => { setConfirmDel(menuFor); setMenuFor(null); } },
+                ]} onClose={() => setMenuFor(null)} />
+            {editing && <LetterEditModal letter={editing} onSave={saveEdit} onCancel={() => setEditing(null)} />}
+            <ConfirmDialog open={!!confirmDel} title="删除这封信？" message={confirmDel ? '这封还没寄出的漂流信将被丢弃。' : ''}
+                onConfirm={() => { if (confirmDel) void del(confirmDel.id); setConfirmDel(null); }} onCancel={() => setConfirmDel(null)} />
         </div>
     );
 };
@@ -810,7 +939,6 @@ const RoomScene: React.FC<{
     const [postText, setPostText] = useState('');
     const [posting, setPosting] = useState(false);
     const music = useMusic();
-    const nameOfChar = (id: string) => characters.find(c => c.id === id)?.name;
 
     useEffect(() => {
         if (!isGuestbook) return;
@@ -908,24 +1036,49 @@ const RoomScene: React.FC<{
                     </div>
                 )}
 
-                {/* 留言簿：版聊墙 */}
+                {/* 留言簿：版聊墙（DC 风：头像 + 连续消息成组，回复弱化） */}
                 {isGuestbook && (() => {
-                    const msgs = (board?.messages || []).slice(-60);
+                    const msgs = (board?.messages || []).slice(-80); // 超出只留最近的，旧的隐藏
+                    // 连续同一作者（且非回复、间隔不久）合并为一组
+                    const groups: VRGuestbookMessage[][] = [];
+                    for (const m of msgs) {
+                        const g = groups[groups.length - 1];
+                        if (g && g[0].authorId === m.authorId && !m.replyToName && (m.createdAt - g[g.length - 1].createdAt) < 5 * 60 * 1000) g.push(m);
+                        else groups.push([m]);
+                    }
                     return (
                         <div className="absolute top-14 left-3 right-3 bottom-16 z-20 rounded-2xl overflow-hidden flex flex-col backdrop-blur-md"
                             style={{ background: 'rgba(10,22,38,0.62)', border: '1px solid rgba(140,200,255,0.22)', boxShadow: '0 8px 26px rgba(0,0,0,.4)' }}>
                             <div className="px-3 py-2 text-[10px] tracking-[0.25em] text-sky-200/70 border-b border-white/10" style={{ fontFamily: `'Noto Serif SC',serif` }}>留言墙</div>
-                            <div className="flex-1 overflow-y-auto vr-reader-scroll px-3 py-2.5 space-y-2">
-                                {msgs.length === 0 ? (
+                            <div className="flex-1 overflow-y-auto vr-reader-scroll px-3 py-3 space-y-3">
+                                {groups.length === 0 ? (
                                     <p className="text-[11px] text-white/40 text-center py-6">这面墙还空着。留下第一句话，或等角色们来开帖。</p>
-                                ) : msgs.map((m: VRGuestbookMessage) => {
-                                    const isUser = m.authorId === 'user';
-                                    const name = isUser ? m.authorName : (nameOfChar(m.authorId) || m.authorName);
+                                ) : groups.map(g => {
+                                    const head = g[0];
+                                    const isUser = head.authorId === 'user';
+                                    const ch = isUser ? null : characters.find(c => c.id === head.authorId);
+                                    const name = isUser ? head.authorName : (ch?.name || head.authorName);
+                                    const hue = (() => { let h = 0; for (let i = 0; i < head.authorId.length; i++) h = (h * 31 + head.authorId.charCodeAt(i)) % 360; return h; })();
+                                    const nameColor = isUser ? '#7dd3fc' : `hsl(${hue},72%,74%)`;
                                     return (
-                                        <div key={m.id} className="text-[12px] leading-snug">
-                                            <span className={`font-bold ${isUser ? 'text-sky-300' : 'text-amber-200/90'}`}>{name}</span>
-                                            {m.replyToName && <span className="text-white/35"> ▸ 回 {m.replyToName}</span>}
-                                            <span className="text-white/85">：{m.content}</span>
+                                        <div key={head.id} className="flex gap-2.5">
+                                            {ch?.avatar
+                                                ? <img src={ch.avatar} className="h-8 w-8 rounded-full object-cover shrink-0 mt-0.5" alt="" />
+                                                : <div className="h-8 w-8 rounded-full shrink-0 mt-0.5 flex items-center justify-center text-[12px] font-bold text-white/95" style={{ background: isUser ? 'linear-gradient(135deg,#38bdf8,#6366f1)' : `hsl(${hue},45%,42%)` }}>{name.slice(0, 1)}</div>}
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className="text-[12px] font-bold" style={{ color: nameColor }}>{name}</span>
+                                                    <span className="text-[8.5px] text-white/30 tabular-nums">{new Date(head.createdAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                                <div className="mt-0.5 space-y-0.5">
+                                                    {g.map(m => (
+                                                        <div key={m.id} className="text-[12.5px] leading-relaxed text-white/85">
+                                                            {m.replyToName && <span className="text-[10px] text-sky-200/45 mr-1">↩{m.replyToName}</span>}
+                                                            {m.content}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
                                     );
                                 })}

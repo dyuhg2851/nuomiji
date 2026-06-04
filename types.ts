@@ -714,6 +714,8 @@ export interface VRCardMeta {
     // --- 留言簿专用 ---
     /** 本次发到留言簿的话（保留正文） */
     boardPost?: string;
+    /** 本次发到留言簿的所有发言（原样，含回复对象），用于同步进 1v1 聊天/记忆 */
+    boardPosts?: { content: string; replyToName?: string }[];
     /** 回复了谁 */
     boardReplyToName?: string;
     /** 这条卡片是"用户在留言簿发言"广播给该 char 的 */

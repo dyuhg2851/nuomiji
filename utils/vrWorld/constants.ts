@@ -70,8 +70,8 @@ export const VR_ROOMS: VRRoomDef[] = [
     },
     {
         id: 'cafe',
-        name: '咖啡馆',
-        blurb: '飘着咖啡香的角落，据说很快就会开门迎客。',
+        name: '糯米鸡研发中心',
+        blurb: '蒸笼热气腾腾，据说很快就会端出点什么。',
         affordance: '',
         emoji: '',
         implemented: false,

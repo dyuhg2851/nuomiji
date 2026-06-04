@@ -328,12 +328,14 @@ export async function runVRSession(deps: VRSessionDeps): Promise<VRSessionResult
             for (const msg of board.messages) { id2.set(msg.id.slice(-4), msg.id); id2name.set(msg.id, msg.authorName); }
             let firstPost: string | undefined;
             let firstReplyName: string | undefined;
+            const mine: { content: string; replyToName?: string }[] = [];
             for (const p of parsed.posts) {
                 const replyToId = p.replyLabel ? id2.get(p.replyLabel) : undefined;
                 const replyToName = replyToId ? id2name.get(replyToId) : undefined;
                 const msg: VRGuestbookMessage = { id: genId('gb'), authorId: char.id, authorName: char.name, content: p.content, replyToId, replyToName, createdAt: Date.now() };
                 board.messages.push(msg);
                 id2.set(msg.id.slice(-4), msg.id); id2name.set(msg.id, char.name);
+                mine.push({ content: p.content, replyToName });
                 if (firstPost === undefined) { firstPost = p.content; firstReplyName = replyToName; }
             }
             board.messages = board.messages.slice(-200);
@@ -345,9 +347,9 @@ export async function runVRSession(deps: VRSessionDeps): Promise<VRSessionResult
                 ? (firstReplyName ? `在留言簿回了 ${firstReplyName} 一句` : `在留言簿发了条帖子`)
                 : '在留言簿逛了逛');
             cardLines = [`「彼方 · ${room.name}」`, nameLine(char.name, activity)];
-            const postEx = firstPost ? (firstPost.length > 70 ? firstPost.slice(0, 70) + '…' : firstPost) : undefined;
-            if (postEx) cardLines.push(firstReplyName ? `回复 ${firstReplyName}：${postEx}` : `留言：${postEx}`);
-            meta = { vrCard: true, room: 'guestbook', activity, boardPost: firstPost, boardReplyToName: firstReplyName };
+            // 把角色在留言墙上说的每句话原样带进 1v1 聊天/记忆（不再只截一句小总结）
+            for (const m of mine) cardLines.push(m.replyToName ? `回复 ${m.replyToName}：${m.content}` : `留言：${m.content}`);
+            meta = { vrCard: true, room: 'guestbook', activity, boardPost: firstPost, boardReplyToName: firstReplyName, boardPosts: mine };
         } else if (room.id === 'gym') {
             // === 娱乐室：纯造谣行为 ===
             const parsed = parseGymOutput(aiContent);
