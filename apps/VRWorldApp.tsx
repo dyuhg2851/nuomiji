@@ -18,6 +18,10 @@ import { safeResponseJson } from '../utils/safeApi';
 
 const genLocalId = (p: string) => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 
+// 顶部安全区避让：全屏浮层（fixed inset-0）会越过外壳的 safe-area padding 直达屏幕顶端，
+// 需自行避开刘海 + 状态栏（系统时间/电量条约 2rem 高），否则退出键会和 iOS 顶部打架。
+const VR_OVERLAY_TOP = 'calc(env(safe-area-inset-top) + 2rem)';
+
 // ── 邮局寄信「日额度」：纯前端软计数，给后端减负（不追求精准，清数据会重置）──
 // 从寄出第一封开始计时，24h 一个滚动窗口，窗口内最多 PO_DAILY_LIMIT 封，过期自动归零。
 const PO_DAILY_LIMIT = 15;
@@ -270,8 +274,8 @@ const VRWorldApp: React.FC = () => {
             <div className="pointer-events-none absolute inset-0"
                 style={{ backgroundImage: 'radial-gradient(1px 1px at 18% 28%, rgba(255,255,255,.7), transparent), radial-gradient(1px 1px at 68% 18%, rgba(200,215,255,.6), transparent), radial-gradient(1px 1px at 82% 58%, rgba(230,220,255,.5), transparent), radial-gradient(1px 1px at 38% 72%, rgba(210,225,255,.5), transparent), radial-gradient(1.5px 1.5px at 52% 42%, rgba(255,255,255,.55), transparent)', animation: 'vrtwinkle 7s ease-in-out infinite' }} />
 
-            {/* 顶栏 */}
-            <div className="relative flex items-center gap-2.5 px-5 pt-4 pb-2.5 shrink-0 z-10">
+            {/* 顶栏 —— pt-8 让退出键避开顶部状态栏（时间/电量），不再打架 */}
+            <div className="relative flex items-center gap-2.5 px-5 pt-8 pb-2.5 shrink-0 z-10">
                 <button onClick={closeApp} className="p-1.5 -ml-1.5 rounded-full text-white/65 active:bg-white/10"><ArrowLeft size={21} weight="regular" /></button>
                 <div className="flex items-center gap-2">
                     <Planet size={17} weight="light" className="text-indigo-100/90" style={{ filter: 'drop-shadow(0 0 7px rgba(165,185,255,.7))' }} />
@@ -715,7 +719,7 @@ const HelpModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
     );
     return (
-        <div className="fixed inset-0 z-[80] flex flex-col" style={{ background: 'linear-gradient(180deg,#0c0a1c 0%,#080612 100%)' }}>
+        <div className="fixed inset-0 z-[80] flex flex-col" style={{ background: 'linear-gradient(180deg,#0c0a1c 0%,#080612 100%)', paddingTop: VR_OVERLAY_TOP }}>
             <div className="flex items-center gap-2.5 px-5 pt-4 pb-3 shrink-0 border-b border-white/8">
                 <span className="text-[15px] tracking-[0.2em] text-white/95" style={{ fontFamily: `'Noto Serif SC',serif` }}>彼方 · 玩法说明</span>
                 <button onClick={onClose} className="ml-auto p-1.5 rounded-full text-white/60 active:bg-white/10"><X size={19} /></button>
@@ -1411,7 +1415,7 @@ const RoomScene: React.FC<{
     }, []);
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col">
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ paddingTop: VR_OVERLAY_TOP, background: '#05060d' }}>
             <VRStyleTag />
             <div className="relative flex-1 overflow-hidden">
                 <RoomBackground roomId={roomId} />
@@ -1775,7 +1779,7 @@ const ReaderModal: React.FC<{ novel: VRWorldNovel; characters: CharacterProfile[
         : novel.segments.slice(winStart, winEnd);
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: theme.bg }}>
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: theme.bg, paddingTop: VR_OVERLAY_TOP }}>
             {/* 顶栏 */}
             <div className="flex items-center gap-2 px-4 pt-3 pb-2 shrink-0" style={{ borderBottom: `1px solid ${theme.accent}22` }}>
                 <button onClick={onClose} className="p-1.5 -ml-1.5 rounded-full active:bg-black/5" style={{ color: theme.text }}><X size={20} weight="bold" /></button>
@@ -2028,7 +2032,7 @@ const ChibiEditor: React.FC<{
 
     if (creating) {
         return (
-            <div className="fixed inset-0 z-[60] flex flex-col bg-black">
+            <div className="fixed inset-0 z-[60] flex flex-col bg-black" style={{ paddingTop: VR_OVERLAY_TOP }}>
                 <div className="flex items-center gap-2 px-4 py-2 shrink-0 text-white" style={{ background: 'linear-gradient(180deg,#161c2e 0%,#0c1019 100%)' }}>
                     <button onClick={() => existing?.img ? setCreating(false) : onClose()} className="p-1.5 -ml-1.5 rounded-full active:bg-white/10"><CaretLeft size={20} weight="bold" /></button>
                     <span className="text-[14px] font-bold">捏 {char.name} 的小人</span>
