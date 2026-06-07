@@ -5,6 +5,7 @@ import {
     UploadSimple, PencilSimple, FlipHorizontal, CaretLeft, Sparkle,
     CircleNotch, TextAa, Palette, Pause, MusicNotes, Queue, Question,
 } from '@phosphor-icons/react';
+import { IslandButton, IslandInput, IslandSelect, IslandModal } from '../components/island/IslandUI';
 import { CreatorIframe, type ChibiResult } from '../components/Like520Event';
 import { useMusic, type Song } from '../context/MusicContext';
 import { DB } from '../utils/db';
@@ -1576,43 +1577,48 @@ const GardenPanel: React.FC<{ addToast?: (m: string, t?: any) => void; character
                 </div>
             </div>
 
-            {/* 底部：种一株 */}
+            {/* 底部：种一株（自建 Island Button，岛屿风 3D 触感阴影） */}
             <div className="absolute left-0 right-0 z-30 flex items-center justify-center px-3 py-2.5"
                 style={{ bottom: vrBottomPad('0px'), background: 'linear-gradient(0deg,rgba(30,22,10,.9),transparent)' }}>
-                <button onClick={() => !full && setPicking(true)} disabled={full}
-                    className="h-9 px-5 rounded-full text-[12px] font-semibold text-amber-950 disabled:opacity-45 shrink-0 flex items-center gap-1.5"
-                    style={{ background: 'linear-gradient(120deg,#f7d98a,#eebd5c)' }}>
-                    <Plus size={14} weight="bold" /> {full ? '花圃满了' : '种一株'}
-                </button>
+                <IslandButton type="primary" disabled={full} icon={<Plus size={14} weight="bold" />} onClick={() => setPicking(true)}>
+                    {full ? '花圃满了' : '种一株'}
+                </IslandButton>
             </div>
 
-            {/* 种花弹窗：选品种 + 寄语 */}
-            {picking && (
-                <div className="fixed inset-0 z-[300] flex items-end justify-center bg-black/55 backdrop-blur-sm" onClick={() => setPicking(false)}>
-                    <div className="w-full max-w-md rounded-t-2xl p-4" onClick={e => e.stopPropagation()}
-                        style={{ background: 'linear-gradient(180deg,#241b10,#15100a)', border: '1px solid rgba(220,190,120,.28)', paddingBottom: vrBottomPad('1rem') }}>
-                        <div className="text-[13px] font-semibold text-amber-100 mb-2.5" style={{ fontFamily: `'Noto Serif SC',serif` }}>种一株花</div>
-                        <div className="grid grid-cols-4 gap-2 mb-3">
-                            {GARDEN_SPECIES.map(s => (
-                                <button key={s.key} onClick={() => setSpeciesKey(s.key)}
-                                    className="rounded-xl py-2 flex flex-col items-center gap-0.5 active:scale-95 transition-transform"
-                                    style={{ background: speciesKey === s.key ? s.color + '33' : 'rgba(255,255,255,.05)', border: `1px solid ${speciesKey === s.key ? s.color + 'aa' : 'rgba(255,255,255,.1)'}` }}>
-                                    <span className="text-[20px] leading-none">{s.emoji}</span>
-                                    <span className="text-[9px] text-amber-50/85">{s.name}</span>
-                                </button>
-                            ))}
-                        </div>
-                        <input value={wish} onChange={e => setWish(e.target.value)} maxLength={40}
-                            placeholder="种下时许个愿 / 写句寄语（可留空）"
-                            className="w-full rounded-lg bg-black/25 px-3 py-2 text-[12px] text-amber-50 placeholder-white/30 outline-none mb-3"
-                            style={{ border: '1px solid rgba(220,190,120,.2)' }} />
-                        <div className="flex gap-2">
-                            <button onClick={() => setPicking(false)} className="flex-1 rounded-full py-2 text-[12.5px] text-white/70" style={{ border: '1px solid rgba(255,255,255,.16)' }}>取消</button>
-                            <button onClick={plantSeed} className="flex-1 rounded-full py-2 text-[12.5px] font-semibold text-amber-950" style={{ background: 'linear-gradient(120deg,#f7d98a,#eebd5c)' }}>种下</button>
-                        </div>
+            {/* 种花弹窗：自建 Island Modal（羊皮纸缎带标题）+ Select + Input + Button */}
+            <IslandModal
+                open={picking}
+                title="种一株花"
+                width={340}
+                onClose={() => setPicking(false)}
+                footer={(
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <IslandButton onClick={() => setPicking(false)}>取消</IslandButton>
+                        <IslandButton type="primary" onClick={plantSeed}>种下</IslandButton>
+                    </div>
+                )}
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>选个品种</div>
+                        <IslandSelect
+                            value={speciesKey}
+                            onChange={setSpeciesKey}
+                            options={GARDEN_SPECIES.map(s => ({ key: s.key, label: `${s.emoji} ${s.name}` }))}
+                        />
+                    </div>
+                    <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>寄语（可留空）</div>
+                        <IslandInput
+                            value={wish}
+                            onChange={e => setWish(e.target.value)}
+                            placeholder="种下时许个愿 / 写句寄语"
+                            allowClear
+                            onClear={() => setWish('')}
+                        />
                     </div>
                 </div>
-            )}
+            </IslandModal>
 
             {/* 单株详情：成长进度 + 浇水 + 寄语 + 浇水的人 */}
             {detail && (() => {
@@ -1640,10 +1646,7 @@ const GardenPanel: React.FC<{ addToast?: (m: string, t?: any) => void; character
                             {detail.wateredBy.length > 0 && (
                                 <p className="text-[9.5px] text-amber-100/45 mb-3">浇过水的人：{Array.from(new Set(detail.wateredBy.map(w => w.name))).join('、')}</p>
                             )}
-                            <button onClick={() => water(detail)} className="w-full rounded-full py-2.5 text-[13px] font-semibold text-amber-950 flex items-center justify-center gap-1.5"
-                                style={{ background: 'linear-gradient(120deg,#bfe7ff,#8fd0f0)' }}>
-                                💧 浇一次水
-                            </button>
+                            <IslandButton type="primary" block onClick={() => water(detail)}>💧 浇一次水</IslandButton>
                         </div>
                     </div>
                 );
