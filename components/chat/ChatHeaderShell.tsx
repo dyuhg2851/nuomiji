@@ -371,6 +371,14 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
 
     return (
         <div className={`${headerDensityClass} flex ${useCenteredLayout ? 'items-center' : 'items-end'} shrink-0 z-30 sticky top-0 relative ${headerToneClass}`} style={headerSafeStyle}>
+            {/* 动森彩蛋：顶栏右下角纯色松树剪影（z-[-1] 在内容之下，不挡按钮） */}
+            {acnh && !selectionMode && (
+                <svg viewBox="0 0 140 46" className="absolute right-2 bottom-[5px] h-9 w-auto pointer-events-none" style={{ zIndex: -1, opacity: 0.9 }} fill="#76b48f" aria-hidden>
+                    <rect x="98" y="40" width="4" height="6" /><path d="M84 41 L116 41 L100 24Z" /><path d="M88 32 L112 32 L100 18Z" /><path d="M91 24 L109 24 L100 10Z" />
+                    <rect x="72" y="40" width="4" height="6" /><path d="M62 41 L86 41 L74 27Z" /><path d="M65 33 L83 33 L74 21Z" />
+                    <rect x="122" y="41" width="3" height="5" /><path d="M114 42 L134 42 L124 30Z" /><path d="M117 35 L131 35 L124 24Z" />
+                </svg>
+            )}
             {selectionMode ? (
                 <div className="flex items-center justify-between w-full">
                     <button onClick={onCancelSelection} className={`text-sm font-bold px-2 py-1 ${secondaryTextClass}`}>取消</button>
