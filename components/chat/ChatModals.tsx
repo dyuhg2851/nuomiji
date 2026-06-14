@@ -8,6 +8,7 @@ import EmotionSettingsPanel from './EmotionSettingsPanel';
 interface ChatModalsProps {
     modalType: string;
     setModalType: (v: any) => void;
+    menuPos?: { x: number; y: number } | null;
     // Data Props
     transferAmt: string;
     setTransferAmt: (v: string) => void;
@@ -118,7 +119,7 @@ interface ChatModalsProps {
 }
 
 const ChatModals: React.FC<ChatModalsProps> = ({
-    modalType, setModalType,
+    modalType, setModalType, menuPos,
     transferAmt, setTransferAmt,
     emojiImportText, setEmojiImportText,
     settingsContextLimit, setSettingsContextLimit,
@@ -709,40 +710,51 @@ const ChatModals: React.FC<ChatModalsProps> = ({
 
             {/* Message Options Menu Bar */}
             {modalType === 'message-options' && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-fade-in">
-                    <div className="absolute inset-0 bg-black/20" onClick={() => setModalType('none')} />
-                    <div className="relative bg-white rounded-[24px] shadow-xl border border-slate-200/50 px-2 py-2 flex items-center gap-1 animate-slide-up">
-                        <button 
-                            onClick={onEnterSelectionMode} 
-                            className="px-4 py-2 text-slate-700 font-medium rounded-xl active:bg-slate-100 transition-colors text-sm"
+                <div className="fixed inset-0 z-[100]" onClick={() => setModalType('none')}>
+                    <div
+                        className="absolute"
+                        style={{
+                            left: menuPos ? Math.min(menuPos.x, window.innerWidth - 320) : '50%',
+                            top: menuPos ? Math.max(8, menuPos.y - 48) : '50%',
+                            transform: menuPos ? 'none' : 'translate(-50%, -50%)',
+                        }}
+                    >
+                        <div
+                            className="bg-white/95 backdrop-blur-md shadow-xl border border-slate-200/50 rounded-[28px] px-1.5 py-1 flex items-center gap-0.5 animate-slide-up"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            多选
-                        </button>
-                        <div className="w-[1px] h-5 bg-slate-300" />
-                        <button 
-                            onClick={onReplyMessage} 
-                            className="px-4 py-2 text-slate-700 font-medium rounded-xl active:bg-slate-100 transition-colors text-sm"
-                        >
-                            引用
-                        </button>
-                        <div className="w-[1px] h-5 bg-slate-300" />
-                        {selectedMessage?.type === 'text' && (
-                            <>
-                                <button 
-                                    onClick={onEditMessageStart} 
-                                    className="px-4 py-2 text-slate-700 font-medium rounded-xl active:bg-slate-100 transition-colors text-sm"
-                                >
-                                    编辑
-                                </button>
-                                <div className="w-[1px] h-5 bg-slate-300" />
-                            </>
-                        )}
-                        <button 
-                            onClick={onDeleteMessage} 
-                            className="px-4 py-2 text-red-500 font-medium rounded-xl active:bg-red-50 transition-colors text-sm"
-                        >
-                            删除
-                        </button>
+                            <button
+                                onClick={onEnterSelectionMode}
+                                className="px-3 py-1.5 text-slate-700 font-medium rounded-[20px] active:bg-slate-100 transition-colors text-[11px]"
+                            >
+                                多选
+                            </button>
+                            <div className="w-[1px] h-4 bg-slate-300" />
+                            <button
+                                onClick={onReplyMessage}
+                                className="px-3 py-1.5 text-slate-700 font-medium rounded-[20px] active:bg-slate-100 transition-colors text-[11px]"
+                            >
+                                引用
+                            </button>
+                            <div className="w-[1px] h-4 bg-slate-300" />
+                            {selectedMessage?.type === 'text' && (
+                                <>
+                                    <button
+                                        onClick={onEditMessageStart}
+                                        className="px-3 py-1.5 text-slate-700 font-medium rounded-[20px] active:bg-slate-100 transition-colors text-[11px]"
+                                    >
+                                        编辑
+                                    </button>
+                                    <div className="w-[1px] h-4 bg-slate-300" />
+                                </>
+                            )}
+                            <button
+                                onClick={onDeleteMessage}
+                                className="px-3 py-1.5 text-red-500 font-medium rounded-[20px] active:bg-red-50 transition-colors text-[11px]"
+                            >
+                                删除
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

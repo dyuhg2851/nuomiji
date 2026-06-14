@@ -92,6 +92,7 @@ const Chat: React.FC = () => {
     const [preserveContext, setPreserveContext] = useState(true);
     const [isVectorizing, setIsVectorizing] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+    const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
     const [selectedEmoji, setSelectedEmoji] = useState<Emoji | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<EmojiCategory | null>(null); // For deletion modal
     const [editContent, setEditContent] = useState('');
@@ -1678,8 +1679,9 @@ const Chat: React.FC = () => {
     }, []);
 
     // Memoized callbacks for MessageItem to avoid busting React.memo
-    const handleMessageLongPress = useCallback((msg: Message) => {
+    const handleMessageLongPress = useCallback((msg: Message, x?: number, y?: number) => {
         setSelectedMessage(msg);
+        setMenuPos(x !== undefined ? { x, y } : null);
         setModalType('message-options');
     }, []);
 
@@ -2138,6 +2140,7 @@ const Chat: React.FC = () => {
 
              <ChatModals
                 modalType={modalType} setModalType={setModalType}
+                menuPos={menuPos}
                 transferAmt={transferAmt} setTransferAmt={setTransferAmt}
                 emojiImportText={emojiImportText} setEmojiImportText={setEmojiImportText}
                 settingsContextLimit={settingsContextLimit} setSettingsContextLimit={setSettingsContextLimit}

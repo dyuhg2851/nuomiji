@@ -409,8 +409,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                             style={{ height: 'auto' }} 
                         />
                         {/* 装饰按钮 */}
-                        <button className={`p-1 shrink-0 opacity-50`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 48 48">
+                        <button className={`p-1.5 shrink-0 opacity-50`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 48 48">
                                 <g fill="none" stroke="#999999" strokeLinejoin="round" strokeWidth="4">
                                     <rect width="14" height="27" x="17" y="4" rx="7"/>
                                     <path strokeLinecap="round" d="M9 23c0 8.284 6.716 15 15 15s15-6.716 15-15M24 38v6"/>

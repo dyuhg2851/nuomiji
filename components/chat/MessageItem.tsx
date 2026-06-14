@@ -646,7 +646,7 @@ interface MessageItemProps {
     charAvatar: string;
     charName: string;
     userAvatar: string;
-    onLongPress: (m: Message) => void;
+    onLongPress: (m: Message, clientX?: number, clientY?: number) => void;
     selectionMode: boolean;
     isSelected: boolean;
     onToggleSelect: (id: number) => void;
@@ -741,7 +741,7 @@ const MessageItem = React.memo(({
         
         longPressTimer.current = setTimeout(() => {
             if (!selectionMode) {
-                onLongPress(m);
+                onLongPress(m, startPos.current.x, startPos.current.y);
             }
         }, 600);
     };
@@ -795,7 +795,7 @@ const MessageItem = React.memo(({
         onTouchCancel: handleTouchEnd, // Handle system interruptions
         onContextMenu: (e: React.MouseEvent) => {
             e.preventDefault();
-            if (!selectionMode) onLongPress(m);
+            if (!selectionMode) onLongPress(m, e.clientX, e.clientY);
         },
         onClick: handleClick
     };
