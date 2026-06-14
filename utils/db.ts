@@ -31,6 +31,7 @@ const STORE_GROUPS = 'groups';
 const STORE_JOURNAL_STICKERS = 'journal_stickers';
 const STORE_COURSES = 'courses';
 const STORE_WORLDBOOKS = 'worldbooks'; 
+const STORE_NOVELS = 'novels';
 const STORE_BANK_TX = 'bank_transactions';
 const STORE_BANK_DATA = 'bank_data';
 const STORE_XHS_ACTIVITIES = 'xhs_activities';

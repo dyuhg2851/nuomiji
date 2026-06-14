@@ -721,10 +721,10 @@ const MessageItem = React.memo(({
     const isSystem = m.role === 'system';
     const spacingClass = messageSpacing === 'compact' ? (isLastInGroup ? 'mb-3' : 'mb-0.5') : messageSpacing === 'spacious' ? (isLastInGroup ? 'mb-8' : 'mb-2.5') : (isLastInGroup ? 'mb-6' : 'mb-1.5');
     const marginBottom = spacingClass;
-    const avatarSizeClass = avatarSize === 'small' ? 'w-7 h-7' : avatarSize === 'large' ? 'w-12 h-12' : 'w-9 h-9';
-    const avatarRadiusClass = avatarShape === 'square' ? 'rounded-sm' : avatarShape === 'rounded' ? 'rounded-xl' : 'rounded-full';
-    const avatarSizePx = avatarSize === 'small' ? 28 : avatarSize === 'large' ? 48 : 36;
-    const shouldShowAvatar = avatarMode === 'every_message' || isLastInGroup;
+    const avatarSizeClass = avatarSize === 'small' ? 'w-7 h-7' : avatarSize === 'large' ? 'w-12 h-12' : 'w-[40px] h-[40px]';
+    const avatarRadiusClass = 'rounded-[4px]';
+    const avatarSizePx = avatarSize === 'small' ? 28 : avatarSize === 'large' ? 48 : 40;
+    const shouldShowAvatar = true;
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const startPos = useRef({ x: 0, y: 0 }); // Track touch start position
 
@@ -1108,7 +1108,7 @@ const MessageItem = React.memo(({
                     Added min-w-0 to prevent flexbox overflow issues.
                     Added explicit margins to clear absolute avatars.
                 */}
-                <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[72%] min-w-0 ${!isUser ? 'ml-12' : 'mr-12'}`} {...interactionProps}>
+                <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[72%] min-w-0 ${!isUser ? 'ml-14' : 'mr-14'}`} {...interactionProps}>
                     {!isUser && m.metadata?.thinkingChain && (
                         <div className={`relative w-full ${selectionMode ? 'pl-7' : ''}`}>
                             {selectionMode && onToggleThinkingSelect && (
@@ -1939,14 +1939,11 @@ const MessageItem = React.memo(({
 
     // Container style (BackgroundColor + Opacity) with bubble variant
     const containerStyle: React.CSSProperties = {
-        backgroundColor: bubbleVariant === 'outline' ? 'transparent' : styleConfig.backgroundColor,
-        opacity: styleConfig.opacity,
-        ...borderObj,
-        ...(bubbleVariant === 'outline' ? { border: `2px solid ${styleConfig.backgroundColor}`, boxShadow: 'none' } : {}),
-        ...(bubbleVariant === 'shadow' ? { boxShadow: '0 4px 12px rgba(0,0,0,0.12)' } : {}),
-        ...(bubbleVariant === 'flat' ? { boxShadow: 'none' } : {}),
-        ...(bubbleVariant === 'wechat' ? { boxShadow: 'none', border: '1px solid rgba(15,23,42,0.05)' } : {}),
-        ...(bubbleVariant === 'ios' ? { boxShadow: '0 10px 24px rgba(148,163,184,0.16)', border: '1px solid rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)' } : {}),
+        backgroundColor: isUser ? '#A9EA7A' : '#FFFFFF',
+        opacity: 1,
+        borderRadius: '4px',
+        boxShadow: isUser ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
+        border: isUser ? 'none' : '1px solid rgba(0,0,0,0.05)',
     };
 
     // --- Inline formatting parser: code → bold → italic → plain ---
@@ -2087,10 +2084,19 @@ const MessageItem = React.memo(({
     const isVoiceOnlyMsg = !displayContent && hasVoiceContent && !isUser && m.type === 'text';
 
     return commonLayout(
-        <div className={isVoiceOnlyMsg
-            ? 'relative animate-fade-in'
-            : `relative ${bubbleVariant === 'flat' || bubbleVariant === 'outline' || bubbleVariant === 'wechat' ? '' : 'shadow-sm '}px-5 py-3 animate-fade-in ${bubbleVariant === 'outline' ? '' : 'border border-black/5 '}active:scale-[0.98] transition-transform overflow-visible ${isUser ? 'sully-bubble-user' : 'sully-bubble-ai'}`}
+        <div className={`relative px-4 py-2 animate-fade-in active:scale-[0.98] transition-transform overflow-visible ${isUser ? 'sully-bubble-user' : 'sully-bubble-ai'}`}
             style={isVoiceOnlyMsg ? undefined : containerStyle}>
+
+            {/* Tail Triangle */}
+            <div
+                className="absolute top-1/2 -translate-y-1/2 w-0 h-0"
+                style={{
+                    [isUser ? 'right' : 'left']: '-7px',
+                    borderTop: '6px solid transparent',
+                    borderBottom: '6px solid transparent',
+                    [isUser ? 'borderLeft' : 'borderRight']: `7px solid ${isUser ? '#A9EA7A' : '#FFFFFF'}`,
+                }}
+            />
 
             {/* Layer 1: Background Image with Independent Opacity */}
             {styleConfig.backgroundImage && (
@@ -2128,7 +2134,7 @@ const MessageItem = React.memo(({
 
             {/* Layer 4: Text Content — shown when there's visible text after stripping voice tags */}
             {displayContent && (
-            <div className="relative z-10 text-[15px] leading-relaxed whitespace-pre-wrap break-all select-text" style={{ color: styleConfig.textColor }}>
+            <div className="relative z-10 text-[15px] leading-relaxed whitespace-pre-wrap break-all select-text" style={{ color: '#000000' }}>
                 {renderContent(displayContent)}
             </div>
             )}

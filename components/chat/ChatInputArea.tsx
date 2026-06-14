@@ -263,15 +263,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
 
     const isDiscordStyle = inputStyle === 'discord';
     const isPixelStyle = inputStyle === 'pixel' || chromeStyle === 'pixel';
-    const shellClass = acnh
-        ? 'bg-[#a8d6bb] border-t-[3px] border-[#86c29a] shadow-[0_-3px_0_rgba(110,160,130,0.18)]'
-        : chromeStyle === 'pixel'
-        ? 'bg-[#eadfce] border-t-[3px] border-[#8f674a] shadow-[0_-4px_0_rgba(123,90,64,0.15)]'
-        : chromeStyle === 'flat'
-          ? 'bg-white border-t border-slate-200 shadow-none'
-          : chromeStyle === 'floating'
-            ? 'bg-white/80 backdrop-blur-2xl border-t border-white/60 shadow-[0_-12px_30px_rgba(148,163,184,0.18)]'
-            : 'bg-white/90 backdrop-blur-2xl border-t border-slate-200/50 shadow-[0_-5px_15px_rgba(0,0,0,0.02)]';
+    const shellClass = 'bg-[#f5f5f5] border-t border-slate-200/50 shadow-[0_-2px_10px_rgba(0,0,0,0.02)]';
     const actionButtonClass = acnh
         ? 'w-11 h-11 shrink-0 rounded-full bg-[#4cb89e] flex items-center justify-center text-white hover:bg-[#43ad93] transition-colors shadow-sm'
         : isPixelStyle
@@ -393,11 +385,14 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                     </button>
                 </div>
             ) : (
-                <div className="p-3 px-4 flex gap-3 items-end relative">
-                    <button onClick={() => setShowPanel(showPanel === 'actions' ? 'none' : 'actions')} className={actionButtonClass}>
-                        <Plus className="w-6 h-6" weight="bold" />
+                <div className="p-2 px-4 flex gap-2 items-center relative">
+                    {/* 语音按钮 */}
+                    <button className={`p-3 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+                            <path fill="#000000" fillRule="evenodd" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m0-1.2a8.8 8.8 0 1 0 0-17.6a8.8 8.8 0 0 0 0 17.6m.308-3.992A6.77 6.77 0 0 0 14.3 12c0-1.83-.724-3.54-1.992-4.808l.849-.849A7.98 7.98 0 0 1 15.5 12c0 2.21-.895 4.21-2.343 5.657zm-1.98-1.98A3.98 3.98 0 0 0 11.5 12a3.98 3.98 0 0 0-1.172-2.828l.849-.849A5.18 5.18 0 0 1 12.7 12a5.18 5.18 0 0 1-1.523 3.677zm-1.13-1.13L7.5 12l1.697-1.697c.434.434.703 1.034.703 1.697s-.269 1.263-.703 1.697z"/>
+                        </svg>
                     </button>
-                    <div className={`flex-1 min-w-0 flex items-center px-1 transition-all ${useIOSStandaloneInputFix ? 'overflow-visible' : 'overflow-hidden'} ${inputWrapClass} ${isPixelStyle ? 'focus-within:bg-[#fff7ed]' : isDiscordStyle ? 'focus-within:bg-slate-800 focus-within:border-white/20' : 'border border-transparent focus-within:bg-white focus-within:border-primary/30'}`}>
+                    <div className={`flex-1 min-w-0 flex items-center px-2 transition-all bg-white rounded-[4px] border border-slate-200/50 ${useIOSStandaloneInputFix ? 'overflow-visible' : 'overflow-hidden'}`}>
                         <textarea 
                             ref={textareaRef}
                             rows={1} 
@@ -409,24 +404,40 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                             enterKeyHint="send"
                             autoCorrect="on"
                             autoCapitalize="sentences"
-                            className={`flex-1 min-w-0 bg-transparent px-4 py-3 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[15px]'} resize-none max-h-24 no-scrollbar ${isDiscordStyle ? 'text-white placeholder:text-slate-500' : isPixelStyle ? 'text-[#6a4c35] placeholder:text-[#9b8677]' : ''}`} 
+                            className={`flex-1 min-w-0 bg-transparent px-3 py-2 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[14px]'} resize-none max-h-24 no-scrollbar text-slate-700 placeholder:text-slate-400`} 
                             placeholder="Message..." 
                             style={{ height: 'auto' }} 
                         />
-                        <button onClick={() => setShowPanel(showPanel === 'emojis' ? 'none' : 'emojis')} className={`p-2 shrink-0 ${isDiscordStyle ? 'text-slate-400 hover:text-sky-300' : isPixelStyle ? 'text-[#8f674a] hover:text-[#a16207]' : 'text-slate-400 hover:text-primary'}`}>
-                            <Smiley className="w-6 h-6" weight="regular" />
+                        {/* 装饰按钮 */}
+                        <button className={`p-1 shrink-0 opacity-50`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 48 48">
+                                <g fill="none" stroke="#999999" strokeLinejoin="round" strokeWidth="4">
+                                    <rect width="14" height="27" x="17" y="4" rx="7"/>
+                                    <path strokeLinecap="round" d="M9 23c0 8.284 6.716 15 15 15s15-6.716 15-15M24 38v6"/>
+                                </g>
+                            </svg>
                         </button>
                     </div>
-                    <button 
-                        onClick={onSend} 
-                        disabled={!input.trim()} 
-                        className={`${sendButtonClass} ${input.trim() ? '' : 'opacity-45 shadow-none'}`}
-                    >
-                        {sendButtonStyle === 'pill' ? <span>发送</span> : <PaperPlaneTilt className="w-5 h-5" weight="fill" />}
+                    {/* 表情按钮 */}
+                    <button onClick={() => setShowPanel(showPanel === 'emojis' ? 'none' : 'emojis')} className={`p-3 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 21 21">
+                            <g fill="none" fillRule="evenodd" transform="translate(2 2)">
+                                <circle cx="8.5" cy="8.5" r="8" stroke="#000000" strokeLinecap="round" strokeLinejoin="round"/>
+                                <circle cx="6" cy="6" r="1" fill="#000000"/>
+                                <circle cx="11" cy="6" r="1" fill="#000000"/>
+                                <path stroke="#000000" strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5q1 3 4 3t4-3z"/>
+                            </g>
+                        </svg>
+                    </button>
+                    {/* 加号按钮 */}
+                    <button onClick={() => setShowPanel(showPanel === 'actions' ? 'none' : 'actions')} className={`p-3 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+                            <path fill="#000000" d="M7 12h4V8h1v4h4v1h-4v4h-1v-4H7zm4.5-9a9.5 9.5 0 0 1 9.5 9.5a9.5 9.5 0 0 1-9.5 9.5A9.5 9.5 0 0 1 2 12.5A9.5 9.5 0 0 1 11.5 3m0 1A8.5 8.5 0 0 0 3 12.5a8.5 8.5 0 0 0 8.5 8.5a8.5 8.5 0 0 0 8.5-8.5A8.5 8.5 0 0 0 11.5 4"/>
+                        </svg>
                     </button>
 
                     {emojiSelectionMode && (
-                        <div className={`absolute inset-0 z-10 ${isPixelStyle ? 'bg-[#eadfce]/70 backdrop-blur-[2px]' : isDiscordStyle ? 'bg-slate-950/70 backdrop-blur-[2px]' : 'bg-white/60 backdrop-blur-[2px]'}`} />
+                        <div className={`absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px]`} />
                     )}
                 </div>
             )}

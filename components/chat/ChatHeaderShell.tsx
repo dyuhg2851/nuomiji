@@ -194,26 +194,8 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
         : { color: buff.color || '#db2777', borderColor: `${buff.color || '#db2777'}40`, background: `${buff.color || '#db2777'}10` };
 
     const headerToneClass =
-        acnh
-          ? 'bg-[#a8d6bb] border-b-[3px] border-[#86c29a] shadow-[0_3px_0_rgba(110,160,130,0.22)]'
-          :
-        headerStyle === 'gradient'
-            ? 'bg-gradient-to-r from-primary/20 via-primary/10 to-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm'
-            : headerStyle === 'minimal'
-              ? 'bg-white/95 backdrop-blur-md border-b border-slate-200/50 shadow-sm'
-              : headerStyle === 'wechat'
-                ? 'bg-[#f7f7f7]/95 backdrop-blur-md border-b border-black/5 shadow-none'
-                : headerStyle === 'telegram'
-                  ? 'bg-white/85 backdrop-blur-xl border-b border-sky-100 shadow-sm'
-                  : headerStyle === 'discord'
-                    ? 'bg-slate-900/95 backdrop-blur-xl border-b border-white/10 shadow-[0_10px_30px_rgba(15,23,42,0.35)]'
-                    : headerStyle === 'pixel'
-                      ? 'bg-[#c99872] border-b-[3px] border-[#7b5a40] shadow-[0_4px_0_rgba(123,90,64,0.25)]'
-                      : chromeStyle === 'flat'
-                        ? 'bg-white border-b border-slate-200 shadow-none'
-                        : chromeStyle === 'floating'
-                          ? 'bg-white/85 backdrop-blur-xl border-b border-white/70 shadow-sm'
-                          : 'bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm';
+        // 统一使用灰色背景 f5f5f5，顶部不留白，铺满整个头部区域
+        'bg-[#f5f5f5] border-b border-slate-200/60 shadow-sm';
     const headerBaseHeight = headerDensity === 'compact' ? '5rem' : headerDensity === 'airy' ? '7rem' : '6rem';
     // 两种对齐都用对称 py，让内容垂直居中（原标准布局只给 pb → 底贴、上方留白、整体不居中）。
     const headerDensityClass = headerDensity === 'compact' ? 'px-4 py-2' : headerDensity === 'airy' ? 'px-6 py-4' : 'px-5 py-3';
@@ -335,52 +317,22 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
 
     const renderCenteredInfo = () => (
         <div className="flex w-full min-w-0 max-w-full flex-col items-center text-center">
-            <img src={activeCharacter.avatar} className={`sully-chat-avatar w-10 h-10 object-cover shadow-sm ${avatarRadiusClass}`} alt="avatar" />
-            <div className={`sully-chat-name mt-1 font-bold ${primaryTextClass}`}>{activeCharacter.name}</div>
-            {buffs.length > 0 && (
-                <div className="mt-1 min-h-[18px] w-full">
-                    {renderBuffRow(true)}
-                </div>
-            )}
+            <div className={`sully-chat-name font-bold ${primaryTextClass}`}>{activeCharacter.name}</div>
         </div>
     );
 
     const renderStandardInfo = () => (
         <>
-            <img src={activeCharacter.avatar} className={`sully-chat-avatar w-10 h-10 object-cover shadow-sm ${avatarRadiusClass}`} alt="avatar" />
-            <div className="sully-chat-info flex-1 min-w-0 flex flex-col items-start text-left">
+            <div className="sully-chat-info flex-1 min-w-0 flex flex-col items-center text-center">
                 <div className={`sully-chat-name font-bold ${primaryTextClass}`}>{activeCharacter.name}</div>
-                <div className="sully-chat-status flex items-center gap-2 flex-wrap">
-                    {onlineStatusNode}
-                    {lastTokenUsage && (
-                        <div className={`sully-chat-token text-[9px] px-1.5 py-0.5 rounded-md font-mono border ${isDarkHeader ? 'bg-slate-800 text-slate-300 border-white/10' : isPixelHeader ? 'bg-[#fff7ed] text-[#8f674a] border-[#8f674a]/20' : 'bg-slate-100 text-slate-400 border-slate-200'}`} title={tokenBreakdown ? `prompt: ${tokenBreakdown.prompt} | completion: ${tokenBreakdown.completion} | msgs: ${tokenBreakdown.msgCount} | pass: ${tokenBreakdown.pass}` : ''}>
-                            {lastTokenUsage}
-                        </div>
-                    )}
-                    {isInstantSending && (
-                        <div className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold border animate-pulse ${isDarkHeader ? 'bg-sky-500/15 text-sky-200 border-sky-400/20' : isPixelHeader ? 'bg-[#eff6ff] text-[#1d4ed8] border-[#1d4ed8]/20' : 'bg-sky-50 text-sky-600 border-sky-200'}`}>
-                            发送中…
-                        </div>
-                    )}
-                    {isEmotionEvaluating && (
-                        <div className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold border animate-pulse ${isDarkHeader ? 'bg-violet-500/15 text-violet-200 border-violet-400/20' : isPixelHeader ? 'bg-[#fff7ed] text-[#8f674a] border-[#8f674a]/20' : 'bg-violet-50 text-violet-500 border-violet-200'}`}>
-                            情绪分析中
-                        </div>
-                    )}
-                </div>
-                {buffs.length > 0 && (
-                    <div className="mt-1 w-full">
-                        {renderBuffRow(false)}
-                    </div>
-                )}
             </div>
         </>
     );
 
     return (
         <div className="shrink-0 z-30 sticky top-0">
-        {/* safe-top spacer：透明 + backdrop-blur 跟 iOS status bar 一致自适应容器色，刘海下不再铺白带 */}
-        <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
+        {/* safe-top spacer：使用灰色背景跟头部一致，顶部不留白 */}
+        <div className="bg-[#f5f5f5]" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
         {/* header 主体：sully-chat-header 钩子 + 内容垂直居中（items-center）；safe-top 已由上面 spacer 让位 */}
         <div className={`sully-chat-header ${headerDensityClass} flex items-center relative ${headerToneClass}`} style={headerSafeStyle}>
             {/* 动森彩蛋：顶栏右下角纯色松树剪影（z-[-1] 在内容之下，不挡按钮）。塞在 header 主体内而非外层 spacer，否则会飘到刘海上 */}
@@ -418,16 +370,20 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                 </div>
             ) : (
                 <div className="flex items-center gap-3 w-full">
-                    <button onClick={onClose} className={`sully-chat-back p-2 -ml-2 ${iconButtonClass}`}>
+                    <button onClick={onClose} className={`sully-chat-back p-2 -ml-2 text-slate-800 hover:bg-slate-100 rounded-full`}>
                         <CaretLeft className="w-5 h-5" weight="bold" />
                     </button>
 
-                    <div onClick={onShowCharsPanel} className="flex-1 min-w-0 flex items-center gap-3 cursor-pointer">
+                    <div className="flex-1 min-w-0 flex items-center gap-3">
                         {renderStandardInfo()}
                     </div>
 
-                    <button onClick={onTriggerAI} className={`sully-chat-trigger p-2 ml-auto ${actionButtonClass}`} title="触发 AI">
-                        <Lightning className="w-5 h-5" weight="bold" />
+                    <button onClick={onTriggerAI} className={`sully-chat-trigger p-2 ml-auto text-slate-800 hover:bg-slate-100 rounded-full`} title="更多选项">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <circle cx="5" cy="12" r="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <circle cx="19" cy="12" r="2" />
+                        </svg>
                     </button>
                 </div>
             )}
