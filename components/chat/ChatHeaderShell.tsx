@@ -380,7 +380,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
     return (
         <div className="shrink-0 z-30 sticky top-0">
         {/* safe-top spacer：透明 + backdrop-blur 跟 iOS status bar 一致自适应容器色，刘海下不再铺白带 */}
-        <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--safe-top)' }} />
+        <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
         {/* header 主体：sully-chat-header 钩子 + 内容垂直居中（items-center）；safe-top 已由上面 spacer 让位 */}
         <div className={`sully-chat-header ${headerDensityClass} flex items-center relative ${headerToneClass}`} style={headerSafeStyle}>
             {/* 动森彩蛋：顶栏右下角纯色松树剪影（z-[-1] 在内容之下，不挡按钮）。塞在 header 主体内而非外层 spacer，否则会飘到刘海上 */}

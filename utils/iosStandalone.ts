@@ -20,6 +20,38 @@ const isTextEntryElement = (target: EventTarget | null): target is HTMLElement =
     return ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 };
 
+// 获取安全区顶部高度
+const getSafeAreaTop = (): number => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return 0;
+    
+    // 优先使用 CSS env 变量
+    const envValue = window.getComputedStyle(document.documentElement).getPropertyValue('--safe-top-env');
+    if (envValue) {
+        const parsed = parseFloat(envValue);
+        if (!isNaN(parsed)) return parsed;
+    }
+    
+    // 使用 VisualViewport API
+    if (window.visualViewport) {
+        return Math.round(window.visualViewport.offsetTop);
+    }
+    
+    // 回退到 CSS env()
+    try {
+        const bodyStyle = window.getComputedStyle(document.body);
+        const safeAreaTop = bodyStyle.getPropertyValue('env(safe-area-inset-top)');
+        if (safeAreaTop && safeAreaTop !== '0px') {
+            const parsed = parseFloat(safeAreaTop);
+            if (!isNaN(parsed)) return parsed;
+        }
+    } catch {
+        // ignore
+    }
+    
+    // 默认值：iOS 有刘海的设备通常需要 44px，普通设备 20px
+    return isIOSDevice() ? 44 : 20;
+};
+
 const setViewportVars = () => {
     if (typeof document === 'undefined') return;
     const shouldStabilizeHeight = isIOSStandaloneWebApp();
@@ -42,11 +74,29 @@ const setViewportVars = () => {
         ? (stableStandaloneHeight || nextViewportHeight)
         : nextViewportHeight;
 
+    // 计算安全区顶部高度
+    const safeTop = getSafeAreaTop();
+    
+    // 计算底部安全区（home indicator）
+    const safeBottom = Math.round(window.screen.height - window.screen.availHeight);
+    
+    // Chrome 顶部 = 安全区顶部 + 状态栏高度（20px）
+    const chromeTop = safeTop + 20;
+
     document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
     document.documentElement.style.setProperty('--visual-viewport-height', `${viewportHeight}px`);
     document.documentElement.style.setProperty('--keyboard-inset', `${keyboardInset}px`);
-    document.documentElement.style.setProperty('--standalone-safe-area-bottom', `0px`);
-    document.documentElement.style.setProperty('--standalone-safe-area-top', `0px`);
+    document.documentElement.style.setProperty('--standalone-safe-area-bottom', `${safeBottom}px`);
+    document.documentElement.style.setProperty('--standalone-safe-area-top', `${safeTop}px`);
+    
+    // 新增：安全区单一来源变量
+    document.documentElement.style.setProperty('--safe-top', `${safeTop}px`);
+    document.documentElement.style.setProperty('--safe-bottom', `${safeBottom}px`);
+    document.documentElement.style.setProperty('--chrome-top', `${chromeTop}px`);
+    
+    // 存储 env 值供 JavaScript 使用
+    const envTop = parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-top)') || '0');
+    document.documentElement.style.setProperty('--safe-top-env', `${envTop}px`);
 };
 
 export const installIOSStandaloneWorkaround = () => {

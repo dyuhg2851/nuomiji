@@ -175,17 +175,20 @@ const WorldbookApp: React.FC = () => {
             <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white/80 to-transparent pointer-events-none z-10"></div>
 
             {/* Header */}
-            <div className="h-20 bg-white/70 backdrop-blur-xl flex items-end pb-3 px-6 border-b border-white/40 shrink-0 sticky top-0 z-20 shadow-sm">
-                <div className="flex justify-between items-center w-full">
-                    <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
-                    </button>
-                    <span className="font-bold text-slate-700 text-lg tracking-wide flex items-center gap-2">
-                        <DiamondsFour size={18} className="text-indigo-500" /> 世界书
-                    </span>
-                    <button onClick={handleCreate} className="w-9 h-9 bg-indigo-500 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center active:scale-90 transition-transform hover:bg-indigo-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                    </button>
+            <div className="shrink-0 z-20 sticky top-0">
+                <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
+                <div className="h-20 bg-white/70 backdrop-blur-xl flex items-end pb-3 px-6 border-b border-white/40 shrink-0 shadow-sm">
+                    <div className="flex justify-between items-center w-full">
+                        <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                        </button>
+                        <span className="font-bold text-slate-700 text-lg tracking-wide flex items-center gap-2">
+                            <DiamondsFour size={18} className="text-indigo-500" /> 世界书
+                        </span>
+                        <button onClick={handleCreate} className="w-9 h-9 bg-indigo-500 text-white rounded-full shadow-lg shadow-indigo-200 flex items-center justify-center active:scale-90 transition-transform hover:bg-indigo-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 

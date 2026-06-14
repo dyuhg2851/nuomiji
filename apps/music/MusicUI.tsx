@@ -91,16 +91,18 @@ export const MizuHeader: React.FC<{
   onClose?: () => void;
   right?: React.ReactNode;
 }> = ({ title, onBack, onClose, right }) => (
-  <div className="flex items-center justify-between px-4 h-12 shrink-0 shizuku-glass-strong relative z-20"
-    style={{ borderBottom: `1px solid rgba(255,255,255,0.3)` }}>
-    <button
-      className="w-8 h-8 flex items-center justify-center rounded-full transition-all"
-      style={{ color: C.primary }}
-      onClick={onBack || onClose}
-    >
-      {onBack ? <ArrowLeft size={16} weight="bold" /> : <X size={16} weight="bold" />}
-    </button>
-    <div className="flex items-center gap-2">
+  <div className="shrink-0 z-20 sticky top-0">
+    <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
+    <div className="flex items-center justify-between px-4 h-12 shrink-0 shizuku-glass-strong"
+      style={{ borderBottom: `1px solid rgba(255,255,255,0.3)` }}>
+      <button
+        className="w-8 h-8 flex items-center justify-center rounded-full transition-all"
+        style={{ color: C.primary }}
+        onClick={onBack || onClose}
+      >
+        {onBack ? <ArrowLeft size={16} weight="bold" /> : <X size={16} weight="bold" />}
+      </button>
+      <div className="flex items-center gap-2">
       <Sparkle size={7} delay={0} />
       <WaterDrop size={5} />
       <span className="text-xs tracking-[0.2em] font-light" style={{ color: C.primary, fontFamily: `'Georgia', serif`, letterSpacing: '0.2em' }}>{title}</span>

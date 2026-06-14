@@ -22,6 +22,7 @@ import Modal from '../components/os/Modal';
 import ProactiveSettingsModal from '../components/chat/ProactiveSettingsModal';
 import ThinkingChainSettingsModal from '../components/chat/ThinkingChainSettingsModal';
 import { useChatAI } from '../hooks/useChatAI';
+import { useSwipeGesture } from '../hooks/useSwipeGesture';
 import { synthesizeSpeechDetailed, cleanTextForTts } from '../utils/minimaxTts';
 import { resolveMiniMaxApiKey } from '../utils/minimaxApiKey';
 import { isInstantConfigReady, loadInstantConfig } from '../utils/instantPushClient';
@@ -38,6 +39,14 @@ type InstantToolUiStatus = {
 const Chat: React.FC = () => {
     const { characters, activeCharacterId, setActiveCharacterId, updateCharacter, apiConfig, apiPresets, addApiPreset, closeApp, customThemes, removeCustomTheme, addToast, showError, userProfile, lastMsgTimestamp, groups, clearUnread, realtimeConfig, memoryPalaceConfig, syncEmotionApiToAllCharacters, theme: osTheme, proactiveComposingChars } = useOS();
     const isProactiveComposing = !!(activeCharacterId && proactiveComposingChars[activeCharacterId]);
+
+    // 右滑返回功能
+    const { containerRef, swipeProgress } = useSwipeGesture({
+        threshold: 50,
+        maxAngle: 30,
+        onSwipeRight: closeApp,
+        disabled: selectionMode || modalType !== 'none',
+    });
 
     // 记忆宫殿高水位（用于清空聊天时的安全检查）
     const getMemoryPalaceHWM = useCallback(async (charId: string): Promise<number> => {
@@ -1933,8 +1942,13 @@ const Chat: React.FC = () => {
 
     return (
         <div
+            ref={containerRef}
             className={`sully-chat-root ${finalRootClass}`}
-            style={finalRootStyle}
+            style={{
+                ...finalRootStyle,
+                transform: swipeProgress > 0 ? `translateX(${swipeProgress * 60}px)` : undefined,
+                transition: swipeProgress > 0 ? 'transform 0.1s ease-out' : undefined,
+            }}
         >
              {/* 白框自定义 CSS：全局默认在前、角色专属在后（后者叠加覆盖）。作用于 .sully-chat-* 各零件。 */}
              {osTheme.chatChromeCustomCss && <style>{osTheme.chatChromeCustomCss}</style>}
