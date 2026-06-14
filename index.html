@@ -109,12 +109,9 @@
         --primary-hue: 245; 
         --primary-sat: 25%;
         --primary-lightness: 65%;
-        /* 安全区单一来源：原生 env 与 JS 探测值 --standalone-safe-area-*（见 utils/iosStandalone.ts）取大，
-           iOS 全屏 PWA 下原生 env 偶发返回 0 时由探测值兜底。新增 App 一律引用这三个变量。 */
-        --safe-top: max(env(safe-area-inset-top, 0px), var(--standalone-safe-area-top, 0px));
-        --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--standalone-safe-area-bottom, 0px));
-        /* 全屏界面顶栏让开「安全区 + SullyOS 顶部状态栏(时间/电量, 约 1.5rem)」；背景仍铺满，只挪控件。 */
-        --chrome-top: calc(var(--safe-top) + 1.5rem);
+        --safe-top: 0px;
+        --safe-bottom: 0px;
+        --chrome-top: 0px;
         --app-height: 100lvh;
         --keyboard-inset: 0px;
         --app-font: 'Quicksand', sans-serif;
@@ -197,7 +194,17 @@
       .pb-safe {
         padding-bottom: var(--safe-bottom);
       }
+      /* 移动端 100lvh 兜底：部分旧 WebView 不支持 lvh，JS 探测后回退 */
     </style>
+    <script>
+      (function(){
+        try {
+          if (typeof CSS !== 'undefined' && CSS.supports && !CSS.supports('height', '100lvh')) {
+            document.documentElement.style.setProperty('--app-height', '100vh');
+          }
+        } catch(e) {}
+      })();
+    </script>
   <script type="importmap">
 {
   "imports": {
@@ -207,7 +214,6 @@
     "vite": "https://esm.sh/vite@^7.3.0",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
     "@capacitor/app": "https://esm.sh/@capacitor/app@^8.0.0",
-    "@capacitor/status-bar": "https://esm.sh/@capacitor/status-bar@^8.0.0",
     "@capacitor/core": "https://esm.sh/@capacitor/core@^8.0.0",
     "@capacitor/share": "https://esm.sh/@capacitor/share@^8.0.0",
     "@capacitor/filesystem": "https://esm.sh/@capacitor/filesystem@^8.0.0",

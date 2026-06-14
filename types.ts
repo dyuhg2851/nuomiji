@@ -71,7 +71,6 @@ export interface OSTheme {
   launcherWidgets?: Record<string, string>; // slots: 'tl' | 'tr' | 'wide' | 'dsq' (legacy 'bl' / 'br' are banned)
   desktopDecorations?: DesktopDecoration[];
   customFont?: string;
-  hideStatusBar?: boolean;
   // Chat UI customization (global)
   chatAvatarShape?: 'circle' | 'rounded' | 'square';
   chatAvatarSize?: 'small' | 'medium' | 'large';

@@ -977,7 +977,7 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
             }
         };
 
-        const [dbChars, dbThemes, dbUser, dbGroups, dbWorldbooks, dbNovels, dbSongs] = await Promise.all([
+        const [dbChars, dbThemes, dbUser, dbGroups, dbWorldbooks, dbNovels] = await Promise.all([
             settle(DB.getAllCharacters(), 'characters', [] as CharacterProfile[]),
             settle(DB.getThemes(), 'themes', [] as ChatTheme[]),
             settle(DB.getUserProfile(), 'userProfile', null as UserProfile | null),
@@ -1065,7 +1065,6 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         setGroups(dbGroups);
         setWorldbooks(dbWorldbooks);
         setNovels(dbNovels);
-        setSongs(dbSongs);
         setCustomThemes(dbThemes);
         if (dbUser) setUserProfile(dbUser);
 
@@ -3278,8 +3277,6 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
           const user = await DB.getUserProfile();
           const books = await DB.getAllWorldbooks();
           const novelList = await DB.getAllNovels();
-          const songList = await DB.getAllSongs();
-          
           if (hadAssetStoreBackup || hadCustomIconsBackup || hadAppearancePresetsBackup) {
               const assets = await DB.getAllAssets();
               const loadedIcons: Record<string, string> = {};
@@ -3305,7 +3302,6 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
           if (user) setUserProfile(user);
           if (books.length > 0) setWorldbooks(books);
           if (novelList.length > 0) setNovels(novelList);
-          if (songList.length > 0) setSongs(songList);
           
           setSysOperation({ status: 'idle', message: '', progress: 100 });
           clearImportInProgress();

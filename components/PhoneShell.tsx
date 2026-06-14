@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { IMPORT_IN_PROGRESS_KEY, useOS } from '../context/OSContext';
-import StatusBar from './os/StatusBar';
 import Launcher from '../apps/Launcher';
 
 // 按需懒加载各 App —— 切到对应 App 时才下载/解析其代码块，首屏只加载 Launcher 与外壳，
@@ -113,7 +112,6 @@ import { WorkerUpdateReminderController, shouldShowWorkerUpdateReminder } from '
 import { formatBytes } from '../utils/format';
 import { AppID } from '../types';
 import { App as CapApp } from '@capacitor/app';
-import { StatusBar as CapStatusBar, Style as StatusBarStyle } from '@capacitor/status-bar';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { isIOSStandaloneWebApp } from '../utils/iosStandalone';
@@ -554,10 +552,6 @@ const PhoneShell: React.FC = () => {
     const initNative = async () => {
         if (Capacitor.isNativePlatform()) {
             try {
-                await CapStatusBar.setOverlaysWebView({ overlay: true });
-                await CapStatusBar.hide();
-                await CapStatusBar.setStyle({ style: StatusBarStyle.Dark });
-
                 const permStatus = await LocalNotifications.checkPermissions();
                 if (permStatus.display !== 'granted') {
                     await LocalNotifications.requestPermissions();
@@ -787,9 +781,6 @@ const PhoneShell: React.FC = () => {
             </AppErrorBoundary>
           </div>
 
-          {/* Overlays: Status Bar (Top) */}
-          {!theme.hideStatusBar && <StatusBar />}
-          
           {/* Overlays: Suspended Call Bar */}
           {suspendedCall && activeApp !== AppID.Call && (
             <button

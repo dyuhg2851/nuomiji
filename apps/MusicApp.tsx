@@ -215,7 +215,6 @@ const MusicApp: React.FC = () => {
           companions={companions}
           onKickCompanion={removeListeningPartner}
           charsWithSong={charsWithSong}
-          regenStatus={isCurrentRegenerating ? regeneratingStatus : undefined}
         />
       )}
     </div>
