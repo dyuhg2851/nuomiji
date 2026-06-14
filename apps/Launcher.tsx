@@ -453,6 +453,7 @@ const Launcher: React.FC = () => {
   const [scheduleViewerOpen, setScheduleViewerOpen] = useState(false);
 
   const [activePageIndex, setActivePageIndex] = useState(_lastPageIndex);
+  const [scrollProgress, setScrollProgress] = useState(0); // 滑动进度 (0-1)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Mouse Drag Logic refs
@@ -575,6 +576,10 @@ const Launcher: React.FC = () => {
           const index = Math.round(scrollLeft / width);
           setActivePageIndex(index);
           _lastPageIndex = index; // Persist across remounts
+          
+          // 计算滑动进度 (0-1)
+          const progress = scrollLeft / width;
+          setScrollProgress(progress);
       }
   };
 
@@ -796,18 +801,40 @@ const Launcher: React.FC = () => {
 
       </div>
 
-      {/* Page Indicators */}
+      {/* Page Indicators - 丝滑的白圆和灰圆交互 */}
       <div
-          className="absolute left-0 w-full flex justify-center gap-2 pointer-events-none z-20"
+          className="absolute left-0 w-full flex justify-center items-center gap-2 pointer-events-none z-20 h-6"
           style={{ bottom: `calc(${launcherBottomInset} + 5.5rem)` }}
       >
-          {Array.from({ length: totalPages }).map((_, i) => (
-              <div 
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-300 ${activePageIndex === i ? 'w-4 opacity-100' : 'w-1.5 opacity-40'}`} 
-                style={{ backgroundColor: contentColor }}
-              ></div>
-          ))}
+          {Array.from({ length: totalPages }).map((_, i) => {
+              // 计算每个指示器的激活程度
+              const distance = Math.abs(scrollProgress - i);
+              const isActive = activePageIndex === i;
+              const isTransitioning = distance < 1 && !isActive;
+              
+              // 基于距离计算大小和透明度
+              const scale = isActive ? 1.4 : isTransitioning ? 1.2 - distance * 0.4 : 1;
+              const opacity = isActive ? 1 : isTransitioning ? 0.7 - distance * 0.3 : 0.4;
+              
+              return (
+                  <div 
+                    key={i}
+                    className="rounded-full transition-all duration-200 ease-out"
+                    style={{
+                      width: isActive ? '10px' : '6px',
+                      height: isActive ? '10px' : '6px',
+                      backgroundColor: isActive 
+                        ? contentColor 
+                        : `rgba(255, 255, 255, 0.5)`,
+                      opacity: opacity,
+                      transform: `scale(${scale})`,
+                      boxShadow: isActive 
+                        ? `0 0 8px ${contentColor}40` 
+                        : 'none',
+                    }}
+                  />
+              );
+          })}
       </div>
 
       {/* Floating Dock - Updated Margin and Safe Area handling */}

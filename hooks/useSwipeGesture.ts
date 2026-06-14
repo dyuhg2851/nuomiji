@@ -11,8 +11,8 @@ interface SwipeConfig {
 }
 
 export const useSwipeGesture = ({
-  threshold = 50,
-  maxAngle = 45,
+  threshold = 80,
+  maxAngle = 25,
   onSwipeRight,
   disabled = false,
 }: SwipeConfig) => {
@@ -45,13 +45,20 @@ export const useSwipeGesture = ({
     
     const deltaX = currentX - startX;
     const deltaY = currentY - startY;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const angle = Math.abs(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+    
+    // 严格的幅度限制：
+    // 1. 水平滑动距离必须大于阈值
+    // 2. 水平滑动距离必须明显大于垂直滑动距离（至少 2 倍）
+    // 3. 角度必须足够小（接近水平）
+    const isHorizontalSwipe = absDeltaX >= threshold && absDeltaX > absDeltaY * 2;
+    
+    // 计算相对于水平轴的角度（0-90度）
+    const angle = absDeltaY > 0 ? Math.atan2(absDeltaY, absDeltaX) * (180 / Math.PI) : 0;
 
-    if (distance >= threshold && angle <= maxAngle) {
-      if (deltaX > 0 && onSwipeRight) {
-        onSwipeRight();
-      }
+    if (isHorizontalSwipe && angle <= maxAngle && deltaX > 0 && onSwipeRight) {
+      onSwipeRight();
     }
 
     setIsSwiping(false);
@@ -73,7 +80,11 @@ export const useSwipeGesture = ({
     };
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
-  const swipeProgress = isSwiping ? Math.min((currentX - startX) / threshold, 1) : 0;
+  // 只有当水平滑动距离明显大于垂直滑动距离时才显示进度
+  const absDeltaX = Math.abs(currentX - startX);
+  const absDeltaY = Math.abs(currentY - startY);
+  const isValidHorizontalSwipe = absDeltaX > absDeltaY * 2 && currentX > startX;
+  const swipeProgress = isSwiping && isValidHorizontalSwipe ? Math.min(absDeltaX / threshold, 1) : 0;
 
   return {
     containerRef,

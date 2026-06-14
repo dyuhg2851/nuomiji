@@ -98,4 +98,4 @@ export const INSTALLED_APPS: AppConfig[] = [
   { id: AppID.CharCreatorDev, name: '捏脸·开发', icon: 'CharCreatorDev', color: 'amber' }, // 仅开发模式显示
 ];
 
-export const DOCK_APPS = [AppID.Chat, AppID.GroupChat, AppID.Settings];
+export const DOCK_APPS = [AppID.Chat, AppID.Call, AppID.Worldbook, AppID.GroupChat, AppID.Settings];
