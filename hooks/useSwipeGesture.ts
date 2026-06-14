@@ -20,6 +20,7 @@ export const useSwipeGesture = ({
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
   const [currentX, setCurrentX] = useState(0);
+  const [currentY, setCurrentY] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -28,6 +29,7 @@ export const useSwipeGesture = ({
     setStartX(touch.clientX);
     setStartY(touch.clientY);
     setCurrentX(touch.clientX);
+    setCurrentY(touch.clientY);
     setIsSwiping(true);
   }, [disabled]);
 
@@ -35,6 +37,7 @@ export const useSwipeGesture = ({
     if (disabled || !isSwiping) return;
     const touch = e.touches[0];
     setCurrentX(touch.clientX);
+    setCurrentY(touch.clientY);
   }, [disabled, isSwiping]);
 
   const handleTouchEnd = useCallback(() => {
@@ -53,9 +56,8 @@ export const useSwipeGesture = ({
 
     setIsSwiping(false);
     setCurrentX(startX);
-  }, [disabled, isSwiping, currentX, startX, startY, threshold, maxAngle, onSwipeRight]);
-
-  const currentY = useRef(0);
+    setCurrentY(startY);
+  }, [disabled, isSwiping, currentX, currentY, startX, startY, threshold, maxAngle, onSwipeRight]);
 
   useEffect(() => {
     const container = containerRef.current || document.body;

@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowLeft } from '@phosphor-icons/react';
 
 interface HeaderProps {
-  title: string;
+  title: React.ReactNode | string;
   onBack: () => void;
   right?: React.ReactNode;
   showBack?: boolean;
@@ -10,12 +10,14 @@ interface HeaderProps {
 
 export const AppHeader: React.FC<HeaderProps> = ({ title, onBack, right, showBack = true }) => {
   return (
-    <div className="shrink-0 z-10 sticky top-0">
+    <div className="shrink-0 z-10 sticky top-0 bg-white/85">
+      {/* 安全区顶部 - 状态栏高度 */}
       <div 
-        className="bg-transparent backdrop-blur-xl" 
+        className="bg-white/85" 
         style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} 
       />
-      <div className="h-16 bg-white/85 flex items-center px-4 border-b border-white/40 shrink-0">
+      {/* Header内容区域 - 增加高度让返回键和标题往下移 */}
+      <div className="h-20 bg-white/85 backdrop-blur-xl flex items-end pb-3 px-4 border-b border-white/40 shrink-0">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
             {showBack && (
