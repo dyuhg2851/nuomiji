@@ -263,7 +263,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
 
     const isDiscordStyle = inputStyle === 'discord';
     const isPixelStyle = inputStyle === 'pixel' || chromeStyle === 'pixel';
-    const shellClass = 'bg-[#f5f5f5] border-t border-slate-200/50 shadow-[0_-2px_10px_rgba(0,0,0,0.02)]';
+    const shellClass = 'bg-[#f5f5f5] border-t-[0.25px] border-slate-300';
     const actionButtonClass = acnh
         ? 'w-11 h-11 shrink-0 rounded-full bg-[#4cb89e] flex items-center justify-center text-white hover:bg-[#43ad93] transition-colors shadow-sm'
         : isPixelStyle

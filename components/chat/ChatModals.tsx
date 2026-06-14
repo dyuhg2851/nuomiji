@@ -707,35 +707,45 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                 </div>
             </Modal>
 
-            <Modal isOpen={modalType === 'message-options'} title="消息操作" onClose={() => setModalType('none')}>
-                <div className="space-y-3">
-                    <button onClick={onEnterSelectionMode} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                        多选 / 批量删除
-                    </button>
-                    <button onClick={onReplyMessage} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                        引用 / 回复
-                    </button>
-                    {selectedMessage?.type === 'text' && (
-                        <button onClick={onEditMessageStart} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                            编辑内容
+            {/* Message Options Menu Bar */}
+            {modalType === 'message-options' && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-fade-in">
+                    <div className="absolute inset-0 bg-black/20" onClick={() => setModalType('none')} />
+                    <div className="relative bg-white rounded-[24px] shadow-xl border border-slate-200/50 px-2 py-2 flex items-center gap-1 animate-slide-up">
+                        <button 
+                            onClick={onEnterSelectionMode} 
+                            className="px-4 py-2 text-slate-700 font-medium rounded-xl active:bg-slate-100 transition-colors text-sm"
+                        >
+                            多选
                         </button>
-                    )}
-                    {selectedMessage?.type === 'text' && (
-                        <button onClick={onCopyMessage} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                            复制文字
+                        <div className="w-[1px] h-5 bg-slate-300" />
+                        <button 
+                            onClick={onReplyMessage} 
+                            className="px-4 py-2 text-slate-700 font-medium rounded-xl active:bg-slate-100 transition-colors text-sm"
+                        >
+                            引用
                         </button>
-                    )}
-                    {voiceAvailable && selectedMessage?.role === 'assistant' && selectedMessage?.type === 'text' && onGenerateVoice && (
-                        <button onClick={() => { onGenerateVoice(); setModalType('none'); }} className="w-full py-3 bg-emerald-50 text-emerald-600 font-medium rounded-2xl active:bg-emerald-100 transition-colors flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" /></svg>
-                            转换语音
+                        <div className="w-[1px] h-5 bg-slate-300" />
+                        {selectedMessage?.type === 'text' && (
+                            <>
+                                <button 
+                                    onClick={onEditMessageStart} 
+                                    className="px-4 py-2 text-slate-700 font-medium rounded-xl active:bg-slate-100 transition-colors text-sm"
+                                >
+                                    编辑
+                                </button>
+                                <div className="w-[1px] h-5 bg-slate-300" />
+                            </>
+                        )}
+                        <button 
+                            onClick={onDeleteMessage} 
+                            className="px-4 py-2 text-red-500 font-medium rounded-xl active:bg-red-50 transition-colors text-sm"
+                        >
+                            删除
                         </button>
-                    )}
-                    <button onClick={onDeleteMessage} className="w-full py-3 bg-red-50 text-red-500 font-medium rounded-2xl active:bg-red-100 transition-colors flex items-center justify-center gap-2">
-                        删除消息
-                    </button>
+                    </div>
                 </div>
-            </Modal>
+            )}
             
              <Modal
                 isOpen={modalType === 'delete-emoji'} title="删除表情包" onClose={() => setModalType('none')}

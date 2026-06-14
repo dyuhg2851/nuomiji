@@ -195,7 +195,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
 
     const headerToneClass =
         // 统一使用灰色背景 f5f5f5，顶部不留白，铺满整个头部区域
-        'bg-[#f5f5f5] border-b border-slate-200/60 shadow-sm';
+        'bg-[#f5f5f5] border-b-[0.25px] border-slate-300';
     const headerBaseHeight = headerDensity === 'compact' ? '5rem' : headerDensity === 'airy' ? '7rem' : '6rem';
     // 两种对齐都用对称 py，让内容垂直居中（原标准布局只给 pb → 底贴、上方留白、整体不居中）。
     const headerDensityClass = headerDensity === 'compact' ? 'px-4 py-2' : headerDensity === 'airy' ? 'px-6 py-4' : 'px-5 py-3';

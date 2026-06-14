@@ -719,7 +719,7 @@ const MessageItem = React.memo(({
 }: MessageItemProps) => {
     const isUser = m.role === 'user';
     const isSystem = m.role === 'system';
-    const spacingClass = messageSpacing === 'compact' ? (isLastInGroup ? 'mb-3' : 'mb-0.5') : messageSpacing === 'spacious' ? (isLastInGroup ? 'mb-8' : 'mb-2.5') : (isLastInGroup ? 'mb-6' : 'mb-1.5');
+    const spacingClass = messageSpacing === 'compact' ? (isLastInGroup ? 'mb-3' : 'mb-1.5') : messageSpacing === 'spacious' ? (isLastInGroup ? 'mb-8' : 'mb-4') : (isLastInGroup ? 'mb-6' : 'mb-3');
     const marginBottom = spacingClass;
     const avatarSizeClass = avatarSize === 'small' ? 'w-7 h-7' : avatarSize === 'large' ? 'w-12 h-12' : 'w-[40px] h-[40px]';
     const avatarRadiusClass = 'rounded-[4px]';
@@ -803,34 +803,31 @@ const MessageItem = React.memo(({
     const formatTime = (ts: number) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
     // Render Avatar with potential decoration/frame
-    // Removed mb-5 from here, handled via absolute positioning in parent
     const renderAvatar = (src: string) => (
-        <div className={`relative ${avatarSizeClass} z-0`}>
-            {shouldShowAvatar && (
-                <>
+        shouldShowAvatar ? (
+            <div className={`relative ${avatarSizeClass} shrink-0`}>
+                <img
+                    src={src}
+                    className={`w-full h-full ${avatarRadiusClass} object-cover shadow-sm ring-1 ring-black/5 relative z-0`}
+                    alt="avatar"
+                    loading="lazy"
+                    decoding="async"
+                />
+                {styleConfig.avatarDecoration && (
                     <img
-                        src={src}
-                        className={`w-full h-full ${avatarRadiusClass} object-cover shadow-sm ring-1 ring-black/5 relative z-0`}
-                        alt="avatar"
-                        loading="lazy"
-                        decoding="async"
+                        src={styleConfig.avatarDecoration}
+                        className="absolute pointer-events-none z-10 max-w-none"
+                        style={{
+                            left: `${styleConfig.avatarDecorationX ?? 50}%`,
+                            top: `${styleConfig.avatarDecorationY ?? 50}%`,
+                            width: `${avatarSizePx * (styleConfig.avatarDecorationScale ?? 1)}px`,
+                            height: 'auto',
+                            transform: `translate(-50%, -50%) rotate(${styleConfig.avatarDecorationRotate ?? 0}deg)`,
+                        }}
                     />
-                    {styleConfig.avatarDecoration && (
-                        <img
-                            src={styleConfig.avatarDecoration}
-                            className="absolute pointer-events-none z-10 max-w-none"
-                            style={{
-                                left: `${styleConfig.avatarDecorationX ?? 50}%`,
-                                top: `${styleConfig.avatarDecorationY ?? 50}%`,
-                                width: `${avatarSizePx * (styleConfig.avatarDecorationScale ?? 1)}px`,
-                                height: 'auto',
-                                transform: `translate(-50%, -50%) rotate(${styleConfig.avatarDecorationRotate ?? 0}deg)`,
-                            }}
-                        />
-                    )}
-                </>
-            )}
-        </div>
+                )}
+            </div>
+        ) : null
     );
 
     // --- SYSTEM MESSAGE RENDERING ---
@@ -1075,7 +1072,7 @@ const MessageItem = React.memo(({
 
     const showPendingDots = isUser && isPending && pendingIndicator;
     const commonLayout = (content: React.ReactNode) => (
-            <div className={`flex items-end ${isUser ? 'justify-end' : 'justify-start'} ${marginBottom} px-3 group select-none relative transition-[padding] duration-300 ${selectionMode ? 'pl-12' : ''}`}>
+            <div className={`flex items-start ${isUser ? 'justify-end' : 'justify-start'} ${marginBottom} px-3 group select-none relative`} {...(selectionMode ? { 'data-selected': isSelected } : {})}>
                 {selectionMode && (
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer z-20" onClick={() => onToggleSelect(m.id)}>
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-slate-300 bg-white/80'}`}>
@@ -1084,50 +1081,35 @@ const MessageItem = React.memo(({
                     </div>
                 )}
 
-                {/* Avatar - Absolute Positioned */}
+                {/* Avatar */}
                 {!isUser && (
-                    <div className={`absolute bottom-[1.25rem] z-0 ${selectionMode ? 'left-14' : 'left-3'} transition-all duration-300`}>
+                    <>
+                        {selectionMode && <div className="w-10" />}
                         {renderAvatar(charAvatar)}
-                    </div>
+                    </>
                 )}
 
                 {showPendingDots && (
-                    <span
-                        className="inline-flex items-center gap-[3px] mb-2 mr-0.5 select-none pointer-events-none"
-                        aria-label="发送准备中"
-                        role="status"
-                    >
+                    <span className="inline-flex items-center gap-[3px] mr-1 select-none pointer-events-none">
                         <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" />
                         <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" style={{ animationDelay: '0.15s' }} />
                         <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" style={{ animationDelay: '0.3s' }} />
                     </span>
                 )}
 
-                {/*
-                    UPDATED: Limit bubble max-width to 72% for better spacing.
-                    Added min-w-0 to prevent flexbox overflow issues.
-                    Added explicit margins to clear absolute avatars.
-                */}
-                <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[72%] min-w-0 ${!isUser ? 'ml-14' : 'mr-14'}`} {...interactionProps}>
+                {/* Bubble Container */}
+                <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[72%] min-w-0 mx-3`} {...interactionProps}>
                     {!isUser && m.metadata?.thinkingChain && (
                         <div className={`relative w-full ${selectionMode ? 'pl-7' : ''}`}>
                             {selectionMode && onToggleThinkingSelect && (
-                                <div
-                                    className="absolute left-0 top-3 cursor-pointer z-20 pointer-events-auto"
-                                    onClick={(e) => { e.stopPropagation(); onToggleThinkingSelect(m.id); }}
-                                >
+                                <div className="absolute left-0 top-3 cursor-pointer z-20" onClick={(e) => { e.stopPropagation(); onToggleThinkingSelect(m.id); }}>
                                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isThinkingSelected ? 'bg-primary border-primary' : 'border-slate-300 bg-white/80'}`}>
                                         {isThinkingSelected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
                                     </div>
                                 </div>
                             )}
                             <div className={selectionMode ? 'pointer-events-none' : ''}>
-                                <ThinkingChainBlock
-                                    chain={String(m.metadata.thinkingChain)}
-                                    styleId={thinkingChainOptions?.styleId}
-                                    customColors={thinkingChainOptions?.customColors}
-                                    onOpenSettings={thinkingChainOptions?.onOpenSettings}
-                                />
+                                <ThinkingChainBlock chain={String(m.metadata.thinkingChain)} styleId={thinkingChainOptions?.styleId} customColors={thinkingChainOptions?.customColors} onOpenSettings={thinkingChainOptions?.onOpenSettings} />
                             </div>
                         </div>
                     )}
@@ -1139,12 +1121,8 @@ const MessageItem = React.memo(({
                     )}
                 </div>
 
-                {/* User Avatar - Absolute Positioned */}
-                {isUser && (
-                    <div className="absolute right-3 bottom-[1.25rem] z-0">
-                        {renderAvatar(userAvatar)}
-                    </div>
-                )}
+                {/* User Avatar */}
+                {isUser && renderAvatar(userAvatar)}
             </div>
     );
 
@@ -2091,10 +2069,10 @@ const MessageItem = React.memo(({
             <div
                 className="absolute top-1/2 -translate-y-1/2 w-0 h-0"
                 style={{
-                    [isUser ? 'right' : 'left']: '-7px',
-                    borderTop: '6px solid transparent',
-                    borderBottom: '6px solid transparent',
-                    [isUser ? 'borderLeft' : 'borderRight']: `7px solid ${isUser ? '#A9EA7A' : '#FFFFFF'}`,
+                    [isUser ? 'right' : 'left']: '-6px',
+                    borderTop: '5px solid transparent',
+                    borderBottom: '5px solid transparent',
+                    [isUser ? 'borderLeft' : 'borderRight']: `6px solid ${isUser ? '#A9EA7A' : '#FFFFFF'}`,
                 }}
             />
 
