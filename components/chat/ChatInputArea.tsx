@@ -362,7 +362,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         {emojiSelectionMode && (
             <div className={`fixed inset-0 z-[-1] ${isPixelStyle ? 'bg-[#eadfce]/70 backdrop-blur-[2px]' : isDiscordStyle ? 'bg-slate-950/70 backdrop-blur-[2px]' : 'bg-white/60 backdrop-blur-[2px]'}`} />
         )}
-        <div className={`sully-chat-inputbar ${shellClass} pb-safe shrink-0 z-40 relative`}>
+        <div className={`sully-chat-inputbar ${shellClass} shrink-0 z-40 relative`}>
             
             {selectionMode ? (
                 <div className={`p-3 flex gap-2 ${isPixelStyle ? 'bg-[#f3e7d6]' : isDiscordStyle ? 'bg-slate-900/60 backdrop-blur-md' : 'bg-white/50 backdrop-blur-md'}`}>
@@ -385,7 +385,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                     </button>
                 </div>
             ) : (
-                <div className="p-2 px-4 flex gap-2 items-center relative">
+                <div className="p-2 pl-4 flex gap-1 items-center relative">
                     {/* 语音按钮 */}
                     <button className={`p-3 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
@@ -404,19 +404,21 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                             enterKeyHint="send"
                             autoCorrect="on"
                             autoCapitalize="sentences"
-                            className={`flex-1 min-w-0 bg-transparent px-3 py-2 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[14px]'} resize-none max-h-24 no-scrollbar text-slate-700 placeholder:text-slate-400`} 
-                            placeholder="Message..." 
+                            className={`flex-1 min-w-0 bg-transparent px-3 py-2 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[14px]'} resize-none max-h-24 no-scrollbar text-slate-700`} 
+                            placeholder="" 
                             style={{ height: 'auto' }} 
                         />
                         {/* 装饰按钮 */}
-                        <button className={`p-1.5 shrink-0 opacity-50`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 48 48">
+                        {!input.trim() && (
+                        <button className={`p-1 shrink-0 opacity-40`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 48 48">
                                 <g fill="none" stroke="#999999" strokeLinejoin="round" strokeWidth="4">
                                     <rect width="14" height="27" x="17" y="4" rx="7"/>
                                     <path strokeLinecap="round" d="M9 23c0 8.284 6.716 15 15 15s15-6.716 15-15M24 38v6"/>
                                 </g>
                             </svg>
                         </button>
+                        )}
                     </div>
                     {/* 表情按钮 */}
                     <button onClick={() => setShowPanel(showPanel === 'emojis' ? 'none' : 'emojis')} className={`p-3 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>

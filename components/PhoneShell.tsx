@@ -33,7 +33,12 @@ const warmLazy = (Comp: PreloadableLazy): void => {
     const payload: any = (Comp as any)?._payload;
     const init: any = (Comp as any)?._init;
     if (!payload || typeof init !== 'function' || payload._status !== LAZY_UNINITIALIZED) {
-      Comp.preload(); // 已在加载/已加载，或拿不到内部结构 → 仅预热 Vite 模块
+      if (payload && payload._status === LAZY_REJECTED) {
+        payload._status = LAZY_UNINITIALIZED;
+        payload._result = Comp.preload;
+      } else {
+        Comp.preload();
+      }
       return;
     }
     init(payload); // 触发下载 + 解析负载
@@ -580,6 +585,18 @@ const PhoneShell: React.FC = () => {
   // Force scroll to top when app changes to prevent "push up" glitches on iOS
   useEffect(() => {
       window.scrollTo(0, 0);
+  }, [activeApp]);
+
+  // 切换 App 时，清除 lazy 组件被 warmLazy 预取失败后留下的 REJECTED 状态，
+  // 避免 React.lazy 直接抛出缓存的 chunk 加载错误导致 App 打不开。
+  useEffect(() => {
+    const comp = APP_BY_ID[activeApp];
+    if (!comp) return;
+    const payload: any = (comp as any)?._payload;
+    if (payload && payload._status === LAZY_REJECTED) {
+      payload._status = LAZY_UNINITIALIZED;
+      payload._result = comp.preload;
+    }
   }, [activeApp]);
 
   useEffect(() => {

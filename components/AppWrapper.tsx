@@ -18,7 +18,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children, onClose, disab
   return (
     <div
       ref={containerRef}
-      className="w-full h-full flex flex-col bg-white"
+      className="w-full h-full flex flex-col"
       style={{
         transform: swipeProgress > 0 ? `translateX(${swipeProgress * 60}px)` : undefined,
         transition: swipeProgress > 0 ? 'transform 0.1s ease-out' : undefined,
