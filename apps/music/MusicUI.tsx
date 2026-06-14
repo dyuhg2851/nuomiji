@@ -108,8 +108,9 @@ export const MizuHeader: React.FC<{
       <span className="text-xs tracking-[0.2em] font-light" style={{ color: C.primary, fontFamily: `'Georgia', serif`, letterSpacing: '0.2em' }}>{title}</span>
       <WaterDrop size={5} />
       <Sparkle size={7} delay={1.2} />
+      </div>
+      <div className="w-8 flex justify-end">{right}</div>
     </div>
-    <div className="w-8 flex justify-end">{right}</div>
   </div>
 );
 
