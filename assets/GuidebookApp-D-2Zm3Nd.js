@@ -1,4 +1,4 @@
-import{aQ as d,M as e,bb as re,aU as Q,ae as H,aA as Z,aB as qe,J as ht,aC as ut,bc as Ce,bd as Xe,be as Ae,aZ as Re,c as Ye,z as Ke}from"./vendor-react-24Oymk71.js";import{al as ft}from"./index-54OTBrhs.js";import{D as ae,I as ue,q as fe}from"./memory-palace-BIYgjY1f.js";import"./vendor-capacitor-Ckkc3DS5.js";import"./vendor-D6bIMsQp.js";function yt(a,l,c,n,i,m,b){const o=a.name||"角色",t=l.name||"用户",p=b&&b.length>0?`
+import{aQ as d,M as e,bb as re,aU as Q,ae as H,aA as Z,aB as qe,J as ht,aC as ut,bc as Ce,bd as Xe,be as Ae,aZ as Re,c as Ye,z as Ke}from"./vendor-react-24Oymk71.js";import{al as ft}from"./index-BFVr83Z7.js";import{D as ae,I as ue,q as fe}from"./memory-palace-W7J5cove.js";import"./vendor-capacitor-CUs4Zd17.js";import"./vendor-D6bIMsQp.js";function yt(a,l,c,n,i,m,b){const o=a.name||"角色",t=l.name||"用户",p=b&&b.length>0?`
 === ${o} 对 ${t} 的了解（来自过往攻略）===
 ${b.map(S=>`• ${S}`).join(`
 `)}
