@@ -57,8 +57,8 @@ export default defineConfig({
     __BUILD_COMMIT__: JSON.stringify(gitInfo.commit),
     __BUILD_BADGE_VISIBLE__: JSON.stringify(showBuildBadge),
   },
-  // GitHub Pages 发布时使用相对路径，避免仓库子路径导致资源 404
-  base: process.env.GITHUB_PAGES ? './' : '/',
+  // 使用相对路径，适配任何部署环境（根路径、子路径、GitHub Pages 等）
+  base: './',
   esbuild: {
     // 只剥 debugger，保留 console.* —— 部署后按 F12 仍能看到运行时日志，方便排查。
     drop: ['debugger'],
@@ -83,7 +83,7 @@ export default defineConfig({
         rewrite: () => '/v1/get_voice',
         router: (req) => {
           const region = String(req.headers['x-minimax-region'] || '').toLowerCase();
-          return region === 'overseas' ? 'https://api.minimax.io' : 'https://api.minimaxi.com';
+          return region === 'overseas' ? 'https://api.minimaxi.io' : 'https://api.minimaxi.com';
         },
       },
     }

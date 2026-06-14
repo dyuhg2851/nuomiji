@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test</title>
+    <style>
+      body { background: #1a1a2e; color: white; font-family: sans-serif; padding: 20px; }
+      .success { color: #4ecca3; }
+      .error { color: #ff6b6b; }
+    </style>
+  </head>
+  <body>
+    <div id="root">Loading...</div>
+    <script type="module">
+      try {
+        console.log('Testing basic JavaScript...');
+        const root = document.getElementById('root');
+        
+        // Test basic DOM manipulation
+        root.innerHTML = `
+          <h1 class="success">✅ Basic JS works!</h1>
+          <p>UserAgent: ${navigator.userAgent}</p>
+          <p>IndexedDB: ${'indexedDB' in window ? '✅ Supported' : '❌ Not supported'}</p>
+          <p>ServiceWorker: ${'serviceWorker' in navigator ? '✅ Supported' : '❌ Not supported'}</p>
+        `;
+        
+        // Test React import
+        import('react').then(React => {
+          root.innerHTML += '<p class="success">✅ React imported successfully!</p>';
+        }).catch(err => {
+          root.innerHTML += `<p class="error">❌ React import failed: ${err.message}</p>`;
+        });
+        
+      } catch (e) {
+        document.getElementById('root').innerHTML = `<h1 class="error">❌ Error: ${e.message}</h1>`;
+        console.error('Fatal error:', e);
+      }
+    </script>
+  </body>
+</html>

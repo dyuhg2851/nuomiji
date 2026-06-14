@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test React App</title>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@^18.2.0/client"
+      }
+    }
+    </script>
+    <style>
+      body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }
+    </style>
+  </head>
+  <body>
+    <div id="root">Loading...</div>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      
+      const App = () => {
+        return (
+          <div>
+            <h1 style={{ color: '#4ecca3' }}>✅ React App Works!</h1>
+            <p>UserAgent: {navigator.userAgent}</p>
+            <p>IndexedDB: {'indexedDB' in window ? '✅ Supported' : '❌ Not supported'}</p>
+            <p>ServiceWorker: {'serviceWorker' in navigator ? '✅ Supported' : '❌ Not supported'}</p>
+          </div>
+        );
+      };
+      
+      const root = createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
