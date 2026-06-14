@@ -40,14 +40,6 @@ const Chat: React.FC = () => {
     const { characters, activeCharacterId, setActiveCharacterId, updateCharacter, apiConfig, apiPresets, addApiPreset, closeApp, customThemes, removeCustomTheme, addToast, showError, userProfile, lastMsgTimestamp, groups, clearUnread, realtimeConfig, memoryPalaceConfig, syncEmotionApiToAllCharacters, theme: osTheme, proactiveComposingChars } = useOS();
     const isProactiveComposing = !!(activeCharacterId && proactiveComposingChars[activeCharacterId]);
 
-    // 右滑返回功能
-    const { containerRef, swipeProgress } = useSwipeGesture({
-        threshold: 50,
-        maxAngle: 30,
-        onSwipeRight: closeApp,
-        disabled: selectionMode || modalType !== 'none',
-    });
-
     // 记忆宫殿高水位（用于清空聊天时的安全检查）
     const getMemoryPalaceHWM = useCallback(async (charId: string): Promise<number> => {
         try {
@@ -116,6 +108,15 @@ const Chat: React.FC = () => {
     // --- Multi-Select State ---
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedMsgIds, setSelectedMsgIds] = useState<Set<number>>(new Set());
+
+    // 右滑返回功能
+    const { containerRef, swipeProgress } = useSwipeGesture({
+        threshold: 50,
+        maxAngle: 30,
+        onSwipeRight: closeApp,
+        disabled: selectionMode || modalType !== 'none',
+    });
+
     // 思维链是 metadata.thinkingChain，没有独立 id，所以用宿主消息 id 作为键，
     // 与 selectedMsgIds 并行存在 —— 只勾思维链时只清 metadata，宿主消息保留。
     const [selectedThinkingMsgIds, setSelectedThinkingMsgIds] = useState<Set<number>>(new Set());

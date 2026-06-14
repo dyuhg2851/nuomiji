@@ -17,6 +17,7 @@ import { PushVapidSettingsModal } from '../components/settings/PushVapidSettings
 import VersionInfo from '../components/settings/VersionInfo';
 import { isPushVapidReady } from '../utils/pushVapid';
 import ApiCallLogModal from '../components/settings/ApiCallLogModal';
+import { AppHeader } from '../components/AppHeader';
 
 // hot_news（orz.ai）可选热榜平台。key 必须与 API 的 ?platform= 完全一致。
 const HOTNEWS_PLATFORM_OPTIONS: { key: string; label: string }[] = [
@@ -772,19 +773,7 @@ const Settings: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="shrink-0 z-10 sticky top-0">
-        <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
-        <div className="h-20 bg-white/85 flex items-end pb-3 px-4 border-b border-white/40 shrink-0">
-          <div className="flex items-center gap-2 w-full">
-              <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                  </svg>
-              </button>
-              <h1 className="text-xl font-medium text-slate-700 tracking-wide">系统设置</h1>
-          </div>
-        </div>
-      </div>
+      <AppHeader title="系统设置" onBack={closeApp} />
 
       <div className="flex-1 overflow-y-auto p-5 space-y-6 no-scrollbar pb-20">
         

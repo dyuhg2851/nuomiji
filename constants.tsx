@@ -52,7 +52,6 @@ export const Icons: Record<string, React.FC<{ className?: string }>> = {
   Schedule: ({ className }) => <SealCheck className={className} weight="bold" />,
   Room: ({ className }) => <House className={className} weight="bold" />,
   CheckPhone: ({ className }) => <DeviceMobileCamera className={className} weight="bold" />,
-  Social: ({ className }) => <Fire className={className} weight="bold" />,
   Study: ({ className }) => <Books className={className} weight="bold" />,
   FAQ: ({ className }) => <Question className={className} weight="bold" />,
   Game: ({ className }) => <GameController className={className} weight="bold" />,
@@ -61,7 +60,6 @@ export const Icons: Record<string, React.FC<{ className?: string }>> = {
   Bank: ({ className }) => <PiggyBank className={className} weight="bold" />,
   XhsFreeRoam: ({ className }) => <Compass className={className} weight="bold" />,
   XhsStock: ({ className }) => <Camera className={className} weight="bold" />,
-  SpecialMoments: ({ className }) => <Sparkle className={className} weight="bold" />,
   Browser: ({ className }) => <GlobeSimple className={className} weight="bold" />,
   Music: ({ className }) => <MusicNotes className={className} weight="fill" />,
   Call: ({ className }) => <PhoneCall className={className} weight="bold" />,
@@ -89,7 +87,6 @@ export const INSTALLED_APPS: AppConfig[] = [
   { id: AppID.Bank, name: '存钱罐', icon: 'Bank', color: 'lime' }, // Hidden
   { id: AppID.Journal, name: '交换日记', icon: 'Journal', color: 'amber' },
   // { id: AppID.Handbook, name: '手账', icon: 'Handbook', color: 'fuchsia' }, // Hidden temporarily, pending update
-  { id: AppID.Social, name: 'Spark', icon: 'Social', color: 'red' },
   { id: AppID.Study, name: '自习室', icon: 'Study', color: 'emerald' },
   { id: AppID.Game, name: 'TRPG', icon: 'Game', color: 'orange' },
   { id: AppID.Novel, name: '笔友会', icon: 'Novel', color: 'amber' },

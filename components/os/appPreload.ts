@@ -26,7 +26,6 @@ const importers: Partial<Record<AppID, () => Promise<unknown>>> = {
   [AppID.LifeSim]: () => import('../../apps/LifeSimApp'),
   [AppID.MemoryPalace]: () => import('../../apps/MemoryPalaceApp'),
   [AppID.QQBridge]: () => import('../../apps/QQBridge'),
-  [AppID.SpecialMoments]: () => import('../ValentineEvent'),
   [AppID.VRWorld]: () => import('../../apps/VRWorldApp'),
   [AppID.CharCreatorDev]: () => import('../../apps/CharCreatorDevApp'),
 };

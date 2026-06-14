@@ -4,6 +4,7 @@ import { useChatAI } from '../hooks/useChatAI';
 import { DB } from '../utils/db';
 import { Message } from '../types';
 import { Plugs, Power, Trash, Plug } from '@phosphor-icons/react';
+import { AppHeader } from '../components/AppHeader';
 
 const LS = {
   wsUrl: 'qqBridge:wsUrl',
@@ -277,22 +278,13 @@ const QQBridge: React.FC = () => {
   }[wsStatus];
 
   return (
-    <div className="h-full w-full bg-slate-50/50 flex flex-col font-light relative">
+    <div className="h-screen w-full bg-slate-50/50 flex flex-col font-light relative">
       {/* Header */}
-      <div className="shrink-0 z-10 sticky top-0">
-          <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
-          <div className="h-20 bg-white/85 flex items-end pb-3 px-4 border-b border-white/40 shrink-0">
-              <div className="flex items-center gap-2 w-full">
-                  <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                      </svg>
-                  </button>
-                  <h1 className="text-xl font-medium text-slate-700 tracking-wide">QQ 桥</h1>
-                  <span className={`ml-auto text-[10px] font-bold px-2 py-1 rounded-full ${statusColor}`}>{statusText}</span>
-              </div>
-          </div>
-      </div>
+      <AppHeader 
+        title={<span className="text-xl font-medium text-slate-700 tracking-wide">QQ 桥</span>} 
+        onBack={closeApp}
+        right={<span className={`text-[10px] font-bold px-2 py-1 rounded-full ${statusColor}`}>{statusText}</span>}
+      />
 
       <div className="flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar pb-20">
         {/* Intro */}

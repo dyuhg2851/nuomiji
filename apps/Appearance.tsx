@@ -10,6 +10,7 @@ import { ChatAppearanceEditor as ModularChatAppearanceEditor } from '../componen
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { AppHeader } from '../components/AppHeader';
 
 // Touch-friendly long-press wrapper. `onContextMenu` alone misses iOS Safari /
 // Capacitor WebView, so we also wire pointer/touch timers to fire after ~550ms.
@@ -870,21 +871,9 @@ const Appearance: React.FC = () => {
   };
 
   return (
-    <div className="h-full w-full bg-slate-50 flex flex-col font-light">
-      {/* safe-top spacer 透明 + backdrop-blur，跟 iOS 系统 status bar 一致 */}
-      <div className="shrink-0 z-10 sticky top-0">
-        <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
-        <div className="h-20 bg-white/70 backdrop-blur-md flex items-end pb-3 px-4 border-b border-white/40 shrink-0">
-          <div className="flex items-center gap-2 w-full">
-              <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                  </svg>
-              </button>
-              <h1 className="text-xl font-medium text-slate-700 tracking-wide">外观定制</h1>
-          </div>
-        </div>
-      </div>
+    <div className="h-screen w-full bg-slate-50 flex flex-col font-light">
+      {/* Header */}
+      <AppHeader title="外观定制" onBack={closeApp} />
 
       <div className="flex border-b border-slate-200 bg-white sticky top-0 z-20">
           <button onClick={() => setActiveTab('theme')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'theme' ? 'text-primary border-b-2 border-primary' : 'text-slate-400'}`}>系统主题</button>

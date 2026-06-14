@@ -16,7 +16,6 @@ export enum AppID {
   Study = 'study',
   Worldbook = 'worldbook', 
   Bank = 'bank', // New App
-  SpecialMoments = 'special_moments', // Valentine's Day & future events
   XhsFreeRoam = 'xhs_free_roam', // Character autonomous XHS activity
   Call = 'call', // 语音电话测试（MiniMax TTS）
   Guidebook = 'guidebook', // 攻略本 — 角色攻略用户小游戏

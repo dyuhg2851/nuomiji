@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { IMPORT_IN_PROGRESS_KEY, useOS } from '../context/OSContext';
 import Launcher from '../apps/Launcher';
+import { AppWrapper } from './AppWrapper';
 
 // 按需懒加载各 App —— 切到对应 App 时才下载/解析其代码块，首屏只加载 Launcher 与外壳，
 // 大体积 App（MemoryPalace / VRWorld 等）不再压在主包里。
@@ -75,7 +76,6 @@ const MemoryPalaceApp = lazyApp(() => import('../apps/MemoryPalaceApp'));
 const QQBridge = lazyApp(() => import('../apps/QQBridge'));
 const VRWorldApp = lazyApp(() => import('../apps/VRWorldApp'));
 const CharCreatorDevApp = lazyApp(() => import('../apps/CharCreatorDevApp'));
-const SpecialMomentsApp = lazyApp(() => import('./ValentineEvent').then(m => ({ default: m.SpecialMomentsApp })));
 
 // 预取优先级：高频/常驻 App 先预热，其余随后；逐个在空闲时触发，避免与交互抢主线程/带宽。
 const APP_PRELOAD_ORDER: PreloadableLazy[] = [
@@ -84,7 +84,7 @@ const APP_PRELOAD_ORDER: PreloadableLazy[] = [
   StudyApp, BankApp, WorldbookApp, MemoryPalaceApp,
   VRWorldApp, LifeSimApp, GuidebookApp,
   XhsFreeRoamApp, ThemeMaker, QQBridge,
-  SpecialMomentsApp, CharCreatorDevApp,
+  CharCreatorDevApp,
 ];
 
 // AppID → 懒加载组件，供「按下即预取」连 React.lazy 负载一起解析（消除切换瞬间露底色的闪烁）。
@@ -101,12 +101,11 @@ const APP_BY_ID: Partial<Record<AppID, PreloadableLazy>> = {
   [AppID.Music]: MusicApp, [AppID.Call]: CallApp,
   [AppID.Guidebook]: GuidebookApp, [AppID.LifeSim]: LifeSimApp, [AppID.MemoryPalace]: MemoryPalaceApp,
   [AppID.QQBridge]: QQBridge,
-  [AppID.VRWorld]: VRWorldApp, [AppID.CharCreatorDev]: CharCreatorDevApp, [AppID.SpecialMoments]: SpecialMomentsApp,
+  [AppID.VRWorld]: VRWorldApp, [AppID.CharCreatorDev]: CharCreatorDevApp,
 };
 // 注入负载预热器：AppIcon 的 pointerdown → preloadApp(id) → 这里 warmLazy，连 React.lazy 负载一起解析。
 setAppPayloadWarmer((id: AppID) => { const c = APP_BY_ID[id]; if (c) warmLazy(c); });
 
-import { Like520Controller, shouldShowLike520Popup } from './Like520Event';
 import { UpdateNotificationController, shouldShowUpdateNotification } from './UpdateNotificationEvent';
 import { WorkerUpdateReminderController, shouldShowWorkerUpdateReminder } from './WorkerUpdateReminderEvent';
 import { formatBytes } from '../utils/format';
@@ -529,23 +528,13 @@ const PhoneShell: React.FC = () => {
     }
   }, [showDisclaimer, showImportRecoveryPrompt, showUpdateNotification]);
 
-  // 520 特别活动弹窗（2026-05-20 当天，且没被 dismiss / completed）
-  // 一次性：用户点过任何按钮就标记 dismissed，下次刷新不再出现；
-  // API 配置改成弹窗内嵌，配完直接进活动，不再需要把弹窗暂存让位给 Settings。
-  const [showLike520Popup, setShowLike520Popup] = useState(false);
-  useEffect(() => {
-    if (showDisclaimer || showImportRecoveryPrompt || showUpdateNotification) return;
-    if (!isDataLoaded) return;
-    if (shouldShowLike520Popup()) setShowLike520Popup(true);
-  }, [showDisclaimer, showImportRecoveryPrompt, showUpdateNotification, isDataLoaded]);
-
   // Worker 后端更新提醒 — 只对启用了 Instant Push 的用户弹，且当前 worker 版本未确认过
   const [showWorkerUpdateReminder, setShowWorkerUpdateReminder] = useState(false);
   useEffect(() => {
-    if (showDisclaimer || showImportRecoveryPrompt || showUpdateNotification || showLike520Popup) return;
+    if (showDisclaimer || showImportRecoveryPrompt || showUpdateNotification) return;
     if (!isDataLoaded) return;
     if (shouldShowWorkerUpdateReminder()) setShowWorkerUpdateReminder(true);
-  }, [showDisclaimer, showImportRecoveryPrompt, showUpdateNotification, showLike520Popup, isDataLoaded]);
+  }, [showDisclaimer, showImportRecoveryPrompt, showUpdateNotification, isDataLoaded]);
 
   // Capacitor Native Handling
   useEffect(() => {
@@ -729,7 +718,6 @@ const PhoneShell: React.FC = () => {
       case AppID.LifeSim: return <LifeSimApp />;
       case AppID.MemoryPalace: return <MemoryPalaceApp />;
       case AppID.QQBridge: return <QQBridge />;
-      case AppID.SpecialMoments: return <SpecialMomentsApp />;
       case AppID.VRWorld: return <VRWorldApp />;
       case AppID.CharCreatorDev: return <CharCreatorDevApp />;
       case AppID.Launcher:
@@ -776,7 +764,13 @@ const PhoneShell: React.FC = () => {
           <div className="flex-1 relative overflow-hidden" style={{ contain: useIOSStandaloneLayout ? undefined : 'layout style paint' }}>
             <AppErrorBoundary onCloseApp={closeApp} resetKey={`${activeApp}:${activeCharacterId || 'none'}`}>
               <Suspense fallback={<AppLoadingFallback onReturn={closeApp} />}>
-                {renderApp()}
+                {activeApp === AppID.Launcher ? (
+                  renderApp()
+                ) : (
+                  <AppWrapper onClose={closeApp}>
+                    {renderApp()}
+                  </AppWrapper>
+                )}
               </Suspense>
             </AppErrorBoundary>
           </div>
@@ -834,15 +828,8 @@ const PhoneShell: React.FC = () => {
          <UpdateNotificationController onClose={() => setShowUpdateNotification(false)} />
        )}
 
-       {/* 520 特别活动弹窗（2026-05-20 当天，一次性） */}
-       {!showDisclaimer && !showImportRecoveryPrompt && !showUpdateNotification && showLike520Popup && (
-         <Like520Controller
-           onClose={() => setShowLike520Popup(false)}
-         />
-       )}
-
        {/* Worker 后端更新提醒（仅启用 Instant Push 的用户，每个 worker 版本一次） */}
-       {!showDisclaimer && !showImportRecoveryPrompt && !showUpdateNotification && !showLike520Popup && showWorkerUpdateReminder && (
+       {!showDisclaimer && !showImportRecoveryPrompt && !showUpdateNotification && showWorkerUpdateReminder && (
          <WorkerUpdateReminderController
            onClose={() => setShowWorkerUpdateReminder(false)}
          />

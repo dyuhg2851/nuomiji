@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useOS } from '../context/OSContext';
 import { processImage } from '../utils/file';
+import { AppHeader } from '../components/AppHeader';
 
 const UserApp: React.FC = () => {
     const { closeApp, userProfile, updateUserProfile, addToast } = useOS();
@@ -21,21 +22,9 @@ const UserApp: React.FC = () => {
     };
 
     return (
-        <div className="h-full w-full bg-slate-50 flex flex-col animate-fade-in">
+        <div className="h-screen w-full bg-slate-50 flex flex-col animate-fade-in">
              {/* Header */}
-             <div className="shrink-0 z-10 sticky top-0">
-                 <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
-                 <div className="h-20 bg-white/70 backdrop-blur-md flex items-end pb-3 px-4 border-b border-white/40 shrink-0">
-                     <div className="flex items-center gap-2 w-full">
-                         <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
-                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600">
-                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                             </svg>
-                         </button>
-                         <h1 className="text-xl font-medium text-slate-700 tracking-wide">个人档案</h1>
-                     </div>
-                 </div>
-             </div>
+             <AppHeader title="个人档案" onBack={closeApp} />
 
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
                 {/* Avatar */}

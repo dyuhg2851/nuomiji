@@ -19,6 +19,7 @@ import { fetchMiniMaxVoices, MiniMaxVoiceItem } from '../utils/minimaxVoice';
 import { resolveMiniMaxApiKey } from '../utils/minimaxApiKey';
 import { normalizeUserImpression } from '../utils/impression';
 import { injectMemoryPalace } from '../utils/memoryPalace/pipeline';
+import { AppHeader } from '../components/AppHeader';
 
 const CharacterCard: React.FC<{
     char: CharacterProfile;
@@ -951,13 +952,13 @@ ${isInitialGeneration ? `
   };
 
   return (
-    <div className="h-full w-full bg-slate-50/30 font-light relative">
+    <div className="h-screen w-full bg-slate-50/30 font-light relative">
        {view === 'list' ? (
            <div className="flex flex-col h-full animate-fade-in">
-               {/* safe-top spacer 透明 + backdrop-blur，跟 iOS 系统 status bar 一致 */}
+               {/* Header */}
                <div className="shrink-0 z-10 sticky top-0">
                    <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
-                   <div className="px-6 pt-4 pb-4 shrink-0 flex items-center justify-between">
+                   <div className="px-6 pt-4 pb-4 shrink-0 flex items-center justify-between bg-white/80 backdrop-blur-md">
                        <div><h1 className="text-2xl font-light text-slate-800 tracking-tight">神经链接</h1><p className="text-xs text-slate-400 mt-1">已建立 {characters.length} 个角色连接</p></div>
                        <div className="flex gap-2">
                             <button onClick={() => cardImportRef.current?.click()} className="p-2 rounded-full bg-white/40 hover:bg-white/80 transition-colors text-slate-600" title="导入角色卡">
@@ -990,7 +991,7 @@ ${isInitialGeneration ? `
            </div>
        ) : formData && (
            <div className="flex flex-col h-full animate-fade-in bg-slate-50/50 relative">
-               {/* safe-top spacer 透明 + backdrop-blur，跟 iOS 系统 status bar 一致 */}
+               {/* Header */}
                <div className="shrink-0 z-40 sticky top-0">
                    <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
                    <div className="h-32 bg-gradient-to-b from-white/90 to-transparent backdrop-blur-sm flex flex-col justify-end px-5 pb-2 shrink-0">

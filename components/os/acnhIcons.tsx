@@ -113,7 +113,6 @@ const ACNH_ICON_MAP: Partial<Record<AppID, React.ReactNode>> = {
   [AppID.Study]: draw([21, 24, 79, 77], bookGlyph),
   [AppID.Worldbook]: draw([21, 24, 79, 77], bookGlyph),
   [AppID.Guidebook]: draw([21, 24, 79, 77], bookGlyph),
-  [AppID.SpecialMoments]: draw([12, 14, 88, 87], starGlyph),
   [AppID.VRWorld]: draw([12, 14, 88, 87], starGlyph),
   [AppID.Appearance]: draw([16, 20, 84, 84], paletteGlyph),
   [AppID.ThemeMaker]: draw([16, 20, 84, 84], paletteGlyph),
