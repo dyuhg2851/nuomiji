@@ -59,44 +59,32 @@ const Chat = lazyApp(() => import('../apps/Chat'));
 const GroupChat = lazyApp(() => import('../apps/GroupChat'));
 const ThemeMaker = lazyApp(() => import('../apps/ThemeMaker'));
 const Appearance = lazyApp(() => import('../apps/Appearance'));
-const Gallery = lazyApp(() => import('../apps/Gallery'));
 const DateApp = lazyApp(() => import('../apps/DateApp'));
 const UserApp = lazyApp(() => import('../apps/UserApp'));
 const JournalApp = lazyApp(() => import('../apps/JournalApp'));
-const ScheduleApp = lazyApp(() => import('../apps/ScheduleApp'));
 const RoomApp = lazyApp(() => import('../apps/RoomApp'));
 const CheckPhone = lazyApp(() => import('../apps/CheckPhone'));
-const SocialApp = lazyApp(() => import('../apps/SocialApp'));
 const StudyApp = lazyApp(() => import('../apps/StudyApp'));
-const FAQApp = lazyApp(() => import('../apps/FAQApp'));
-const GameApp = lazyApp(() => import('../apps/GameApp'));
 const WorldbookApp = lazyApp(() => import('../apps/WorldbookApp'));
-const NovelApp = lazyApp(() => import('../apps/NovelApp'));
 const BankApp = lazyApp(() => import('../apps/BankApp'));
-const XhsStockApp = lazyApp(() => import('../apps/XhsStockApp'));
 const XhsFreeRoamApp = lazyApp(() => import('../apps/XhsFreeRoamApp'));
-const BrowserApp = lazyApp(() => import('../apps/BrowserApp'));
-const SongwritingApp = lazyApp(() => import('../apps/SongwritingApp'));
 const MusicApp = lazyApp(() => import('../apps/MusicApp'));
 const CallApp = lazyApp(() => import('../apps/CallApp'));
-const VoiceDesignerApp = lazyApp(() => import('../apps/VoiceDesignerApp'));
 const GuidebookApp = lazyApp(() => import('../apps/GuidebookApp'));
 const LifeSimApp = lazyApp(() => import('../apps/LifeSimApp'));
 const MemoryPalaceApp = lazyApp(() => import('../apps/MemoryPalaceApp'));
-const HandbookApp = lazyApp(() => import('../apps/HandbookApp'));
 const QQBridge = lazyApp(() => import('../apps/QQBridge'));
-const HotNewsApp = lazyApp(() => import('../apps/HotNewsApp'));
 const VRWorldApp = lazyApp(() => import('../apps/VRWorldApp'));
 const CharCreatorDevApp = lazyApp(() => import('../apps/CharCreatorDevApp'));
 const SpecialMomentsApp = lazyApp(() => import('./ValentineEvent').then(m => ({ default: m.SpecialMomentsApp })));
 
 // 预取优先级：高频/常驻 App 先预热，其余随后；逐个在空闲时触发，避免与交互抢主线程/带宽。
 const APP_PRELOAD_ORDER: PreloadableLazy[] = [
-  Chat, Character, GroupChat, SocialApp, RoomApp, Settings, Appearance,
-  CheckPhone, JournalApp, ScheduleApp, MusicApp, CallApp, Gallery, DateApp, UserApp,
-  StudyApp, GameApp, NovelApp, BankApp, WorldbookApp, MemoryPalaceApp, HandbookApp,
-  VRWorldApp, LifeSimApp, SongwritingApp, GuidebookApp, FAQApp, HotNewsApp,
-  XhsStockApp, XhsFreeRoamApp, BrowserApp, VoiceDesignerApp, ThemeMaker, QQBridge,
+  Chat, Character, GroupChat, RoomApp, Settings, Appearance,
+  CheckPhone, JournalApp, MusicApp, CallApp, DateApp, UserApp,
+  StudyApp, BankApp, WorldbookApp, MemoryPalaceApp,
+  VRWorldApp, LifeSimApp, GuidebookApp,
+  XhsFreeRoamApp, ThemeMaker, QQBridge,
   SpecialMomentsApp, CharCreatorDevApp,
 ];
 
@@ -105,15 +93,15 @@ const APP_PRELOAD_ORDER: PreloadableLazy[] = [
 const APP_BY_ID: Partial<Record<AppID, PreloadableLazy>> = {
   [AppID.Settings]: Settings, [AppID.Character]: Character, [AppID.Chat]: Chat,
   [AppID.GroupChat]: GroupChat, [AppID.ThemeMaker]: ThemeMaker, [AppID.Appearance]: Appearance,
-  [AppID.Gallery]: Gallery, [AppID.Date]: DateApp, [AppID.User]: UserApp,
-  [AppID.Journal]: JournalApp, [AppID.Schedule]: ScheduleApp, [AppID.Room]: RoomApp,
-  [AppID.CheckPhone]: CheckPhone, [AppID.Social]: SocialApp, [AppID.Study]: StudyApp,
-  [AppID.FAQ]: FAQApp, [AppID.Game]: GameApp, [AppID.Worldbook]: WorldbookApp,
-  [AppID.Novel]: NovelApp, [AppID.Bank]: BankApp, [AppID.XhsStock]: XhsStockApp,
-  [AppID.XhsFreeRoam]: XhsFreeRoamApp, [AppID.Browser]: BrowserApp, [AppID.Songwriting]: SongwritingApp,
-  [AppID.Music]: MusicApp, [AppID.Call]: CallApp, [AppID.VoiceDesigner]: VoiceDesignerApp,
+  [AppID.Date]: DateApp, [AppID.User]: UserApp,
+  [AppID.Journal]: JournalApp, [AppID.Room]: RoomApp,
+  [AppID.CheckPhone]: CheckPhone, [AppID.Study]: StudyApp,
+  [AppID.Worldbook]: WorldbookApp,
+  [AppID.Bank]: BankApp,
+  [AppID.XhsFreeRoam]: XhsFreeRoamApp,
+  [AppID.Music]: MusicApp, [AppID.Call]: CallApp,
   [AppID.Guidebook]: GuidebookApp, [AppID.LifeSim]: LifeSimApp, [AppID.MemoryPalace]: MemoryPalaceApp,
-  [AppID.Handbook]: HandbookApp, [AppID.QQBridge]: QQBridge, [AppID.HotNews]: HotNewsApp,
+  [AppID.QQBridge]: QQBridge,
   [AppID.VRWorld]: VRWorldApp, [AppID.CharCreatorDev]: CharCreatorDevApp, [AppID.SpecialMoments]: SpecialMomentsApp,
 };
 // 注入负载预热器：AppIcon 的 pointerdown → preloadApp(id) → 这里 warmLazy，连 React.lazy 负载一起解析。
@@ -732,33 +720,21 @@ const PhoneShell: React.FC = () => {
       case AppID.GroupChat: return <GroupChat />; 
       case AppID.ThemeMaker: return <ThemeMaker />;
       case AppID.Appearance: return <Appearance />;
-      case AppID.Gallery: return <Gallery />;
       case AppID.Date: return <DateApp />; 
       case AppID.User: return <UserApp />;
       case AppID.Journal: return <JournalApp />; 
-      case AppID.Schedule: return <ScheduleApp />;
       case AppID.Room: return <RoomApp />; 
       case AppID.CheckPhone: return <CheckPhone />;
-      case AppID.Social: return <SocialApp />;
       case AppID.Study: return <StudyApp />; 
-      case AppID.FAQ: return <FAQApp />; 
-      case AppID.Game: return <GameApp />; 
       case AppID.Worldbook: return <WorldbookApp />;
-      case AppID.Novel: return <NovelApp />; 
       case AppID.Bank: return <BankApp />;
-      case AppID.XhsStock: return <XhsStockApp />;
       case AppID.XhsFreeRoam: return <XhsFreeRoamApp />;
-      case AppID.Browser: return <BrowserApp />;
-      case AppID.Songwriting: return <SongwritingApp />;
       case AppID.Music: return <MusicApp />;
       case AppID.Call: return <CallApp />;
-      case AppID.VoiceDesigner: return <VoiceDesignerApp />;
       case AppID.Guidebook: return <GuidebookApp />;
       case AppID.LifeSim: return <LifeSimApp />;
       case AppID.MemoryPalace: return <MemoryPalaceApp />;
-      case AppID.Handbook: return <HandbookApp />;
       case AppID.QQBridge: return <QQBridge />;
-      case AppID.HotNews: return <HotNewsApp />;
       case AppID.SpecialMoments: return <SpecialMomentsApp />;
       case AppID.VRWorld: return <VRWorldApp />;
       case AppID.CharCreatorDev: return <CharCreatorDevApp />;

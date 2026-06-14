@@ -5,36 +5,24 @@ export enum AppID {
   Character = 'character',
   Chat = 'chat',
   GroupChat = 'group_chat', 
-  Gallery = 'gallery',
   Music = 'music',
-  Browser = 'browser',
   ThemeMaker = 'thememaker',
   Appearance = 'appearance',
   Date = 'date',
   User = 'user',
   Journal = 'journal',
-  Schedule = 'schedule',
   Room = 'room',
   CheckPhone = 'check_phone',
-  Social = 'social',
   Study = 'study',
-  FAQ = 'faq',
-  Game = 'game',
   Worldbook = 'worldbook', 
-  Novel = 'novel', 
   Bank = 'bank', // New App
-  XhsStock = 'xhs_stock', // XHS image stock for publishing
   SpecialMoments = 'special_moments', // Valentine's Day & future events
   XhsFreeRoam = 'xhs_free_roam', // Character autonomous XHS activity
-  Songwriting = 'songwriting', // Songwriting / Lyric creation app
   Call = 'call', // 语音电话测试（MiniMax TTS）
-  VoiceDesigner = 'voice_designer', // 捏声音 — MiniMax 音色设计器
   Guidebook = 'guidebook', // 攻略本 — 角色攻略用户小游戏
   LifeSim = 'lifesim', // 模拟人生 — 与角色共同经营的小世界
   MemoryPalace = 'memory_palace', // 记忆宫殿 — 七个房间可视化
-  Handbook = 'handbook', // 手账 — 跨角色聚合的生活留痕本（LLM 代笔 + 角色生活流陪伴）
   QQBridge = 'qq_bridge', // QQ 桥接 — 通过 NapCat 把 QQ 私聊接入当前角色，共享 IndexedDB 上下文
-  HotNews = 'hot_news', // 热点 — 分时段召回的多平台热榜可视化（决定角色可能聊起的话题）
   VRWorld = 'vrworld', // 彼方 — 角色自主登入的虚拟世界（定时驱动，房间里看小说/听歌/留言，产出活动卡注入聊天+记忆）
   CharCreatorDev = 'char_creator_dev', // 捏脸系统开发模式 — 仅开发模式可见，向捏人器指定类目追加自定义部件
 }
@@ -608,21 +596,6 @@ export interface NovelSegment {
     };
 }
 
-export interface NovelBook {
-    id: string;
-    title: string;
-    subtitle?: string; 
-    summary: string;
-    coverStyle: string; 
-    coverImage?: string; 
-    worldSetting: string;
-    collaboratorIds: string[]; 
-    protagonists: NovelProtagonist[];
-    segments: NovelSegment[];
-    createdAt: number;
-    lastActiveAt: number;
-}
-
 // =====================================================================
 // --- VR WORLD ("彼方") TYPES ---
 // 角色自主登入的虚拟世界。定时器驱动每个角色独立调用一次 LLM，在某个房间
@@ -631,7 +604,7 @@ export interface NovelBook {
 // =====================================================================
 
 /** 虚拟世界里的房间。 */
-export type VRRoomId = 'library' | 'music' | 'guestbook' | 'gym' | 'postoffice' | 'theater' | 'cafe';
+export type VRRoomId = 'library' | 'music' | 'guestbook' | 'gym' | 'postoffice' | 'cafe';
 
 /** 全局小说库里的一本书（所有角色共享原文，各自留批注、各自书签）。 */
 export interface VRWorldNovel {
@@ -832,88 +805,6 @@ export interface VRMusicRoomState {
     updatedAt: number;
 }
 
-// ============ 剧院 / 话剧部门 ============
-
-/** 剧本里的一个登场角色（名字 + 大致性格，供选角匹配/演绎用）。 */
-export interface VRPlayRole {
-    name: string;
-    persona: string;
-}
-
-/** 一份投稿剧本（角色创作 / 用户写 / LLM 代写 / 上传）。 */
-export interface VRScript {
-    id: string;
-    title: string;
-    /** 一句话简介（"创作了关于 xxx 的舞台剧"用） */
-    logline: string;
-    roles: VRPlayRole[];
-    /** 完整剧本正文（固定格式：幕/场 + 角色台词 + （旁白）） */
-    body: string;
-    /** 作者 id：'user' | charId | 'llm' */
-    authorId: string;
-    authorName: string;
-    source: 'char' | 'user' | 'llm' | 'upload';
-    createdAt: number;
-}
-
-/** 编排时的 LLM 调用模式：逐角色各调一次（精准，N 次）/ 固定两次（省，可能 OOC）。 */
-export type VRStageMode = 'per-role' | 'two-call';
-
-/** 选角：剧本角色 → 演员（char 或 临时 NPC）。 */
-export interface VRCastAssign {
-    roleName: string;
-    actorId: string;   // charId | npc_xxx
-    actorName: string;
-    isNpc: boolean;
-    /** NPC 的捏脸立绘（透明 PNG dataUrl） */
-    npcChibi?: string;
-}
-
-/** 某演员读完剧本后给导演的意见（吐槽 / 改台词动作 / 配不配合）。 */
-export interface VRActorNote {
-    actorId: string;
-    actorName: string;
-    roleName: string;
-    /** 一句吐槽 / 想法（UI 展示） */
-    note: string;
-    /** 角色按自己本色重写过的"我这部分台词 / 怎么演"（可空 = 照原本演） */
-    lines?: string;
-    /** 绝对禁忌：导演绝不能让该角色做的事（硬红线，可空） */
-    taboo?: string;
-    /** 给导演的写作指导（这条线该怎么处理，可空） */
-    direction?: string;
-    /** 态度光谱：欣然 / 配合 / 勉强 / 隐忍 / 抵触 / 拒演（按角色性子自然落点，不必都硬刚） */
-    attitude?: string;
-    /** 是否配合（由 attitude 推导：抵触/拒演 = false） */
-    cooperative: boolean;
-}
-
-/** 最终演出脚本的一拍（台词气泡 / 旁白 / 上场 / 下场）。 */
-export interface VRStageLine {
-    kind: 'line' | 'narration' | 'enter' | 'exit';
-    /** line/enter/exit 时是谁 */
-    actorName?: string;
-    /** 台词气泡内容 / 旁白文字 */
-    text: string;
-}
-
-/** 一场已收录的演出（导演整合后的成品 + 观众锐评 + 评级）。 */
-export interface VRStagedPlay {
-    id: string;
-    scriptId: string;
-    title: string;
-    logline: string;
-    cast: VRCastAssign[];
-    notes: VRActorNote[];
-    /** 导演整合后的可演出脚本 */
-    stage: VRStageLine[];
-    /** 赛博观众锐评 */
-    reviews: { critic: string; text: string }[];
-    /** 评级（如 S / A / ★★★★☆） */
-    rating: string;
-    createdAt: number;
-}
-
 /**
  * 捏脸系统自定义部件（开发模式追加）。运行时由 CreatorIframe 读出，随 like520_init
  * 以 extraItems 注入捏人器，合并进对应类目的 PARTS。520 / 彼方 都会拿到。
@@ -934,109 +825,6 @@ export interface CustomCreatorPart {
 // --- SONGWRITING APP TYPES ---
 export type SongMood = 'happy' | 'sad' | 'romantic' | 'angry' | 'chill' | 'epic' | 'nostalgic' | 'dreamy';
 export type SongGenre = 'pop' | 'rock' | 'ballad' | 'rap' | 'folk' | 'electronic' | 'jazz' | 'rnb' | 'free';
-
-export interface SongLine {
-    id: string;
-    authorId: string; // 'user' or charId
-    content: string;
-    section: 'intro' | 'verse' | 'pre-chorus' | 'chorus' | 'bridge' | 'outro' | 'free';
-    annotation?: string; // AI guidance note on this line
-    timestamp: number;
-    isDraft?: boolean; // true = not selected as final lyrics, kept as draft record
-}
-
-export interface SongComment {
-    id: string;
-    authorId: string; // charId
-    type: 'guidance' | 'praise' | 'suggestion' | 'teaching' | 'reaction';
-    content: string;
-    targetLineId?: string; // which line this comment is about
-    timestamp: number;
-}
-
-export interface ChordInfo {
-    root: string;       // e.g. 'C', 'D', 'Ab'
-    quality: string;    // e.g. 'maj', 'min', '7', 'maj7', 'sus4'
-    display: string;    // e.g. 'C', 'Am', 'G7', 'Fmaj7'
-    midi: number;       // root note MIDI number (for audio)
-}
-
-export interface MelodyNote {
-    midi: number;       // MIDI note number
-    duration: number;   // in beats
-    vowel: number;      // index into vowel formant table (0=a,1=o,2=e,3=i,4=u)
-}
-
-export interface SectionArrangement {
-    section: string;            // matches SongLine.section
-    chords: ChordInfo[];        // one chord per line in this section
-    melodies?: MelodyNote[][];  // melodies[lineIdx] = notes for that line
-}
-
-export interface SongArrangement {
-    rootNote: string;           // e.g. 'C', 'A'
-    scale: 'major' | 'minor';
-    bpm: number;
-    sections: SectionArrangement[];
-    instruments: {
-        piano: boolean;
-        bass: boolean;
-        drums: boolean;
-        melody: boolean;
-    };
-    drumPattern: 'basic' | 'upbeat' | 'halftime' | 'shuffle';
-}
-
-// Provider identifier for AI-generated audio. Each one has its own pricing
-// / length cap / API path; the actual call site decides which to use.
-//   - 'minimax-free' → music-2.6-free, free tier, 60s cap
-//   - 'minimax-paid' → music-2.6, Token-Plan price, 60s cap
-//   - 'ace-step'     → Replicate lucataco/ace-step, $0.015/song, 4-min cap
-export type MusicProvider = 'minimax-free' | 'minimax-paid' | 'ace-step';
-
-// AI-rendered audio attached to a SongSheet.
-// Audio blob lives in the IndexedDB assets store keyed by `assetKey`,
-// so the sheet itself stays small and JSON-serializable for sync/export.
-export interface SongAudio {
-    assetKey: string;          // DB.getAssetRaw / saveAssetRaw key
-    mimeType: string;          // e.g. "audio/mpeg", "audio/wav"
-    durationSec?: number;
-    generatedAt: number;
-    provider: MusicProvider;
-    // Snapshot of the inputs used so we can show "regenerate when lyrics changed"
-    promptHash: string;
-    tagsUsed: string;
-    lyricsLineCount: number;
-}
-
-export interface SongSheet {
-    id: string;
-    title: string;
-    subtitle?: string;
-    genre: SongGenre;
-    mood: SongMood;
-    bpm?: number;
-    key?: string; // e.g. "C major", "A minor"
-    collaboratorId: string; // the character guiding the user
-    lines: SongLine[];
-    comments: SongComment[];
-    status: 'draft' | 'completed';
-    coverStyle: string; // gradient/color identifier
-    createdAt: number;
-    lastActiveAt: number;
-    completedAt?: number;
-    arrangement?: SongArrangement;
-    audio?: SongAudio;
-    // Custom style prompt — when set, overrides the preset/genre/mood-derived tags.
-    // Plain comma-separated English string the user (or LLM helper) authored.
-    // Reused by both ACE-Step (`tags` field) and MiniMax music (`prompt` field).
-    aceStepCustomTags?: string;
-    // Last-used music provider for this song — drives the modal's default selection.
-    musicProvider?: MusicProvider;
-    // Lyric structure template chosen at creation. Drives the structure-guide
-    // banner shown in the write view so user/char don't write randomly.
-    lyricTemplate?: string;
-}
 
 // --- DATE APP TYPES ---
 export interface DialogueItem {
@@ -1552,26 +1340,6 @@ export interface Toast {
     type: 'success' | 'error' | 'info';
 }
 
-export interface XhsStockImage {
-    id: string;
-    url: string;           // 图床URL (must be public https)
-    tags: string[];        // 标签 e.g. ['美食','咖啡','下午茶']
-    addedAt: number;       // timestamp
-    usedCount: number;     // 被使用次数
-    lastUsedAt?: number;   // 上次使用时间
-}
-
-export interface GalleryImage {
-    id: string;
-    charId: string;
-    url: string;
-    timestamp: number;
-    review?: string;
-    reviewTimestamp?: number;
-    savedDate?: string; // YYYY-MM-DD format
-    chatContext?: string[]; // Recent chat messages at time of save
-}
-
 export interface StickerData {
     id: string;
     url: string;
@@ -1869,47 +1637,6 @@ export interface Anniversary {
     lastThoughtGeneratedAt?: number;
 }
 
-export interface SocialComment {
-    id: string;
-    authorName: string;
-    authorAvatar?: string;
-    content: string;
-    likes: number;
-    isCharacter?: boolean;
-    authorType?: 'user' | 'character' | 'stranger';
-    authorCharId?: string;
-}
-
-export interface SocialPost {
-    id: string;
-    authorName: string;
-    authorAvatar: string;
-    title: string;
-    content: string;
-    images: string[];
-    likes: number;
-    isCollected: boolean;
-    isLiked: boolean;
-    comments: SocialComment[];
-    timestamp: number;
-    tags: string[];
-    bgStyle?: string;
-    authorType?: 'user' | 'character' | 'stranger';
-    authorCharId?: string;
-}
-
-export interface SubAccount {
-    id: string;
-    handle: string; 
-    note: string;   
-}
-
-export interface SocialAppProfile {
-    name: string;
-    avatar: string;
-    bio: string;
-}
-
 export interface StudyChapter {
     id: string;
     title: string;
@@ -1972,63 +1699,6 @@ export interface QuizSession {
     gradedAt?: number;
 }
 
-export type GameTheme = 'fantasy' | 'cyber' | 'horror' | 'modern';
-
-export interface GameActionOption {
-    label: string;
-    type: 'neutral' | 'chaotic' | 'evil';
-}
-
-export interface GameLog {
-    id: string;
-    role: 'gm' | 'player' | 'character' | 'system';
-    speakerName?: string;
-    content: string;
-    timestamp: number;
-    diceRoll?: {
-        result: number;
-        max: number;
-        check?: string;
-        success?: boolean;
-    };
-    // 自动总结后，被归档折叠的日志会标记为 archived（不删除，UI 灰显折叠）
-    archived?: boolean;
-}
-
-// 自动总结产出的「前情提要」存档，像写小说一样记录起因经过结果与人物关系变化
-export interface GameSummary {
-    id: string;
-    content: string;       // 小说式总结（起因/经过/结果 + 人物关系变化）
-    logCount: number;      // 本段总结覆盖了多少条日志
-    logIds?: string[];     // 本段总结覆盖的日志 id（用于把原文与总结对应展示）
-    createdAt: number;
-}
-
-export interface GameSession {
-    id: string;
-    title: string;
-    theme: GameTheme;
-    worldSetting: string;
-    playerCharIds: string[];
-    logs: GameLog[];
-    status: {
-        location: string;
-        health: number;
-        sanity: number;
-        gold: number;
-        inventory: string[];
-    };
-    sanityLocked?: boolean;
-    diceDisabled?: boolean;      // 关闭骰子：行动不再自动骰 D20，默认直接成功
-    // 归档模式：'auto' 满20条自动总结并送进角色 chatapp；'manual' 自动总结但不送，仅手动归档时送。
-    // 旧存档无此字段，按 'manual' 处理（不污染旧角色的聊天上下文）。
-    archiveMode?: 'auto' | 'manual';
-    suggestedActions?: GameActionOption[];
-    summaries?: GameSummary[];   // 自动总结归档的前情提要
-    createdAt: number;
-    lastPlayedAt: number;
-}
-
 export type MessageType = 'text' | 'image' | 'emoji' | 'interaction' | 'transfer' | 'system' | 'social_card' | 'chat_forward' | 'xhs_card' | 'score_card' | 'music_card' | 'mcd_card' | 'html_card' | 'news_card' | 'vr_card' | 'trpg_card';
 
 export interface Message {
@@ -2081,44 +1751,29 @@ export interface FullBackupData {
     emojiCategories?: EmojiCategory[]; 
     savedJournalStickers?: {name: string, url: string}[]; 
     assets?: { id: string, data: string }[];
-    galleryImages?: GalleryImage[];
     userProfile?: UserProfile;
     diaries?: DiaryEntry[];
     tasks?: Task[];
     anniversaries?: Anniversary[];
     roomTodos?: RoomTodo[]; 
     roomNotes?: RoomNote[];
-    socialPosts?: SocialPost[]; 
     courses?: StudyCourse[]; 
-    games?: GameSession[];
     worldbooks?: Worldbook[]; 
     roomCustomAssets?: { id?: string; name: string; image: string; defaultScale: number; description?: string; visibility?: 'public' | 'character'; assignedCharIds?: string[] }[]; 
     
-    novels?: NovelBook[];
     vrNovels?: VRWorldNovel[];          // 虚拟世界「彼方」全局小说库
     vrAnnotations?: VRNovelAnnotation[]; // 虚拟世界小说批注
     customCreatorParts?: CustomCreatorPart[]; // 捏脸系统自定义部件
     vrMusicRoom?: VRMusicRoomState;            // 听歌房共享状态
     vrGuestbook?: VRGuestbookState;            // 留言簿共享状态
-    vrScripts?: VRScript[];                     // 剧院·投稿剧本库
-    vrStagedPlays?: VRStagedPlay[];             // 剧院·历史舞台剧
-    vrPresets?: { key: string; name: string; prompt: string; blurb?: string }[]; // 剧院·用户自定义写作风格预设
     vrLetters?: VRLetter[];                    // 邮局信件（本地存档+队列）
     vrSettings?: any[];                        // 彼方设置（独立 API + 调用记录）
     vrPostOffice?: Record<string, string>;     // 邮局本机配置：身份 deviceId / 后端地址（存 localStorage）
-    songs?: SongSheet[]; // Songwriting app data
     
     // Bank Data
     bankState?: BankFullState;
     bankDollhouse?: DollhouseState;
     bankTransactions?: BankTransaction[];
-
-    socialAppData?: {
-        charHandles?: Record<string, SubAccount[]>;
-        userProfile?: SocialAppProfile;
-        userId?: string;
-        userBg?: string;
-    };
     
     mediaAssets?: {
         charId: string;
@@ -2133,7 +1788,6 @@ export interface FullBackupData {
     }[];
 
     xhsActivities?: XhsActivityRecord[];
-    xhsStockImages?: XhsStockImage[];
 
     // Study Room settings
     studyApiConfig?: Partial<APIConfig>;

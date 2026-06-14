@@ -36,7 +36,6 @@ import {
     buildGymRoomTurn, parseGymOutput,
     buildPostOfficeRoomTurn, parsePostOfficeOutput,
     buildPostOfficeReadTurn, parsePostOfficeReadOutput,
-    buildTheaterRoomTurn, parseScriptOutput,
 } from './prompts';
 
 /** 记忆管线所需配置的最小形状（避免从 OSContext 反向 import 造成循环依赖）。 */
@@ -121,9 +120,9 @@ function nameLine(name: string, act: string): string {
     return t.startsWith(name) ? t : `${name}${act}`;
 }
 
-/** roll 一个房间：图书馆需有书；听歌房需有歌单或正在放歌；留言簿/娱乐室/邮局/剧院恒可去。 */
+/** roll 一个房间：图书馆需有书；听歌房需有歌单或正在放歌；留言簿/娱乐室/邮局恒可去。 */
 function rollRoom(char: CharacterProfile, novels: VRWorldNovel[], musicState: VRMusicRoomState | null, prefer?: VRRoomId): VRRoomId | null {
-    const pool: VRRoomId[] = ['guestbook', 'gym', 'postoffice', 'theater'];
+    const pool: VRRoomId[] = ['guestbook', 'gym', 'postoffice'];
     if (novels.length > 0) pool.push('library');
     if (gatherCharSongs(char).length > 0 || musicState?.nowPlaying) pool.push('music');
     if (prefer && pool.includes(prefer)) return prefer; // 指定的房间可用则去，否则回退随机
@@ -256,9 +255,6 @@ export async function runVRSession(deps: VRSessionDeps): Promise<VRSessionResult
             // 让角色召回"我当初为什么写这个"。截断到 200 字，够 embedding 抓语义即可。
             const recallLetter = (forcedTarget || poTarget)?.content || poReadTarget?.content;
             if (recallLetter) recallExtra.push(`一封信聊到：${recallLetter.slice(0, 200)}`);
-        } else if (room.id === 'theater') {
-            occupantsOf('theater').forEach(n => recallNames.add(n));
-            roomTurn = buildTheaterRoomTurn(occupantsOf('theater'), char.name);
         } else {
             // gym
             occupantsOf('gym').forEach(n => recallNames.add(n));
@@ -445,20 +441,6 @@ export async function runVRSession(deps: VRSessionDeps): Promise<VRSessionResult
             cardLines = [`「彼方 · ${room.name}」`, nameLine(char.name, activity)];
             if (parsed.behavior) cardLines.push(`· ${parsed.behavior}`);
             meta = { vrCard: true, room: 'gym', activity, behavior: parsed.behavior };
-        } else if (room.id === 'theater') {
-            // === 剧院：角色即兴写一出舞台剧投稿 ===
-            const parsed = parseScriptOutput(aiContent);
-            const script: VRScript = {
-                id: genId('scr'), title: parsed.title, logline: parsed.logline,
-                roles: parsed.roles, body: parsed.body,
-                authorId: char.id, authorName: char.name, source: 'char', createdAt: Date.now(),
-            };
-            await DB.saveVRScript(script);
-            await updateCharacter(char.id, { vrState: { ...prevState, currentRoom: 'theater', lastActiveAt: Date.now() } });
-            activity = `创作了一出${parsed.logline ? `关于「${parsed.logline}」的` : ''}舞台剧《${parsed.title}》。`;
-            cardLines = [`「彼方 · ${room.name}」`, nameLine(char.name, activity)];
-            if (parsed.roles.length) cardLines.push(`登场：${parsed.roles.map(r => r.name).join('、')}`);
-            meta = { vrCard: true, room: 'theater', activity };
         } else if (room.id === 'postoffice' && poReadTarget) {
             // === 邮局：认领自己寄出的信、读陌生人的回信、写感触 → 封存 ===
             const parsed = parsePostOfficeReadOutput(aiContent);

@@ -5,7 +5,6 @@ import {
     UploadSimple, PencilSimple, FlipHorizontal, CaretLeft, Sparkle,
     CircleNotch, TextAa, Palette, Pause, MusicNotes, Queue, Question, Check, Gear,
 } from '@phosphor-icons/react';
-import TheaterPanel from './theater/TheaterPanel';
 import { CreatorIframe, type ChibiResult } from '../components/Like520Event';
 import { useMusic, type Song } from '../context/MusicContext';
 import { DB } from '../utils/db';
@@ -1553,7 +1552,6 @@ const RoomScene: React.FC<{
     const isMusic = roomId === 'music';
     const isGuestbook = roomId === 'guestbook';
     const isPostOffice = roomId === 'postoffice';
-    const isTheater = roomId === 'theater';
     const [detail, setDetail] = useState<CharacterProfile | null>(null);
     const [musicState, setMusicState] = useState<VRMusicRoomState | null>(null);
     const [board, setBoard] = useState<VRGuestbookState | null>(null);
@@ -1720,9 +1718,6 @@ const RoomScene: React.FC<{
                 {/* 邮局：信件管理面板 */}
                 {isPostOffice && <PostOfficePanel addToast={addToast} characters={characters} userName={userName} />}
 
-                {/* 剧院：话剧部门面板（投稿 / 编排 / 演出 / 历史） */}
-                {isTheater && <TheaterPanel addToast={addToast} />}
-
                 {/* chibi 站位（可隐藏，避免挡住留言墙等文字） */}
                 {!hideChibi && occupants.map((c, i) => {
                     const slot = slots[i % slots.length];
@@ -1735,7 +1730,7 @@ const RoomScene: React.FC<{
                         </div>
                     );
                 })}
-                {occupants.length === 0 && !isMusic && !isGuestbook && !isPostOffice && !isTheater && (
+                {occupants.length === 0 && !isMusic && !isGuestbook && !isPostOffice && (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <p className="text-white/70 text-[12px] bg-black/30 rounded-full px-4 py-2">这个房间还没有人。去「接入」启用角色吧。</p>
                     </div>

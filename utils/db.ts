@@ -4,10 +4,10 @@
 import {
     CharacterProfile, ChatTheme, Message, UserProfile,
     Task, Anniversary, DiaryEntry, RoomTodo, RoomNote, DailySchedule,
-    GalleryImage, FullBackupData, GroupProfile, SocialPost, StudyCourse, GameSession, Worldbook, NovelBook, Emoji, EmojiCategory,
-    BankTransaction, SavingsGoal, BankFullState, DollhouseState, XhsStockImage, XhsActivityRecord, SongSheet, QuizSession, GuidebookSession,
-    LifeSimState, HandbookEntry, Tracker, TrackerEntry, HotNewsSnapshot,
-    VRWorldNovel, VRNovelAnnotation, CustomCreatorPart, VRMusicRoomState, VRGuestbookState, VRScript, VRStagedPlay, VRLetter
+    FullBackupData, GroupProfile, StudyCourse, Worldbook, Emoji, EmojiCategory,
+    BankTransaction, SavingsGoal, BankFullState, DollhouseState, XhsActivityRecord, QuizSession, GuidebookSession,
+    LifeSimState, HandbookEntry, Tracker, TrackerEntry,
+    VRWorldNovel, VRNovelAnnotation, CustomCreatorPart, VRMusicRoomState, VRGuestbookState, VRLetter
 } from '../types';
 import { exportPostOfficeLocal, importPostOfficeLocal } from './vrWorld/postOffice';
 
@@ -21,7 +21,6 @@ const STORE_EMOJI_CATEGORIES = 'emoji_categories';
 const STORE_THEMES = 'themes';
 const STORE_ASSETS = 'assets'; 
 const STORE_SCHEDULED = 'scheduled_messages'; 
-const STORE_GALLERY = 'gallery';
 const STORE_USER = 'user_profile'; 
 const STORE_DIARIES = 'diaries';
 const STORE_TASKS = 'tasks'; 
@@ -30,16 +29,11 @@ const STORE_ROOM_TODOS = 'room_todos';
 const STORE_ROOM_NOTES = 'room_notes'; 
 const STORE_GROUPS = 'groups'; 
 const STORE_JOURNAL_STICKERS = 'journal_stickers';
-const STORE_SOCIAL_POSTS = 'social_posts';
 const STORE_COURSES = 'courses';
-const STORE_GAMES = 'games';
 const STORE_WORLDBOOKS = 'worldbooks'; 
-const STORE_NOVELS = 'novels'; 
 const STORE_BANK_TX = 'bank_transactions';
 const STORE_BANK_DATA = 'bank_data';
-const STORE_XHS_STOCK = 'xhs_stock';
 const STORE_XHS_ACTIVITIES = 'xhs_activities';
-const STORE_SONGS = 'songs';
 const STORE_QUIZZES = 'quizzes';
 const STORE_GUIDEBOOK = 'guidebook';
 const STORE_LIFE_SIM = 'life_sim';
@@ -47,15 +41,11 @@ const STORE_DAILY_SCHEDULE = 'daily_schedule';
 const STORE_HANDBOOK = 'handbook'; // 跨角色聚合手账，每天一条 entry，id = 'YYYY-MM-DD'
 const STORE_TRACKERS = 'trackers';                // 手账打卡 tracker 定义
 const STORE_TRACKER_ENTRIES = 'tracker_entries';  // tracker 每日打卡数据
-const STORE_HOTNEWS = 'hotnews_snapshots';        // 分时段热点快照（全角色共享，key=日期#时段）
 const STORE_VR_NOVELS = 'vr_novels';              // 虚拟世界「彼方」全局小说库（所有角色共享原文）
 const STORE_VR_ANNOTATIONS = 'vr_annotations';    // 虚拟世界小说批注（per-segment per-char，可互相吐槽）
 const STORE_CC_PARTS = 'cc_custom_parts';         // 捏脸系统自定义部件（开发模式追加，注入捏人器）
 const STORE_VR_MUSIC = 'vr_music';                // 听歌房共享状态（单例 nowPlaying + 循环队列）
 const STORE_VR_GUESTBOOK = 'vr_guestbook';        // 留言簿共享版聊墙（单例 messages）
-const STORE_VR_SCRIPTS = 'vr_scripts';            // 剧院·投稿剧本库（每份剧本一条）
-const STORE_VR_PLAYS = 'vr_plays';                // 剧院·历史舞台剧（每场演出一条）
-const STORE_VR_PRESETS = 'vr_presets';            // 剧院·用户自定义写作风格预设（key 为主键）
 const STORE_VR_LETTERS = 'vr_letters';            // 邮局信件（本地存档 + 待寄出/待回复队列）
 const STORE_VR_SETTINGS = 'vr_settings';          // 彼方设置单例：独立 API（id='api'）+ 调用记录（id='apilog'）
 const STORE_API_CALL_LOG = 'api_call_log';        // 全局 API 调用记录单例（id='log'，保留近 5 天）
@@ -227,11 +217,6 @@ export const openDB = (): Promise<IDBDatabase> => {
         schedStore.createIndex('charId', 'charId', { unique: false });
       }
 
-      if (!db.objectStoreNames.contains(STORE_GALLERY)) {
-          const galleryStore = db.createObjectStore(STORE_GALLERY, { keyPath: 'id' });
-          galleryStore.createIndex('charId', 'charId', { unique: false });
-      }
-
       createStore(STORE_USER, { keyPath: 'id' });
       
       if (!db.objectStoreNames.contains(STORE_DIARIES)) {
@@ -252,11 +237,8 @@ export const openDB = (): Promise<IDBDatabase> => {
 
       createStore(STORE_GROUPS, { keyPath: 'id' });
       createStore(STORE_JOURNAL_STICKERS, { keyPath: 'name' });
-      createStore(STORE_SOCIAL_POSTS, { keyPath: 'id' });
       createStore(STORE_COURSES, { keyPath: 'id' });
-      createStore(STORE_GAMES, { keyPath: 'id' }); 
       createStore(STORE_WORLDBOOKS, { keyPath: 'id' }); 
-      createStore(STORE_NOVELS, { keyPath: 'id' });
 
       createStore(STORE_VR_NOVELS, { keyPath: 'id' });
       if (!db.objectStoreNames.contains(STORE_VR_ANNOTATIONS)) {
@@ -269,9 +251,6 @@ export const openDB = (): Promise<IDBDatabase> => {
       }
       createStore(STORE_VR_MUSIC, { keyPath: 'id' });
       createStore(STORE_VR_GUESTBOOK, { keyPath: 'id' });
-      createStore(STORE_VR_SCRIPTS, { keyPath: 'id' });
-      createStore(STORE_VR_PLAYS, { keyPath: 'id' });
-      createStore(STORE_VR_PRESETS, { keyPath: 'key' });
       if (!db.objectStoreNames.contains(STORE_VR_LETTERS)) {
           const ltStore = db.createObjectStore(STORE_VR_LETTERS, { keyPath: 'id' });
           ltStore.createIndex('box', 'box', { unique: false });
@@ -281,14 +260,12 @@ export const openDB = (): Promise<IDBDatabase> => {
 
       createStore(STORE_BANK_TX, { keyPath: 'id' });
       createStore(STORE_BANK_DATA, { keyPath: 'id' });
-      createStore(STORE_XHS_STOCK, { keyPath: 'id' });
 
       if (!db.objectStoreNames.contains(STORE_XHS_ACTIVITIES)) {
           const xhsActStore = db.createObjectStore(STORE_XHS_ACTIVITIES, { keyPath: 'id' });
           xhsActStore.createIndex('characterId', 'characterId', { unique: false });
       }
 
-      createStore(STORE_SONGS, { keyPath: 'id' });
       createStore(STORE_QUIZZES, { keyPath: 'id' });
       createStore(STORE_GUIDEBOOK, { keyPath: 'id' });
       createStore(STORE_LIFE_SIM, { keyPath: 'id' });
@@ -301,8 +278,6 @@ export const openDB = (): Promise<IDBDatabase> => {
           teStore.createIndex('trackerId', 'trackerId', { unique: false });
           teStore.createIndex('date', 'date', { unique: false });
       }
-
-      createStore(STORE_HOTNEWS, { keyPath: 'id' });
 
       // ─── Memory Palace (记忆宫殿) stores ───
       if (!db.objectStoreNames.contains('memory_nodes')) {
@@ -758,36 +733,6 @@ export const DB = {
       });
   },
 
-  getSocialPosts: async (): Promise<SocialPost[]> => {
-      const db = await openDB();
-      if (!db.objectStoreNames.contains(STORE_SOCIAL_POSTS)) return [];
-      return new Promise((resolve, reject) => {
-          const transaction = db.transaction(STORE_SOCIAL_POSTS, 'readonly');
-          const store = transaction.objectStore(STORE_SOCIAL_POSTS);
-          const request = store.getAll();
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = () => reject(request.error);
-      });
-  },
-
-  saveSocialPost: async (post: SocialPost): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_SOCIAL_POSTS, 'readwrite');
-      transaction.objectStore(STORE_SOCIAL_POSTS).put(post);
-  },
-
-  deleteSocialPost: async (id: string): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_SOCIAL_POSTS, 'readwrite');
-      transaction.objectStore(STORE_SOCIAL_POSTS).delete(id);
-  },
-
-  clearSocialPosts: async (): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_SOCIAL_POSTS, 'readwrite');
-      transaction.objectStore(STORE_SOCIAL_POSTS).clear();
-  },
-
   getEmojis: async (): Promise<Emoji[]> => {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -965,96 +910,6 @@ export const DB = {
     const db = await openDB();
     const transaction = db.transaction(STORE_JOURNAL_STICKERS, 'readwrite');
     transaction.objectStore(STORE_JOURNAL_STICKERS).delete(name);
-  },
-
-  saveGalleryImage: async (img: GalleryImage): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_GALLERY, 'readwrite');
-      transaction.objectStore(STORE_GALLERY).put(img);
-  },
-
-  getGalleryImages: async (charId?: string): Promise<GalleryImage[]> => {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-          const transaction = db.transaction(STORE_GALLERY, 'readonly');
-          const store = transaction.objectStore(STORE_GALLERY);
-          let request;
-          if (charId) {
-              const index = store.index('charId');
-              request = index.getAll(IDBKeyRange.only(charId));
-          } else {
-              request = store.getAll();
-          }
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = () => reject(request.error);
-      });
-  },
-
-  updateGalleryImageReview: async (id: string, review: string): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_GALLERY, 'readwrite');
-      const store = transaction.objectStore(STORE_GALLERY);
-      return new Promise((resolve, reject) => {
-          const req = store.get(id);
-          req.onsuccess = () => {
-              const data = req.result as GalleryImage;
-              if (data) {
-                  data.review = review;
-                  data.reviewTimestamp = Date.now();
-                  store.put(data);
-                  resolve();
-              } else reject(new Error('Image not found'));
-          };
-          req.onerror = () => reject(req.error);
-      });
-  },
-
-  deleteGalleryImage: async (id: string): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_GALLERY, 'readwrite');
-      transaction.objectStore(STORE_GALLERY).delete(id);
-  },
-
-  // --- XHS Stock Images ---
-  getXhsStockImages: async (): Promise<XhsStockImage[]> => {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-          const transaction = db.transaction(STORE_XHS_STOCK, 'readonly');
-          const request = transaction.objectStore(STORE_XHS_STOCK).getAll();
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = () => reject(request.error);
-      });
-  },
-
-  saveXhsStockImage: async (img: XhsStockImage): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_XHS_STOCK, 'readwrite');
-      transaction.objectStore(STORE_XHS_STOCK).put(img);
-  },
-
-  deleteXhsStockImage: async (id: string): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_XHS_STOCK, 'readwrite');
-      transaction.objectStore(STORE_XHS_STOCK).delete(id);
-  },
-
-  updateXhsStockImageUsage: async (id: string): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_XHS_STOCK, 'readwrite');
-      const store = transaction.objectStore(STORE_XHS_STOCK);
-      return new Promise((resolve, reject) => {
-          const req = store.get(id);
-          req.onsuccess = () => {
-              const data = req.result as XhsStockImage;
-              if (data) {
-                  data.usedCount = (data.usedCount || 0) + 1;
-                  data.lastUsedAt = Date.now();
-                  store.put(data);
-                  resolve();
-              } else reject(new Error('Stock image not found'));
-          };
-          req.onerror = () => reject(req.error);
-      });
   },
 
   // --- XHS Activities (Free Roam) ---
@@ -1296,59 +1151,6 @@ export const DB = {
       const db = await openDB();
       const transaction = db.transaction(STORE_DAILY_SCHEDULE, 'readwrite');
       transaction.objectStore(STORE_DAILY_SCHEDULE).put(schedule);
-  },
-
-  // ─── 热点快照 (分时段，全角色共享) ───
-  getHotNewsSnapshot: async (id: string): Promise<HotNewsSnapshot | null> => {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-          if (!db.objectStoreNames.contains(STORE_HOTNEWS)) { resolve(null); return; }
-          const transaction = db.transaction(STORE_HOTNEWS, 'readonly');
-          const req = transaction.objectStore(STORE_HOTNEWS).get(id);
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = () => reject(req.error);
-      });
-  },
-
-  saveHotNewsSnapshot: async (snapshot: HotNewsSnapshot): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_HOTNEWS, 'readwrite');
-      transaction.objectStore(STORE_HOTNEWS).put(snapshot);
-  },
-
-  // 拿最近一次快照（按 fetchedAt 倒序），失败兜底与 App 展示用
-  getLatestHotNewsSnapshot: async (): Promise<HotNewsSnapshot | null> => {
-      const db = await openDB();
-      return new Promise((resolve, reject) => {
-          if (!db.objectStoreNames.contains(STORE_HOTNEWS)) { resolve(null); return; }
-          const transaction = db.transaction(STORE_HOTNEWS, 'readonly');
-          const req = transaction.objectStore(STORE_HOTNEWS).getAll();
-          req.onsuccess = () => {
-              const all = (req.result || []) as HotNewsSnapshot[];
-              if (all.length === 0) { resolve(null); return; }
-              all.sort((a, b) => b.fetchedAt - a.fetchedAt);
-              resolve(all[0]);
-          };
-          req.onerror = () => reject(req.error);
-      });
-  },
-
-  // 清理过期快照（保留最近 N 条），避免无限堆积
-  pruneHotNewsSnapshots: async (keep = 12): Promise<void> => {
-      const db = await openDB();
-      return new Promise((resolve) => {
-          if (!db.objectStoreNames.contains(STORE_HOTNEWS)) { resolve(); return; }
-          const transaction = db.transaction(STORE_HOTNEWS, 'readwrite');
-          const store = transaction.objectStore(STORE_HOTNEWS);
-          const req = store.getAll();
-          req.onsuccess = () => {
-              const all = (req.result || []) as HotNewsSnapshot[];
-              all.sort((a, b) => b.fetchedAt - a.fetchedAt);
-              all.slice(keep).forEach(s => store.delete(s.id));
-              resolve();
-          };
-          req.onerror = () => resolve();
-      });
   },
 
   getScheduleCoverImage: async (charId: string): Promise<string | null> => {
@@ -1717,63 +1519,6 @@ export const DB = {
       transaction.objectStore(STORE_VR_GUESTBOOK).put({ ...state, id: 'board', messages });
   },
 
-  // --- 剧院·投稿剧本库 ---
-  getVRScripts: async (): Promise<VRScript[]> => {
-      const db = await openDB();
-      if (!db.objectStoreNames.contains(STORE_VR_SCRIPTS)) return [];
-      return new Promise((resolve) => {
-          const request = db.transaction(STORE_VR_SCRIPTS, 'readonly').objectStore(STORE_VR_SCRIPTS).getAll();
-          request.onsuccess = () => resolve((request.result || []).sort((a: VRScript, b: VRScript) => b.createdAt - a.createdAt));
-          request.onerror = () => resolve([]);
-      });
-  },
-  saveVRScript: async (script: VRScript): Promise<void> => {
-      const db = await openDB();
-      db.transaction(STORE_VR_SCRIPTS, 'readwrite').objectStore(STORE_VR_SCRIPTS).put(script);
-  },
-  deleteVRScript: async (id: string): Promise<void> => {
-      const db = await openDB();
-      db.transaction(STORE_VR_SCRIPTS, 'readwrite').objectStore(STORE_VR_SCRIPTS).delete(id);
-  },
-
-  // --- 剧院·历史舞台剧 ---
-  getVRStagedPlays: async (): Promise<VRStagedPlay[]> => {
-      const db = await openDB();
-      if (!db.objectStoreNames.contains(STORE_VR_PLAYS)) return [];
-      return new Promise((resolve) => {
-          const request = db.transaction(STORE_VR_PLAYS, 'readonly').objectStore(STORE_VR_PLAYS).getAll();
-          request.onsuccess = () => resolve((request.result || []).sort((a: VRStagedPlay, b: VRStagedPlay) => b.createdAt - a.createdAt));
-          request.onerror = () => resolve([]);
-      });
-  },
-  saveVRStagedPlay: async (play: VRStagedPlay): Promise<void> => {
-      const db = await openDB();
-      db.transaction(STORE_VR_PLAYS, 'readwrite').objectStore(STORE_VR_PLAYS).put(play);
-  },
-  deleteVRStagedPlay: async (id: string): Promise<void> => {
-      const db = await openDB();
-      db.transaction(STORE_VR_PLAYS, 'readwrite').objectStore(STORE_VR_PLAYS).delete(id);
-  },
-
-  // --- 剧院·用户自定义写作风格预设 ---
-  getVRPresets: async (): Promise<any[]> => {
-      const db = await openDB();
-      if (!db.objectStoreNames.contains(STORE_VR_PRESETS)) return [];
-      return new Promise((resolve) => {
-          const request = db.transaction(STORE_VR_PRESETS, 'readonly').objectStore(STORE_VR_PRESETS).getAll();
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = () => resolve([]);
-      });
-  },
-  saveVRPreset: async (preset: { key: string; name: string; prompt: string; blurb?: string }): Promise<void> => {
-      const db = await openDB();
-      db.transaction(STORE_VR_PRESETS, 'readwrite').objectStore(STORE_VR_PRESETS).put(preset);
-  },
-  deleteVRPreset: async (key: string): Promise<void> => {
-      const db = await openDB();
-      db.transaction(STORE_VR_PRESETS, 'readwrite').objectStore(STORE_VR_PRESETS).delete(key);
-  },
-
   // --- 邮局信件 ---
   getVRLetters: async (): Promise<VRLetter[]> => {
       const db = await openDB();
@@ -2095,7 +1840,7 @@ export const DB = {
           });
       };
 
-      const [characters, messages, themes, emojis, emojiCategories, assets, galleryImages, userProfiles, diaries, tasks, anniversaries, roomTodos, roomNotes, groups, journalStickers, socialPosts, courses, games, worldbooks, novels, bankTx, bankData, xhsActivities, xhsStockImages, songs, quizzes, guidebookSessions, scheduledMessages, lifeSimStates, handbooks, trackers, trackerEntries, hotNewsSnapshots, vrNovels, vrAnnotations, customCreatorParts, vrMusic, vrGuestbook, vrScripts, vrStagedPlays, vrPresets, vrLetters, vrSettings] = await Promise.all([
+      const [characters, messages, themes, emojis, emojiCategories, assets, galleryImages, userProfiles, diaries, tasks, anniversaries, roomTodos, roomNotes, groups, journalStickers, socialPosts, courses, games, worldbooks, novels, bankTx, bankData, xhsActivities, xhsStockImages, songs, quizzes, guidebookSessions, scheduledMessages, lifeSimStates, handbooks, trackers, trackerEntries, hotNewsSnapshots, vrNovels, vrAnnotations, customCreatorParts, vrMusic, vrGuestbook, vrLetters, vrSettings] = await Promise.all([
           getAllFromStore(STORE_CHARACTERS),
           getAllFromStore(STORE_MESSAGES),
           getAllFromStore(STORE_THEMES),
@@ -2134,9 +1879,6 @@ export const DB = {
           getAllFromStore(STORE_CC_PARTS),
           getAllFromStore(STORE_VR_MUSIC),
           getAllFromStore(STORE_VR_GUESTBOOK),
-          getAllFromStore(STORE_VR_SCRIPTS),
-          getAllFromStore(STORE_VR_PLAYS),
-          getAllFromStore(STORE_VR_PRESETS),
           getAllFromStore(STORE_VR_LETTERS),
           getAllFromStore(STORE_VR_SETTINGS),
       ]);
@@ -2171,9 +1913,6 @@ export const DB = {
           customCreatorParts,
           vrMusicRoom: vrMusic && vrMusic.length ? vrMusic[0] : undefined,
           vrGuestbook: vrGuestbook && vrGuestbook.length ? vrGuestbook[0] : undefined,
-          vrScripts,
-          vrStagedPlays,
-          vrPresets,
           vrLetters,
           vrSettings,
           vrPostOffice: exportPostOfficeLocal(), // 邮局本机配置（身份/后端地址，存 localStorage）

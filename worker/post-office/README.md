@@ -17,16 +17,16 @@ wrangler deploy
 表结构由 Worker 自动建，**加性升级、不破坏老数据**（老库会自动补 `likes/dislikes/views` 列、
 新建 `po_devices/po_votes/po_ratelimit`），不必手动跑 `schema.sql`。
 
-### 挂到统一域名（如 noir2.cc.cd/po）
+### 挂到统一域名（如 nuomiji.24429888873.workers.dev/po）
 
 二选一：
 
-- **A. 单独部署 + 路由**：部署本 worker，然后在 Cloudflare 给 `noir2.cc.cd/po/*`
-  加一条 Route 指向它。客户端默认就是 `https://noir2.cc.cd/po`。
+- **A. 单独部署 + 路由**：部署本 worker，然后在 Cloudflare 给 `nuomiji.24429888873.workers.dev/po/*`
+  加一条 Route 指向它。客户端默认就是 `https://nuomiji.24429888873.workers.dev/po`。
 - **B. 合并进现有 worker**：把 `src/index.ts` 的 `fetch` 逻辑并进你现有的 noir2
   worker（按 path 结尾匹配，和现有 push 路由不冲突），并绑定 D1 `DB`。
 
-客户端后端地址可在「彼方 → 邮局 → ⚙」里改（默认 `https://noir2.cc.cd/po`）。
+客户端后端地址可在「彼方 → 邮局 → ⚙」里改（默认 `https://nuomiji.24429888873.workers.dev/po`）。
 
 ## 接口
 

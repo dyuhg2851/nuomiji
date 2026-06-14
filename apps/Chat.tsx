@@ -751,22 +751,6 @@ const Chat: React.FC = () => {
 
         if (!customContent) { setInput(''); localStorage.removeItem(draftKey); }
         
-        if (type === 'image') {
-            const recentChat = messages.slice(-10).map(m => {
-                const sender = m.role === 'user' ? userProfile.name : char.name;
-                return `${sender}: ${m.content.substring(0, 100)}`;
-            });
-            await DB.saveGalleryImage({
-                id: `img-${Date.now()}-${Math.random()}`,
-                charId: char.id,
-                url: text,
-                timestamp: Date.now(),
-                savedDate: new Date().toISOString().split('T')[0],
-                chatContext: recentChat
-            });
-            addToast('图片已保存至相册', 'info');
-        }
-
         const msgPayload: any = { charId: char.id, role: 'user', type, content: text, metadata };
         
         if (replyTarget) {

@@ -103,46 +103,20 @@ const ACNH_ICON_MAP: Partial<Record<AppID, React.ReactNode>> = {
     <circle cx="31" cy="50" r="3.4" fill={BROWN} /><circle cx="45" cy="50" r="3.4" fill={BROWN} />
     <path d="M31 58 Q38 64 45 58" stroke={BROWN} strokeWidth="3.4" fill="none" strokeLinecap="round" />
   </>),
-  [AppID.Social]: draw([29, 16, 71, 86], <>
-    <path d="M52 16 C60 33 76 38 71 59 C68 78 58 86 50 86 C41 86 29 79 29 60 C29 47 40 45 42 34 C47 43 49 39 52 16Z" fill={CREAM} />
-    <path d="M51 46 C55 55 61 57 58 67 C56 75 53 79 50 79 C46 79 42 74 42 64 C42 57 47 55 48 50Z" fill="#F7CD67" />
-  </>),
   [AppID.Settings]: draw([20, 28, 80, 78], <>
     <rect x="22" y="33" width="56" height="6" rx="3" fill={CREAM} /><circle cx="62" cy="36" r="8" fill={CREAM} stroke={BROWN} strokeWidth="3.5" />
     <rect x="22" y="50" width="56" height="6" rx="3" fill={CREAM} /><circle cx="38" cy="53" r="8" fill={CREAM} stroke={BROWN} strokeWidth="3.5" />
     <rect x="22" y="67" width="56" height="6" rx="3" fill={CREAM} /><circle cx="66" cy="70" r="8" fill={CREAM} stroke={BROWN} strokeWidth="3.5" />
   </>),
-  [AppID.Gallery]: draw([17, 25, 83, 79], camGlyph('#82D5BB')),
-  [AppID.XhsStock]: draw([17, 25, 83, 79], camGlyph('#FC736D')),
   [AppID.Music]: draw([35, 22, 80, 76], musicGlyph),
-  [AppID.Songwriting]: draw([35, 22, 80, 76], musicGlyph),
-  [AppID.Game]: draw([18, 40, 82, 70], <>
-    <rect x="18" y="40" width="64" height="30" rx="15" fill={CREAM} />
-    <rect x="30" y="52" width="14" height="5" rx="2.5" fill={BROWN} /><rect x="34.5" y="47.5" width="5" height="14" rx="2.5" fill={BROWN} />
-    <circle cx="64" cy="50" r="4" fill="#FC736D" /><circle cx="72" cy="58" r="4" fill="#82D5BB" />
-  </>),
   [AppID.Journal]: draw([21, 24, 79, 77], bookGlyph),
-  [AppID.Novel]: draw([21, 24, 79, 77], bookGlyph),
   [AppID.Study]: draw([21, 24, 79, 77], bookGlyph),
   [AppID.Worldbook]: draw([21, 24, 79, 77], bookGlyph),
   [AppID.Guidebook]: draw([21, 24, 79, 77], bookGlyph),
-  [AppID.Schedule]: draw([22, 20, 78, 80], <>
-    <rect x="22" y="26" width="56" height="54" rx="8" fill={CREAM} />
-    <rect x="22" y="26" width="56" height="16" rx="8" fill="#FC736D" />
-    <rect x="33" y="20" width="6" height="14" rx="3" fill={BROWN} /><rect x="61" y="20" width="6" height="14" rx="3" fill={BROWN} />
-    <circle cx="38" cy="56" r="4" fill={BROWN} /><circle cx="52" cy="56" r="4" fill={BROWN} /><circle cx="66" cy="56" r="4" fill="#B7A98C" />
-    <circle cx="38" cy="69" r="4" fill="#B7A98C" /><circle cx="52" cy="69" r="4" fill={BROWN} />
-  </>),
   [AppID.SpecialMoments]: draw([12, 14, 88, 87], starGlyph),
   [AppID.VRWorld]: draw([12, 14, 88, 87], starGlyph),
   [AppID.Appearance]: draw([16, 20, 84, 84], paletteGlyph),
   [AppID.ThemeMaker]: draw([16, 20, 84, 84], paletteGlyph),
-  [AppID.HotNews]: draw([20, 26, 80, 76], <>
-    <rect x="20" y="26" width="60" height="50" rx="6" fill={CREAM} />
-    <rect x="27" y="34" width="22" height="16" rx="3" fill="#B7A98C" />
-    <rect x="54" y="34" width="20" height="4" rx="2" fill={BROWN} /><rect x="54" y="43" width="20" height="4" rx="2" fill={BROWN} />
-    <rect x="27" y="56" width="46" height="4" rx="2" fill={BROWN} /><rect x="27" y="64" width="36" height="4" rx="2" fill="#B7A98C" />
-  </>),
 };
 
 export const getAcnhIcon = (appId: string): React.ReactNode =>
