@@ -7,7 +7,7 @@ import StatusBar from './os/StatusBar';
 import Launcher from '../apps/Launcher';
 
 // 按需懒加载各 App —— 切到对应 App 时才下载/解析其代码块，首屏只加载 Launcher 与外壳，
-// 大体积 App（MemoryPalace / VRWorld / Songwriting 等）不再压在主包里。
+// 大体积 App（MemoryPalace / VRWorld 等）不再压在主包里。
 // 默认导出直接 lazy；命名导出（SpecialMomentsApp）用 .then 适配成 { default }。
 // Launcher 保持静态导入：桌面常驻、需要秒开，不走懒加载。
 //

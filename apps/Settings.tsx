@@ -334,7 +334,7 @@ const Settings: React.FC = () => {
       setLocalMiniMaxKey(apiConfig.minimaxApiKey || '');
       setLocalMiniMaxGroupId(apiConfig.minimaxGroupId || '');
       setLocalMiniMaxRegion(apiConfig.minimaxRegion === 'overseas' ? 'overseas' : 'domestic');
-      setLocalAceStepKey(apiConfig.aceStepApiKey || '');
+
   }, [apiConfig]);
 
   const loadPreset = (preset: typeof apiPresets[0]) => {
@@ -343,8 +343,8 @@ const Settings: React.FC = () => {
       setLocalModel(preset.config.model);
       setLocalStream(preset.config.stream === true);
       setLocalTemperature(typeof preset.config.temperature === 'number' ? preset.config.temperature : 0.85);
-      // MiniMax / AceStep settings are NOT overwritten by presets — typically one user
-      // has only one MiniMax / Replicate account regardless of which LLM preset they use.
+      // MiniMax settings are NOT overwritten by presets — typically one user
+      // has only one MiniMax account regardless of which LLM preset they use.
       addToast(`已加载配置: ${preset.name}`, 'info');
   };
 
@@ -1159,7 +1159,7 @@ const Settings: React.FC = () => {
             </svg>
         </button>
 
-        {/* 其他 API 区域 — 非 LLM 类（语音、写歌等），不会跟随预设切换 */}
+        {/* 其他 API 区域 — 非 LLM 类（语音等），不会跟随预设切换 */}
         <section className="bg-white/80 rounded-3xl p-5 shadow-sm border border-white/50">
             <div className="flex items-center gap-2 mb-4">
                 <div className="p-2 bg-amber-100/50 rounded-xl text-amber-600">
@@ -1170,7 +1170,7 @@ const Settings: React.FC = () => {
                 <h2 className="text-sm font-semibold text-slate-600 tracking-wider">其他 API</h2>
             </div>
             <p className="text-[11px] text-slate-400 mb-4 leading-relaxed pl-1">
-                语音 / 写歌等非 LLM 类 API。这些设置 <span className="font-semibold text-slate-500">不会随预设切换</span>，通常只配置一次。
+                语音等非 LLM 类 API。这些设置 <span className="font-semibold text-slate-500">不会随预设切换</span>，通常只配置一次。
             </p>
 
             <div className="space-y-4">

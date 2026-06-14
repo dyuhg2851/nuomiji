@@ -21,7 +21,7 @@
 //   用户在 Settings → Instant Push 里生成；Proactive 和 Instant 共用同一份
 //   VAPID，避免两边互相 unsubscribe 抢同一个 pushManager 订阅。
 // ═══════════════════════════════════════════════════════════════════
-const WORKER_URL = 'https://nuomiji.24429888873.workers.dev';
+const WORKER_URL = 'https://nuomiji-push.2442988873.workers.dev';
 const CLIENT_TOKEN = 'weqwqewqeqwdcsccagdgs32132';
 // ═══════════════════════════════════════════════════════════════════
 

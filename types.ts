@@ -145,8 +145,6 @@ export interface APIConfig {
   // 'overseas' → https://api.minimax.io  (海外站)
   // Missing / unknown falls back to domestic.
   minimaxRegion?: MinimaxRegion;
-  // Replicate token (r8_xxx) for ACE-Step song generation in 写歌 App.
-  aceStepApiKey?: string;
   model: string;
   // Per-API streaming toggle. Some endpoints only support stream:true.
   // Missing → false (默认非流式).

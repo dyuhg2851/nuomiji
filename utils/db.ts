@@ -1734,31 +1734,6 @@ export const DB = {
       transaction.objectStore(STORE_BANK_TX).delete(id);
   },
 
-  // --- Songs (Songwriting App) ---
-  getAllSongs: async (): Promise<SongSheet[]> => {
-      const db = await openDB();
-      if (!db.objectStoreNames.contains(STORE_SONGS)) return [];
-      return new Promise((resolve, reject) => {
-          const transaction = db.transaction(STORE_SONGS, 'readonly');
-          const store = transaction.objectStore(STORE_SONGS);
-          const request = store.getAll();
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = () => reject(request.error);
-      });
-  },
-
-  saveSong: async (song: SongSheet): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_SONGS, 'readwrite');
-      transaction.objectStore(STORE_SONGS).put(song);
-  },
-
-  deleteSong: async (id: string): Promise<void> => {
-      const db = await openDB();
-      const transaction = db.transaction(STORE_SONGS, 'readwrite');
-      transaction.objectStore(STORE_SONGS).delete(id);
-  },
-
   // --- Guidebook (攻略本) ---
   getAllGuidebookSessions: async (): Promise<GuidebookSession[]> => {
       const db = await openDB();
@@ -1840,7 +1815,7 @@ export const DB = {
           });
       };
 
-      const [characters, messages, themes, emojis, emojiCategories, assets, galleryImages, userProfiles, diaries, tasks, anniversaries, roomTodos, roomNotes, groups, journalStickers, socialPosts, courses, games, worldbooks, novels, bankTx, bankData, xhsActivities, xhsStockImages, songs, quizzes, guidebookSessions, scheduledMessages, lifeSimStates, handbooks, trackers, trackerEntries, hotNewsSnapshots, vrNovels, vrAnnotations, customCreatorParts, vrMusic, vrGuestbook, vrLetters, vrSettings] = await Promise.all([
+      const [characters, messages, themes, emojis, emojiCategories, assets, galleryImages, userProfiles, diaries, tasks, anniversaries, roomTodos, roomNotes, groups, journalStickers, socialPosts, courses, games, worldbooks, novels, bankTx, bankData, xhsActivities, xhsStockImages, quizzes, guidebookSessions, scheduledMessages, lifeSimStates, handbooks, trackers, trackerEntries, hotNewsSnapshots, vrNovels, vrAnnotations, customCreatorParts, vrMusic, vrGuestbook, vrLetters, vrSettings] = await Promise.all([
           getAllFromStore(STORE_CHARACTERS),
           getAllFromStore(STORE_MESSAGES),
           getAllFromStore(STORE_THEMES),
@@ -1865,7 +1840,6 @@ export const DB = {
           getAllFromStore(STORE_BANK_DATA),
           getAllFromStore(STORE_XHS_ACTIVITIES),
           getAllFromStore(STORE_XHS_STOCK),
-          getAllFromStore(STORE_SONGS),
           getAllFromStore(STORE_QUIZZES),
           getAllFromStore(STORE_GUIDEBOOK),
           getAllFromStore(STORE_SCHEDULED),
@@ -1899,7 +1873,6 @@ export const DB = {
           bankTransactions: bankTx,
           xhsActivities,
           xhsStockImages,
-          songs,
           quizSessions: quizzes,
           guidebookSessions,
           scheduledMessages,
@@ -1939,7 +1912,7 @@ export const DB = {
           STORE_CHARACTERS, STORE_MESSAGES, STORE_THEMES, STORE_EMOJIS, STORE_EMOJI_CATEGORIES,
           STORE_ASSETS, STORE_GALLERY, STORE_USER, STORE_DIARIES,
           STORE_TASKS, STORE_ANNIVERSARIES, STORE_ROOM_TODOS, STORE_ROOM_NOTES,
-          STORE_GROUPS, STORE_JOURNAL_STICKERS, STORE_SOCIAL_POSTS, STORE_COURSES, STORE_GAMES, STORE_WORLDBOOKS, STORE_NOVELS, STORE_SONGS,
+          STORE_GROUPS, STORE_JOURNAL_STICKERS, STORE_SOCIAL_POSTS, STORE_COURSES, STORE_GAMES, STORE_WORLDBOOKS, STORE_NOVELS,
           STORE_BANK_TX, STORE_BANK_DATA,
           STORE_XHS_ACTIVITIES, STORE_XHS_STOCK,
           STORE_QUIZZES,
@@ -2008,8 +1981,7 @@ export const DB = {
           data.games !== undefined,
           data.worldbooks !== undefined,
           data.novels !== undefined,
-          data.songs !== undefined,
-          data.quizSessions !== undefined,
+              data.quizSessions !== undefined,
           data.guidebookSessions !== undefined,
           data.scheduledMessages !== undefined,
           data.lifeSimState !== undefined,
@@ -2313,10 +2285,6 @@ export const DB = {
           importPostOfficeLocal((data as any).vrPostOffice);
           (data as any).vrPostOffice = undefined;
       }, 1);
-      await runSection('歌曲', data.songs !== undefined, async () => {
-          await clearAndAdd(STORE_SONGS, data.songs, '歌曲', false);
-          data.songs = undefined as any;
-      }, data.songs?.length || 0);
       await runSection('练习本', data.quizSessions !== undefined, async () => {
           await clearAndAdd(STORE_QUIZZES, data.quizSessions, '练习本', false);
           data.quizSessions = undefined as any;

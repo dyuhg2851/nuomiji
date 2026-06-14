@@ -1,6 +1,6 @@
 /**
  * 彼方 chibi 立绘解析（单一来源）：vrState.chibi → date 皮肤/sprites → 头像兜底。
- * VRWorldApp 的房间站位、剧院的演出回放共用这套逻辑。
+ * VRWorldApp 的房间站位共用这套逻辑。
  */
 import type { CharacterProfile } from '../../types';
 

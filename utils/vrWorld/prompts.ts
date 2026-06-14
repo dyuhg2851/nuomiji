@@ -522,8 +522,3 @@ export function parsePostOfficeReadOutput(raw: string): ParsedPostOfficeReadOutp
     return { reaction: f && f[1].trim() ? f[1].trim() : undefined, activity: a ? a[1].trim() : '' };
 }
 
-/** 角色逛进剧院 → 即兴写一出原创舞台剧。 */
-export function buildTheaterRoomTurn(_occupantNames: string[], _selfName: string): string {
-    // Theater functionality has been removed
-    return '';
-}

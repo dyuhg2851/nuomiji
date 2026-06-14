@@ -32,7 +32,6 @@ export interface Song {
   albumPic: string;
   duration: number;
   fee: number;
-  // ── Local-source extensions (used for AI-generated songs from 写歌 App) ──
   /** True for songs not from netease — play them via blob from IndexedDB. */
   local?: boolean;
   /** IndexedDB key (under DB.assets) where the audio Blob lives. */
@@ -69,19 +68,6 @@ export interface NeteaseProfile {
 /* ───────────── 默认 / 常量 ───────────── */
 const LS_CFG_KEY = 'sully_music_cfg_v1';
 const LS_STATE_KEY = 'sully_music_state_v1';
-const LS_LOCAL_ALBUM_KEY = 'sully_music_local_album_v1';
-
-const loadLocalAlbum = (): Song[] => {
-  try {
-    const raw = localStorage.getItem(LS_LOCAL_ALBUM_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch { return []; }
-};
-const saveLocalAlbum = (songs: Song[]) => {
-  try { localStorage.setItem(LS_LOCAL_ALBUM_KEY, JSON.stringify(songs)); } catch {}
-};
 const DEFAULT_WORKER = 'https://nuomiji.24429888873.workers.dev';
 
 export const MUSIC_DEFAULT_CFG: MusicCfg = {
@@ -333,14 +319,6 @@ interface MusicContextType {
   toast: (msg: string, type?: 'info' | 'success' | 'error') => void;
   setToastHandler: (h: (msg: string, type?: 'info' | 'success' | 'error') => void) => void;
 
-  // 「一起写的歌」专辑 — 从 写歌 App 同步过来的本地生成歌
-  localAlbumSongs: Song[];
-  addLocalSong: (song: Song) => void;
-  removeLocalSong: (songId: number) => void;
-  // 实时重录状态 — 让音乐 App 即使在切到其他界面也能看到"正在重录"提示
-  regeneratingId: number | null;
-  regeneratingStatus: string;
-  markRegenerating: (id: number | null, status?: string) => void;
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -363,33 +341,6 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [queue, setQueueState] = useState<Song[]>(initialState.queue);
   const [idx, setIdx] = useState<number>(initialState.idx);
   const current = idx >= 0 && idx < queue.length ? queue[idx] : null;
-
-  // 「一起写的歌」本地专辑 — 由写歌 App 同步过来的 ACE-Step / MiniMax 出歌
-  const [localAlbumSongs, setLocalAlbumSongs] = useState<Song[]>(loadLocalAlbum);
-  const addLocalSong = useCallback((song: Song) => {
-    setLocalAlbumSongs(prev => {
-      // 同 id 去重，新版本覆盖
-      const filtered = prev.filter(s => s.id !== song.id);
-      const next = [song, ...filtered];
-      saveLocalAlbum(next);
-      return next;
-    });
-  }, []);
-  const removeLocalSong = useCallback((songId: number) => {
-    setLocalAlbumSongs(prev => {
-      const next = prev.filter(s => s.id !== songId);
-      saveLocalAlbum(next);
-      return next;
-    });
-  }, []);
-
-  // 重录状态 — 单个 id + 状态文案，跨 App 可见
-  const [regeneratingId, setRegeneratingId] = useState<number | null>(null);
-  const [regeneratingStatus, setRegeneratingStatus] = useState<string>('');
-  const markRegenerating = useCallback((id: number | null, status: string = '') => {
-    setRegeneratingId(id);
-    setRegeneratingStatus(status);
-  }, []);
 
   const setQueue = useCallback((next: Song[]) => {
     setQueueState(next);
@@ -461,29 +412,9 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }).catch(() => {});
   }, [cfg]);
 
-  // 「喜欢」逻辑分两条路:
-  //   - 网易云歌 → 走 likelist API
-  //   - 本地歌 → 在 localAlbum 里就算喜欢，不在就不喜欢；toggle = add/remove
-  const liked = !!current && (
-    current.local
-      ? localAlbumSongs.some(s => s.id === current.id)
-      : likedSet.has(current.id)
-  );
+  const liked = !!current && likedSet.has(current.id);
   const toggleLike = useCallback(async () => {
     if (!current) return;
-    // ── 本地歌：toggle from album ──
-    if (current.local) {
-      const inAlbum = localAlbumSongs.some(s => s.id === current.id);
-      if (inAlbum) {
-        removeLocalSong(current.id);
-        toast('已从「一起写的歌」移除', 'info');
-      } else {
-        addLocalSong(current);
-        toast('已加入「一起写的歌」', 'success');
-      }
-      return;
-    }
-    // ── 网易云歌 ──
     if (!cfg.cookie) { toast('需要登录网易云账号', 'error'); return; }
     const willLike = !likedSet.has(current.id);
     try {
@@ -498,7 +429,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (e: any) {
       toast(`喜欢失败: ${e.message}`, 'error');
     }
-  }, [current, cfg, likedSet, localAlbumSongs, addLocalSong, removeLocalSong, toast]);
+  }, [current, cfg, likedSet, toast]);
 
   // 播放模式
   const [playMode, setPlayMode] = useState<PlayMode>('loop');
@@ -587,83 +518,8 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setLoadingSong(true); setLyric([]); setTlyric([]); setProgress(0); setDuration(0);
     try {
-      // ── Local-source branch ── 本地生成的歌（写歌 App 出歌）从 IndexedDB 取 blob
       if (song.local && song.localAssetKey) {
-        const a = audioRef.current!;
-        const entry = await DB.getAssetRaw(song.localAssetKey).catch(() => null) as
-          | { blob?: Blob; mimeType?: string }
-          | Blob
-          | null;
-        const blob: Blob | null = entry instanceof Blob ? entry : (entry?.blob instanceof Blob ? entry.blob : null);
-        if (!blob) {
-          toast('本地歌曲文件丢失', 'error');
-          setLoadingSong(false);
-          return;
-        }
-        const prevSrc = a.src;
-        if (prevSrc.startsWith('blob:')) URL.revokeObjectURL(prevSrc);
-        a.src = URL.createObjectURL(blob);
-        a.play().catch(() => {});
-
-        // ── 本地歌词时间分布 ──
-        // MiniMax / ACE-Step 不返回带时间戳的歌词，但我们写歌时就有原文。
-        // 等 metadata 加载完拿到 duration → 把每行歌词均匀铺到时长上，
-        // 实现「跟着歌词滚动」的网易云播放器体验。
-        if (song.localLyrics) {
-          const distribute = () => {
-            const dur = a.duration;
-            if (!isFinite(dur) || dur <= 0) return;
-            const lines = song.localLyrics!
-              .split(/\r?\n/)
-              .map(l => l.trim())
-              // 跳过 [Verse]/[Chorus]/[Bridge] 等章节标记（纯时间标，不显示）
-              // 也跳过空行
-              .filter(l => l && !/^\[[^\]]+\]$/i.test(l));
-            if (lines.length === 0) {
-              setLyric([]);
-              setTlyric([]);
-              return;
-            }
-            // 用户手动对轴的优先用，没对过用平均分布兜底
-            let synced: LyricLine[];
-            if (song.lyricLineTimings && song.lyricLineTimings.length === lines.length) {
-              synced = lines.map((text, i) => ({
-                t: song.lyricLineTimings![i] ?? 0,
-                text,
-              }));
-            } else {
-              const intro = Math.min(2, dur * 0.05);
-              const outro = Math.min(3, dur * 0.05);
-              const usable = Math.max(dur - intro - outro, dur * 0.6);
-              const step = usable / lines.length;
-              synced = lines.map((text, i) => ({
-                t: intro + i * step,
-                text,
-              }));
-            }
-            setLyric(synced);
-            setTlyric([]);
-          };
-          if (a.readyState >= 1 && isFinite(a.duration) && a.duration > 0) {
-            distribute();
-          } else {
-            const onMeta = () => { distribute(); a.removeEventListener('loadedmetadata', onMeta); };
-            a.addEventListener('loadedmetadata', onMeta);
-          }
-        } else {
-          setLyric([]);
-          setTlyric([]);
-        }
-
-        if ('mediaSession' in navigator) {
-          try {
-            (navigator as any).mediaSession.metadata = new (window as any).MediaMetadata({
-              title: song.name,
-              artist: song.artists,
-              album: song.album,
-            });
-          } catch {}
-        }
+        toast('本地歌曲已不再支持', 'error');
         setLoadingSong(false);
         return;
       }
@@ -906,8 +762,6 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     liked, toggleLike,
     listeningTogetherWith, addListeningPartner, removeListeningPartner, clearListeningPartners,
     toast, setToastHandler,
-    localAlbumSongs, addLocalSong, removeLocalSong,
-    regeneratingId, regeneratingStatus, markRegenerating,
   };
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;

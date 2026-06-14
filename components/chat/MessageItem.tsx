@@ -1695,7 +1695,7 @@ const MessageItem = React.memo(({
         );
     }
 
-    // --- Score Card Rendering (Songwriting & Quiz) ---
+    // --- Score Card Rendering (Quiz) ---
     if (m.type === 'score_card') {
         let scoreData: any = null;
         try { scoreData = m.metadata?.scoreCard || JSON.parse(m.content); } catch {}

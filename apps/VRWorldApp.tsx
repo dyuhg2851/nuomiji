@@ -85,7 +85,6 @@ const ROOM_SLOTS: Record<VRRoomId, { x: number; y: number }[]> = {
     guestbook: [{ x: 28, y: 76 }, { x: 52, y: 78 }, { x: 73, y: 74 }, { x: 40, y: 68 }],
     gym:       [{ x: 26, y: 74 }, { x: 50, y: 80 }, { x: 74, y: 74 }, { x: 38, y: 66 }, { x: 62, y: 66 }],
     postoffice:[{ x: 28, y: 76 }, { x: 52, y: 78 }, { x: 72, y: 72 }, { x: 42, y: 68 }],
-    theater:   [{ x: 30, y: 80 }, { x: 70, y: 80 }, { x: 50, y: 84 }, { x: 40, y: 72 }, { x: 60, y: 72 }],
     cafe:      [{ x: 30, y: 74 }, { x: 54, y: 78 }, { x: 70, y: 72 }],
 };
 
@@ -95,7 +94,6 @@ const IDLE_QUIPS: Record<VRRoomId, string[]> = {
     guestbook: ['写点什么呢', '路过留个名', '看看墙上的话', '嗯…'],
     gym: ['活动一下', '再来一组！', '伸个懒腰', '热身中'],
     postoffice: ['给谁写封信呢', '封口、寄出', '翻翻信格', '写点心里话'],
-    theater: ['对台词…', '再走一遍', '背词中', '候场'],
     cafe: ['', '', '', ''],
 };
 
@@ -438,7 +436,6 @@ const RoomBackground: React.FC<{ roomId: VRRoomId; className?: string }> = ({ ro
         guestbook: 'https://raw.githubusercontent.com/qegj567-cloud/SullyOS-assets/main/img/PLAY.jpg',
         postoffice: 'https://raw.githubusercontent.com/qegj567-cloud/SullyOS-assets/main/img/post.png',
         gym: 'https://raw.githubusercontent.com/qegj567-cloud/SullyOS-assets/main/img/ALL.png',
-        theater: 'https://raw.githubusercontent.com/qegj567-cloud/SullyOS-assets/main/img/SHOW.png',
     };
     const bgUrl = ROOM_BG[roomId];
     if (bgUrl) {
@@ -2536,7 +2533,6 @@ const SettingsView: React.FC<{
                 actions={[
                     { label: '随机一个房间', onClick: () => go() },
                     ...(novelCount > 0 ? [{ label: '图书馆 · 读书写批注', onClick: () => go('library') }] : []),
-                    { label: '剧院 · 写剧本投稿', onClick: () => go('theater') },
                     { label: '听歌房 · 点歌锐评', onClick: () => go('music') },
                     { label: '留言簿 · 发帖版聊', onClick: () => go('guestbook') },
                     { label: '娱乐室 · 放开玩', onClick: () => go('gym') },

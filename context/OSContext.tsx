@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { APIConfig, AppID, OSTheme, VirtualTime, CharacterProfile, ChatTheme, Toast, FullBackupData, UserProfile, ApiPreset, GroupProfile, SystemLog, Worldbook, NovelBook, SongSheet, Message, RealtimeConfig, AppearancePreset, CloudBackupConfig, CloudBackupFile } from '../types';
+import { APIConfig, AppID, OSTheme, VirtualTime, CharacterProfile, ChatTheme, Toast, FullBackupData, UserProfile, ApiPreset, GroupProfile, SystemLog, Worldbook, NovelBook, Message, RealtimeConfig, AppearancePreset, CloudBackupConfig, CloudBackupFile } from '../types';
 import { DB } from '../utils/db';
 import { ProactiveChat } from '../utils/proactiveChat';
 import { VRScheduler } from '../utils/vrWorld/scheduler';
@@ -227,12 +227,6 @@ interface OSContextType {
   addNovel: (novel: NovelBook) => void;
   updateNovel: (id: string, updates: Partial<NovelBook>) => Promise<void>;
   deleteNovel: (id: string) => void;
-
-  // Songs (Songwriting)
-  songs: SongSheet[];
-  addSong: (song: SongSheet) => void;
-  updateSong: (id: string, updates: Partial<SongSheet>) => Promise<void>;
-  deleteSong: (id: string) => void;
 
   // Groups
   groups: GroupProfile[];
@@ -610,7 +604,6 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [groups, setGroups] = useState<GroupProfile[]>([]); 
   const [worldbooks, setWorldbooks] = useState<Worldbook[]>([]); 
   const [novels, setNovels] = useState<NovelBook[]>([]); // New
-  const [songs, setSongs] = useState<SongSheet[]>([]);
 
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile);
   
@@ -991,7 +984,6 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
             settle(DB.getGroups(), 'groups', [] as GroupProfile[]),
             settle(DB.getAllWorldbooks(), 'worldbooks', [] as Worldbook[]),
             settle(DB.getAllNovels(), 'novels', [] as NovelBook[]),
-            settle(DB.getAllSongs(), 'songs', [] as SongSheet[])
         ]);
 
         let finalChars = dbChars;
@@ -2191,26 +2183,6 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const deleteNovel = async (id: string) => {
       setNovels(prev => prev.filter(n => n.id !== id));
       await DB.deleteNovel(id);
-  };
-
-  // Song Methods
-  const addSong = async (song: SongSheet) => {
-      setSongs(prev => [song, ...prev]);
-      await DB.saveSong(song);
-  };
-
-  const updateSong = async (id: string, updates: Partial<SongSheet>) => {
-      setSongs(prev => {
-          const next = prev.map(s => s.id === id ? { ...s, ...updates, lastActiveAt: Date.now() } : s);
-          const target = next.find(s => s.id === id);
-          if (target) DB.saveSong(target);
-          return next;
-      });
-  };
-
-  const deleteSong = async (id: string) => {
-      setSongs(prev => prev.filter(s => s.id !== id));
-      await DB.deleteSong(id);
   };
 
   const updateUserProfile = async (updates: Partial<UserProfile>) => { setUserProfile(prev => { const next = { ...prev, ...updates }; DB.saveUserProfile(next); return next; }); };
@@ -3420,10 +3392,6 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     addNovel,
     updateNovel,
     deleteNovel,
-    songs,
-    addSong,
-    updateSong,
-    deleteSong,
     groups,
     createGroup,
     deleteGroup,
