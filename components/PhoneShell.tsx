@@ -727,8 +727,9 @@ const PhoneShell: React.FC = () => {
 
   // 安全区策略（方案 B）：彼方/聊天/群聊/桌面这几个 App 已全屏铺底、自己给控件让位，外壳不再加 padding；
   // 其余尚未迁移、靠外壳兜底的 App，仍由外壳用单一来源变量 --safe-* 统一让出安全区，避免顶栏怼进状态栏。
-  // TODO(safe-area-A): 把下列「未迁移」App 逐个改为自理安全区后，移除外壳这层兜底，实现全屏无色条。
-  const shellHandlesSafeArea = ![AppID.Launcher, AppID.VRWorld, AppID.Chat, AppID.GroupChat].includes(activeApp);
+  // 所有 App 都自理安全区（通过 AppHeader 或内部 Header），外壳不再添加额外的 padding
+  // 这样避免双重安全区处理导致顶部留白
+  const shellHandlesSafeArea = false;
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-200 text-slate-900 font-sans select-none overscroll-none">
@@ -747,18 +748,9 @@ const PhoneShell: React.FC = () => {
        
        <div className={`absolute inset-0 transition-all duration-500 ${activeApp === AppID.Launcher ? 'bg-transparent' : 'bg-white/50 backdrop-blur-3xl'}`} />
        
-       {/* 外壳安全区两种策略：
-          - 未迁移 App：外壳铺满 body（含 --app-height 多出的 +safe-bottom 溢出区），用 padding 让位安全区，
-            内容只画到可见 viewport 内，home 条上方留出 safe-bottom 视觉间隙。
-          - 已迁移 App（彼方/聊天/群聊/桌面）：自理安全区。外壳直接把底边收回到可见 viewport
-            （bottom = --standalone-safe-area-bottom），不让那多出来的 34px 把 App 底部控件压到 home 条上。 */}
+       {/* 外壳不再处理安全区，所有 App 都自理安全区 */}
       <div
-        className="absolute top-0 left-0 right-0 z-10 overflow-hidden bg-transparent overscroll-none flex flex-col"
-        style={
-          shellHandlesSafeArea
-            ? { bottom: 0, paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }
-            : { bottom: 'var(--standalone-safe-area-bottom, 0px)' }
-        }
+        className="absolute inset-0 z-10 overflow-hidden bg-transparent overscroll-none flex flex-col"
       >
           {/* App Container */}
           <div className="flex-1 relative overflow-hidden" style={{ contain: useIOSStandaloneLayout ? undefined : 'layout style paint' }}>
