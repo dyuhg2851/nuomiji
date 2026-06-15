@@ -201,7 +201,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
     const headerDensityClass = headerDensity === 'compact' ? 'px-4 py-2' : headerDensity === 'airy' ? 'px-6 py-4' : 'px-5 py-3';
     // safe-top 已由外层 spacer 单独让位（见 return：透明 + backdrop-blur 的状态栏占位条），
     // header 主体不再把 --safe-top 算进高度（否则会让两次）；内容在 headerBaseHeight 内垂直居中。
-    const headerSafeStyle: React.CSSProperties = { minHeight: headerBaseHeight };
+    const headerSafeStyle: React.CSSProperties = { minHeight: headerBaseHeight, paddingTop: 'env(safe-area-inset-top, 0px)' };
     const primaryTextClass = acnh ? 'text-[#6b5a3e]' : isDarkHeader ? 'text-white' : isPixelHeader ? 'text-[#fff7ed]' : 'text-slate-800';
     const secondaryTextClass = acnh ? 'text-[#5a9e7a]' : isDarkHeader ? 'text-slate-400' : isPixelHeader ? 'text-[#f3ddc7]' : 'text-slate-400';
     const iconButtonClass = acnh

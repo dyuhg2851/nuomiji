@@ -879,7 +879,7 @@ ${charPart}
             <div className="h-full w-full bg-amber-50 flex flex-col font-light">
                 {introModal}
                 {archiveResultModal}
-                <div className="pt-8 pb-4 px-6 border-b border-amber-100 bg-amber-50/80 backdrop-blur-sm sticky top-0 z-20 flex items-center justify-between shrink-0 h-20 box-border">
+                <div className="pt-8 pb-4 px-6 border-b border-amber-100 bg-amber-50/80 backdrop-blur-sm sticky top-0 z-20 flex items-center justify-between shrink-0 h-20 box-border" style={{ paddingTop: 'calc(32px + env(safe-area-inset-top, 0px))' }}>
                     <button onClick={closeApp} className="p-2 rounded-full hover:bg-amber-100/50 active:scale-90 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-amber-900"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                     </button>

@@ -742,7 +742,7 @@ ${previousGuestbook}
 
             {/* Premium Header */}
             <div className="pt-[1.5rem] pb-3 px-4 sticky top-0 z-[50] shrink-0"
-                 style={{ background: 'linear-gradient(180deg, rgba(141, 110, 99, 0.95) 0%, rgba(109, 76, 65, 0.95) 100%)', backdropFilter: 'blur(10px)' }}>
+                 style={{ background: 'linear-gradient(180deg, rgba(141, 110, 99, 0.95) 0%, rgba(109, 76, 65, 0.95) 100%)', backdropFilter: 'blur(10px)', paddingTop: 'calc(1.5rem + env(safe-area-inset-top, 0px))' }}>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
@@ -872,7 +872,7 @@ ${previousGuestbook}
                 <div className="absolute inset-0 z-[100] flex flex-col animate-slide-up" style={{ background: 'linear-gradient(180deg, #FDF6E3 0%, #FFF8E1 100%)' }}>
                     {/* Header */}
                     <div className="pt-[0.75rem] pb-3 px-4 shrink-0"
-                         style={{ background: 'linear-gradient(180deg, rgba(141, 110, 99, 0.95) 0%, rgba(109, 76, 65, 0.95) 100%)', backdropFilter: 'blur(10px)' }}>
+                         style={{ background: 'linear-gradient(180deg, rgba(141, 110, 99, 0.95) 0%, rgba(109, 76, 65, 0.95) 100%)', backdropFilter: 'blur(10px)', paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))' }}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">

@@ -756,13 +756,9 @@ const PhoneShell: React.FC = () => {
          />
        )}
        
-       {/* 外壳统一处理顶部安全区，确保所有应用在灵动岛设备上都能正确显示 */}
+       {/* 全屏布局 - 忽略安全区 */}
       <div
         className="absolute inset-0 z-10 overflow-hidden bg-transparent overscroll-none flex flex-col"
-        style={{ 
-          paddingTop: 'max(env(safe-area-inset-top, 44px), 52px)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)'
-        }}
       >
           {/* App Container */}
           <div className="flex-1 relative overflow-hidden" style={{ contain: useIOSStandaloneLayout ? undefined : 'layout style paint' }}>

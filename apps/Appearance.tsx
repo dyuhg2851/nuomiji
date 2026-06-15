@@ -674,7 +674,7 @@ const Appearance: React.FC = () => {
       {/* Header */}
       <AppHeader title="外观定制" onBack={closeApp} />
 
-      <div className="flex border-b border-slate-200 bg-white sticky top-0 z-20">
+      <div className="flex border-b border-slate-200 bg-white sticky top-0 z-20" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <button onClick={() => setActiveTab('theme')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'theme' ? 'text-primary border-b-2 border-primary' : 'text-slate-400'}`}>系统主题</button>
           <button onClick={() => setActiveTab('icons')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'icons' ? 'text-primary border-b-2 border-primary' : 'text-slate-400'}`}>应用图标</button>
           <button onClick={() => setActiveTab('presets')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'presets' ? 'text-primary border-b-2 border-primary' : 'text-slate-400'}`}>外观预设</button>

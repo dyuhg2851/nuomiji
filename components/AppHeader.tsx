@@ -11,8 +11,8 @@ interface HeaderProps {
 export const AppHeader: React.FC<HeaderProps> = ({ title, onBack, right, showBack = true }) => {
   return (
     <div className="shrink-0 z-10 sticky top-0 bg-white/85">
-      {/* Header内容区域 - 增加高度让返回键和标题往下移 */}
-      <div className="h-16 bg-white/85 backdrop-blur-xl flex items-center px-4 border-b border-white/40 shrink-0">
+          {/* Header内容区域 - 使用padding-top避开灵动岛 */}
+          <div className="h-16 bg-white/85 backdrop-blur-xl flex items-center px-4 border-b border-white/40 shrink-0" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
             {showBack && (

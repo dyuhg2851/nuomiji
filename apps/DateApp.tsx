@@ -491,7 +491,7 @@ const DateApp: React.FC = () => {
     if (mode === 'select' || !char) {
         return (
             <div className="h-full w-full bg-slate-50 flex flex-col font-light">
-                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 bg-white sticky top-0 z-10">
+                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 bg-white sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
                     <button onClick={closeApp} className="p-2 rounded-full hover:bg-slate-100">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                     </button>
@@ -523,7 +523,7 @@ const DateApp: React.FC = () => {
     if (mode === 'history') {
         return (
             <div className="h-full w-full bg-slate-50 flex flex-col font-light" onClick={() => historyMenuMsg && setHistoryMenuMsg(null)}>
-                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 bg-white sticky top-0 z-10">
+                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 bg-white sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
                     <button onClick={handleBack} className="p-2 rounded-full hover:bg-slate-100"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg></button>
                     <span className="font-bold text-slate-700">见面记录</span>
                     <div className="w-8"></div>
