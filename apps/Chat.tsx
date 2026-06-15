@@ -1159,50 +1159,6 @@ const Chat: React.FC = () => {
 
     const handleClearHistory = async () => {
         if (!char) return;
-
-        // 记忆宫殿安全检查：如果角色启用了记忆宫殿，检查是否有未被向量化处理的消息
-        if (char.memoryPalaceEnabled) {
-            const hwm = await getMemoryPalaceHWM(char.id);
-            const allMessages = await DB.getMessagesByCharId(char.id, true);
-            const textMessages = allMessages.filter(m => m.type === 'text' && m.content?.trim());
-            const unprocessedCount = textMessages.filter(m => m.id > hwm).length;
-
-            if (unprocessedCount > 0) {
-                // 有未处理的消息，弹出选择对话框
-                const processedMsgs = allMessages.filter(m => m.id <= hwm);
-                const choice = confirm(
-                    `⚠️ 记忆宫殿提醒\n\n` +
-                    `当前有 ${unprocessedCount} 条聊天记录尚未被记忆宫殿处理（向量化）。\n` +
-                    `直接清空会导致这些记录永久丢失，无法被角色记住。\n\n` +
-                    `点击「确定」→ 仅删除已被记忆宫殿处理过的记录（安全）\n` +
-                    `点击「取消」→ 取消清空操作\n\n` +
-                    `（看不懂在问什么的话就点确定）`
-                );
-
-                if (!choice) {
-                    return; // 用户取消
-                }
-
-                // 安全删除：只删除高水位之前的消息
-                if (processedMsgs.length === 0) {
-                    addToast('没有已处理的记录可以删除', 'info');
-                    return;
-                }
-                const processedIds = processedMsgs.map(m => m.id);
-                await DB.deleteMessages(processedIds);
-                discardVoiceForMessages(processedIds);
-                const remaining = allMessages.filter(m => m.id > hwm);
-                setMessages(remaining.slice(-200));
-                setTotalMsgCount(remaining.length);
-                setVisibleCount(LOAD_BATCH_SIZE);
-                visibleCountRef.current = LOAD_BATCH_SIZE;
-                addToast(`已安全清理 ${processedMsgs.length} 条已处理记录，保留 ${remaining.length} 条未处理记录`, 'success');
-                setModalType('none');
-                return;
-            }
-        }
-
-        // Always clear all messages
         const allIds = (await DB.getMessagesByCharId(char.id, true)).map(m => m.id);
         await DB.clearMessages(char.id);
         discardVoiceForMessages(allIds);
@@ -2507,7 +2463,7 @@ const Chat: React.FC = () => {
                 <div className="fixed inset-0 z-[110] flex items-end justify-center bg-black/5" onClick={() => setModalType('none')}>
                     <div
                         className="w-full max-h-[68vh] overflow-y-auto rounded-t-3xl border-t border-white/60 bg-white/95 p-5 shadow-[0_-12px_40px_rgba(15,23,42,0.18)] backdrop-blur-xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                        style={{ paddingBottom: 'calc(1.25rem + var(--safe-bottom))' }}
+                        style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))' }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="mb-2 flex items-start justify-between">
@@ -2524,12 +2480,12 @@ const Chat: React.FC = () => {
                         保证你刚粘进坏 CSS 当场崩掉时，这个还原键一定点得到。 */}
                     {createPortal(
                         <>
-                            <style>{`#sully-safe-reset{position:fixed!important;top:calc(var(--safe-top) + 6px)!important;left:50%!important;transform:translateX(-50%)!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;display:flex!important;z-index:2147483647!important;}`}</style>
+                            <style>{`#sully-safe-reset{position:fixed!important;top:calc(env(safe-area-inset-top, 0px) + 6px)!important;left:50%!important;transform:translateX(-50%)!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;display:flex!important;z-index:2147483647!important;}`}</style>
                             <button
                                 id="sully-safe-reset"
                                 onClick={() => { updateCharacter(char.id, { chromeCustomCss: '' } as any); addToast('已还原该角色白框', 'success'); }}
                                 style={{
-                                    position: 'fixed', top: 'calc(var(--safe-top) + 6px)', left: '50%', transform: 'translateX(-50%)',
+                                    position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 6px)', left: '50%', transform: 'translateX(-50%)',
                                     zIndex: 2147483647, display: 'flex', alignItems: 'center', gap: '4px',
                                     padding: '5px 12px', borderRadius: '999px',
                                     background: 'rgba(15,23,42,0.62)', color: '#fff', fontSize: '11px', fontWeight: 700,

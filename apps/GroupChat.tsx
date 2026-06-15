@@ -1094,7 +1094,6 @@ ${attachedImagesNote}
             <div className="h-screen w-full bg-slate-50 flex flex-col font-light">
                 {/* Header */}
                 <div className="shrink-0 z-10 sticky top-0 bg-white/70">
-                    <div className="bg-white/70" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
                     <div className="bg-white/70 backdrop-blur-md flex items-end pb-3 px-4 border-b border-white/40 h-20">
                         <button onClick={closeApp} className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
@@ -1197,7 +1196,6 @@ ${attachedImagesNote}
 
             {/* Header */}
             <div className="shrink-0 z-30 sticky top-0 transition-all bg-white/80">
-            <div className="bg-white/80" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
             <div className="bg-white/80 backdrop-blur-xl px-5 flex items-end pb-4 border-b border-slate-200/60 shadow-sm h-24">
                 {selectionMode ? (
                     <div className="flex items-center justify-between w-full">

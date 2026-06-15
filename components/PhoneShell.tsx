@@ -738,32 +738,28 @@ const PhoneShell: React.FC = () => {
     }
   };
 
-  // 安全区策略（方案 B）：彼方/聊天/群聊/桌面这几个 App 已全屏铺底、自己给控件让位，外壳不再加 padding；
-  // 其余尚未迁移、靠外壳兜底的 App，仍由外壳用单一来源变量 --safe-* 统一让出安全区，避免顶栏怼进状态栏。
-  // 所有 App 都自理安全区（通过 AppHeader 或内部 Header），外壳不再添加额外的 padding
-  // 这样避免双重安全区处理导致顶部留白
-  const shellHandlesSafeArea = false;
+  // 安全区策略：所有应用统一由外壳处理顶部安全区，确保在 iPhone 灵动岛设备上内容不被遮挡
+  // 使用 max(env(safe-area-inset-top, 44px), 52px) 确保即使系统返回的 safe-area-inset-top 偏小，也有足够的最小高度
+  const shellHandlesSafeArea = true;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-200 text-slate-900 font-sans select-none overscroll-none">
-       {/* Optimized Background Layer */}
-       <div 
-         className="absolute inset-0 bg-cover bg-center transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
-         style={{ 
-             backgroundImage: bgImageValue,
-             transform: activeApp !== AppID.Launcher ? 'scale(1.1)' : 'scale(1)',
-             filter: activeApp !== AppID.Launcher ? 'blur(10px)' : 'none',
-             opacity: activeApp !== AppID.Launcher ? 0.6 : 1,
-             backfaceVisibility: 'hidden',
-             contain: useIOSStandaloneLayout ? undefined : 'strict'
-         }}
-       />
+    <div className="relative w-full h-full overflow-hidden bg-slate-900 text-slate-900 font-sans select-none overscroll-none">
+       {/* Optimized Background Layer - 仅在 Launcher 页面显示背景图 */}
+       {activeApp === AppID.Launcher && (
+         <div 
+           className="absolute inset-0 bg-cover bg-center"
+           style={{ 
+               backgroundImage: bgImageValue,
+               backfaceVisibility: 'hidden',
+               contain: useIOSStandaloneLayout ? undefined : 'strict'
+           }}
+         />
+       )}
        
-       <div className={`absolute inset-0 transition-all duration-500 ${activeApp === AppID.Launcher ? 'bg-transparent' : 'bg-white/50 backdrop-blur-3xl'}`} />
-       
-       {/* 外壳不再处理安全区，所有 App 都自理安全区 */}
+       {/* 外壳统一处理顶部安全区，确保所有应用在灵动岛设备上都能正确显示 */}
       <div
         className="absolute inset-0 z-10 overflow-hidden bg-transparent overscroll-none flex flex-col"
+        style={{ paddingTop: 'max(env(safe-area-inset-top, 44px), 52px)' }}
       >
           {/* App Container */}
           <div className="flex-1 relative overflow-hidden" style={{ contain: useIOSStandaloneLayout ? undefined : 'layout style paint' }}>

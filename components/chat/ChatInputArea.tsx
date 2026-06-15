@@ -361,7 +361,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
             
             {selectionMode ? (
-                <div className={`p-3 flex gap-2 ${isPixelStyle ? 'bg-[#f3e7d6]' : isDiscordStyle ? 'bg-slate-900/60 backdrop-blur-md' : 'bg-white/50 backdrop-blur-md'}`}>
+                <div className={`p-3 pb-[max(12px,env(safe-area-inset-bottom,12px))] flex gap-2 ${isPixelStyle ? 'bg-[#f3e7d6]' : isDiscordStyle ? 'bg-slate-900/60 backdrop-blur-md' : 'bg-white/50 backdrop-blur-md'}`}>
                     {onForwardSelected && (
                         <button
                             onClick={onForwardSelected}

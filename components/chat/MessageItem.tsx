@@ -282,9 +282,9 @@ const ForwardCard: React.FC<{
 
             {/* Expanded Full-screen Overlay */}
             {expanded && (
-                <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col animate-fade-in" style={{ paddingBottom: 'var(--safe-bottom)' }} onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col animate-fade-in" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }} onClick={(e) => e.stopPropagation()}>
                     {/* Header */}
-                    <div className="pt-[calc(var(--safe-top)+0.75rem)] pb-3 px-4 bg-white border-b border-slate-100 shrink-0 flex items-center gap-3">
+                    <div className="pt-[calc(env(safe-area-inset-top, 0px)+0.75rem)] pb-3 px-4 bg-white border-b border-slate-100 shrink-0 flex items-center gap-3">
                         <button onClick={() => setExpanded(false)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-600">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                         </button>
@@ -1112,7 +1112,7 @@ const MessageItem = React.memo(({
                             {content}
                         </div>
                         {isLastInGroup && showTimestamp !== 'never' && (
-                            <div className={`text-[9px] text-slate-400/80 px-1 mt-1 font-medium ${showTimestamp === 'hover' ? 'opacity-0 group-hover:opacity-100 transition-opacity' : ''}`}>{formatTime(m.timestamp)}</div>
+                            <div className={`text-[9px] text-[#858585] px-1 mt-1 font-medium ${showTimestamp === 'hover' ? 'opacity-0 group-hover:opacity-100 transition-opacity' : ''}`}>{formatTime(m.timestamp)}</div>
                         )}
                     </div>
 
@@ -1125,7 +1125,7 @@ const MessageItem = React.memo(({
                     <div className={`flex ${isUser ? 'justify-end' : ''} items-start mt-[3px]`}>
                         {!isUser && <div className="w-10 shrink-0" />}
                         <div className="max-w-[72%] min-w-0 mx-3">
-                            <div className="bg-white rounded text-[9px] text-slate-400/80 px-1.5 py-1 font-medium border border-current/30 max-w-full overflow-hidden">
+                            <div className="bg-white rounded text-[11px] text-[#858585] px-1.5 py-1 font-medium border border-[#858585]/30 max-w-full overflow-hidden">
                                 <span className="truncate">{m.replyTo.name}：{replyPreview.length > 20 ? replyPreview.slice(0, 20) + '...' : replyPreview}</span>
                             </div>
                         </div>

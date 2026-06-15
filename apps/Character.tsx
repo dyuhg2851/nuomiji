@@ -957,7 +957,6 @@ ${isInitialGeneration ? `
            <div className="flex flex-col h-full animate-fade-in">
                {/* Header */}
                <div className="shrink-0 z-10 sticky top-0 bg-white/80">
-                   <div className="bg-white/80" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
                    <div className="px-6 pt-4 pb-4 shrink-0 flex items-center justify-between bg-white/80 backdrop-blur-md">
                        <div><h1 className="text-2xl font-light text-slate-800 tracking-tight">神经链接</h1><p className="text-xs text-slate-400 mt-1">已建立 {characters.length} 个角色连接</p></div>
                        <div className="flex gap-2">
@@ -993,7 +992,6 @@ ${isInitialGeneration ? `
            <div className="flex flex-col h-full animate-fade-in bg-slate-50/50 relative">
                {/* Header */}
                <div className="shrink-0 z-40 sticky top-0 bg-gradient-to-b from-white/90 to-white/60">
-                   <div className="bg-gradient-to-b from-white/90 to-white/60" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
                    <div className="h-32 bg-gradient-to-b from-white/90 to-transparent backdrop-blur-sm flex flex-col justify-end px-5 pb-2 shrink-0">
                        <div className="flex justify-between items-center mb-3">
                            <button onClick={handleBack} className="p-2 rounded-full hover:bg-white/60 flex items-center gap-1 text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg><span className="text-sm font-medium">列表</span></button>

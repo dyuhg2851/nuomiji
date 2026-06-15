@@ -112,9 +112,6 @@
         --primary-hue: 245; 
         --primary-sat: 25%;
         --primary-lightness: 65%;
-        --safe-top: 0px;
-        --safe-bottom: 0px;
-        --chrome-top: 0px;
         --app-height: 100lvh;
         --keyboard-inset: 0px;
         --app-font: 'Quicksand', sans-serif;
@@ -195,7 +192,19 @@
       }
       /* Utility for Safe Area —— 统一引用单一来源变量 */
       .pb-safe {
-        padding-bottom: var(--safe-bottom);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      /* 顶部安全区 - 确保内容不被灵动岛遮挡 */
+      .pt-safe {
+        padding-top: max(env(safe-area-inset-top, 44px), 52px);
+      }
+      /* 顶部安全区用于固定定位元素 */
+      .top-safe {
+        top: max(env(safe-area-inset-top, 44px), 52px);
+      }
+      /* 最小顶部高度 - 确保安全区足够大 */
+      .min-h-safe-top {
+        min-height: max(env(safe-area-inset-top, 44px), 52px);
       }
       /* 键盘弹出时的样式修复 - 防止底部空白 */
       body.ios-keyboard-open {

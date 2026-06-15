@@ -22,9 +22,11 @@ const genLocalId = (p: string) => `${p}_${Date.now().toString(36)}_${Math.random
 // 安全区单一来源：index.html :root 定义 --safe-top/--safe-bottom/--chrome-top，
 // 由 utils/iosStandalone.ts 喂入 JS 探测值（iOS 全屏 PWA 下原生 env 偶发返回 0 时兜底）。
 // 全屏浮层背景铺满屏幕，只用这些变量给顶/底「控件」让位。
-const VR_TOP = 'var(--chrome-top)';                            // 安全区 + SullyOS 状态栏：全屏面板顶栏统一用它
-const VR_SAFE_BOTTOM = 'var(--safe-bottom)';
-const VR_ROOM_PANEL_TOP = 'calc(var(--chrome-top) + 3.75rem)'; // 房间内浮层从顶栏下方开始
+const VR_TOP = 'env(safe-area-inset-top, 44px)';                            // 安全区 + SullyOS 状态栏：全屏面板顶栏统一用它
+
+const VR_SAFE_BOTTOM = 'env(safe-area-inset-bottom, 0px)';
+
+const VR_ROOM_PANEL_TOP = 'calc(env(safe-area-inset-top, 44px) + 3.75rem)'; // 房间内浮层从顶栏下方开始
 // 底部额外留一点手势余量；iOS 全屏隐藏 home 条时也不让交互区贴着物理底边。
 const VR_BOTTOM_TOUCH_GAP = '0.75rem';
 // 底部内边距 / 贴底定位统一用它：base + 安全区 + 手势余量。

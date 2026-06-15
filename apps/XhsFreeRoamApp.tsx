@@ -226,7 +226,7 @@ const XhsFreeRoamApp: React.FC = () => {
         return (
             <div
                 className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center"
-                style={{ paddingBottom: 'var(--safe-bottom)', paddingTop: 'var(--safe-top)' }}
+                style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', paddingTop: 'env(safe-area-inset-top, 0px)' }}
                 onClick={() => setShowDetail(null)}
             >
                 <div className="w-full max-w-lg bg-white rounded-t-3xl p-5 space-y-3 max-h-[75vh] overflow-y-auto animate-slide-up" onClick={e => e.stopPropagation()}>
