@@ -1058,7 +1058,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             <div className="h-full w-full bg-slate-50 flex flex-col font-light">
                 <div className="pt-8 pb-3 px-6 bg-white sticky top-0 z-20 shrink-0">
                     <div className="flex items-center justify-between h-12">
-                        <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-slate-100 active:scale-90 transition-transform">
+                        <button onClick={closeApp} className="p-2 rounded-full hover:bg-slate-100 active:scale-90 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                         </button>
                         <span className="font-bold text-slate-700 text-lg tracking-wide">

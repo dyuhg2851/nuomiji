@@ -350,7 +350,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                     <div className="w-10" />
                 </div>
             ) : useCenteredLayout ? (
-                <div className="relative w-full min-h-[56px] flex items-end justify-center">
+                <div className="relative w-full min-h-[56px] flex items-end justify-center" style={{ marginTop: '10px' }}>
                     <button onClick={onClose} className={`sully-chat-back absolute left-0 bottom-2 p-2 ${iconButtonClass}`}>
                         <CaretLeft className="w-5 h-5" weight="bold" />
                     </button>
@@ -369,7 +369,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                     </button>
                 </div>
             ) : (
-                <div className="flex items-center gap-3 w-full">
+                <div className="flex items-center gap-3 w-full" style={{ marginTop: '10px' }}>
                     <button onClick={onClose} className={`sully-chat-back p-2 -ml-2 text-slate-800 hover:bg-slate-100 rounded-full`}>
                         <CaretLeft className="w-5 h-5" weight="bold" />
                     </button>

@@ -357,7 +357,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         {emojiSelectionMode && (
             <div className={`fixed inset-0 z-[-1] ${isPixelStyle ? 'bg-[#eadfce]/70 backdrop-blur-[2px]' : isDiscordStyle ? 'bg-slate-950/70 backdrop-blur-[2px]' : 'bg-white/60 backdrop-blur-[2px]'}`} />
         )}
-        <div className={`sully-chat-inputbar ${shellClass} shrink-0 z-40 relative -mt-3 pt-3`}>
+        <div className={`sully-chat-inputbar ${shellClass} shrink-0 z-40 relative -mt-[15px] pt-0`}
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
             
             {selectionMode ? (
                 <div className={`p-3 flex gap-2 ${isPixelStyle ? 'bg-[#f3e7d6]' : isDiscordStyle ? 'bg-slate-900/60 backdrop-blur-md' : 'bg-white/50 backdrop-blur-md'}`}>
@@ -380,9 +381,9 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                     </button>
                 </div>
             ) : (
-                <div className="p-2 pl-4 flex gap-0 items-center relative">
+                <div className="pt-[5px] pr-2 pb-2 pl-4 flex gap-0 items-center relative">
                     {/* 语音按钮 */}
-                    <button className={`p-2 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                    <button className={`p-[9px] shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
                             <path fill="#000000" fillRule="evenodd" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m0-1.2a8.8 8.8 0 1 0 0-17.6a8.8 8.8 0 0 0 0 17.6m.308-3.992A6.77 6.77 0 0 0 14.3 12c0-1.83-.724-3.54-1.992-4.808l.849-.849A7.98 7.98 0 0 1 15.5 12c0 2.21-.895 4.21-2.343 5.657zm-1.98-1.98A3.98 3.98 0 0 0 11.5 12a3.98 3.98 0 0 0-1.172-2.828l.849-.849A5.18 5.18 0 0 1 12.7 12a5.18 5.18 0 0 1-1.523 3.677zm-1.13-1.13L7.5 12l1.697-1.697c.434.434.703 1.034.703 1.697s-.269 1.263-.703 1.697z"/>
                         </svg>
@@ -416,7 +417,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                         )}
                     </div>
                     {/* 表情按钮 */}
-                    <button onClick={() => setShowPanel(showPanel === 'emojis' ? 'none' : 'emojis')} className={`p-2 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                    <button onClick={() => setShowPanel(showPanel === 'emojis' ? 'none' : 'emojis')} className={`p-[9px] ml-[5px] shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 21 21">
                             <g fill="none" fillRule="evenodd" transform="translate(2 2)">
                                 <circle cx="8.5" cy="8.5" r="8" stroke="#000000" strokeLinecap="round" strokeLinejoin="round"/>
@@ -427,7 +428,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                         </svg>
                     </button>
                     {/* 加号按钮 */}
-                    <button onClick={() => setShowPanel(showPanel === 'actions' ? 'none' : 'actions')} className={`p-2 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                    <button onClick={() => setShowPanel(showPanel === 'actions' ? 'none' : 'actions')} className={`p-[9px] shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
                             <path fill="#000000" d="M7 12h4V8h1v4h4v1h-4v4h-1v-4H7zm4.5-9a9.5 9.5 0 0 1 9.5 9.5a9.5 9.5 0 0 1-9.5 9.5A9.5 9.5 0 0 1 2 12.5A9.5 9.5 0 0 1 11.5 3m0 1A8.5 8.5 0 0 0 3 12.5a8.5 8.5 0 0 0 8.5 8.5a8.5 8.5 0 0 0 8.5-8.5A8.5 8.5 0 0 0 11.5 4"/>
                         </svg>

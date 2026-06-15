@@ -1066,57 +1066,72 @@ const MessageItem = React.memo(({
 
     const showPendingDots = isUser && isPending && pendingIndicator;
     const commonLayout = (content: React.ReactNode) => (
-            <div className={`flex items-start ${isUser ? 'justify-end' : 'justify-start'} ${marginBottom} px-3 group select-none relative`} {...(selectionMode ? { 'data-selected': isSelected } : {})}>
-                {selectionMode && (
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer z-20" onClick={() => onToggleSelect(m.id)}>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-slate-300 bg-white/80'}`}>
-                            {isSelected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
-                        </div>
-                    </div>
-                )}
-
-                {/* Avatar */}
-                {!isUser && (
-                    <>
-                        {selectionMode && <div className="w-10" />}
-                        {renderAvatar(charAvatar)}
-                    </>
-                )}
-
-                {showPendingDots && (
-                    <span className="inline-flex items-center gap-[3px] mr-1 select-none pointer-events-none">
-                        <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" />
-                        <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" style={{ animationDelay: '0.15s' }} />
-                        <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" style={{ animationDelay: '0.3s' }} />
-                    </span>
-                )}
-
-                {/* Bubble Container */}
-                <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[72%] min-w-0 mx-3`} {...interactionProps}>
-                    {!isUser && m.metadata?.thinkingChain && (
-                        <div className={`relative w-full ${selectionMode ? 'pl-7' : ''}`}>
-                            {selectionMode && onToggleThinkingSelect && (
-                                <div className="absolute left-0 top-3 cursor-pointer z-20" onClick={(e) => { e.stopPropagation(); onToggleThinkingSelect(m.id); }}>
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isThinkingSelected ? 'bg-primary border-primary' : 'border-slate-300 bg-white/80'}`}>
-                                        {isThinkingSelected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
-                                    </div>
-                                </div>
-                            )}
-                            <div className={selectionMode ? 'pointer-events-none' : ''}>
-                                <ThinkingChainBlock chain={String(m.metadata.thinkingChain)} styleId={thinkingChainOptions?.styleId} customColors={thinkingChainOptions?.customColors} onOpenSettings={thinkingChainOptions?.onOpenSettings} />
+            <div className={`flex flex-col ${marginBottom} px-3 group select-none relative`} {...(selectionMode ? { 'data-selected': isSelected } : {})}>
+                <div className={`flex items-center ${isUser ? 'justify-end' : 'justify-start'}`}>
+                    {selectionMode && (
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer z-20" onClick={() => onToggleSelect(m.id)}>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary' : 'border-slate-300 bg-white/80'}`}>
+                                {isSelected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
                             </div>
                         </div>
                     )}
-                    <div className={selectionMode ? 'pointer-events-none' : ''}>
-                        {content}
-                    </div>
-                    {isLastInGroup && showTimestamp !== 'never' && (
-                        <div className={`text-[9px] text-slate-400/80 px-1 mt-1 font-medium ${showTimestamp === 'hover' ? 'opacity-0 group-hover:opacity-100 transition-opacity' : ''}`}>{formatTime(m.timestamp)}</div>
+
+                    {/* Avatar */}
+                    {!isUser && (
+                        <>
+                            {selectionMode && <div className="w-10" />}
+                            {renderAvatar(charAvatar)}
+                        </>
                     )}
+
+                    {showPendingDots && (
+                        <span className="inline-flex items-center gap-[3px] mr-1 select-none pointer-events-none">
+                            <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" />
+                            <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" style={{ animationDelay: '0.15s' }} />
+                            <span className="w-1 h-1 rounded-full bg-slate-400/70 animate-dot-pulse" style={{ animationDelay: '0.3s' }} />
+                        </span>
+                    )}
+
+                    {/* Bubble Container */}
+                    <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[72%] min-w-0 mx-3`} {...interactionProps}>
+                        {!isUser && m.metadata?.thinkingChain && (
+                            <div className={`relative w-full ${selectionMode ? 'pl-7' : ''}`}>
+                                {selectionMode && onToggleThinkingSelect && (
+                                    <div className="absolute left-0 top-3 cursor-pointer z-20" onClick={(e) => { e.stopPropagation(); onToggleThinkingSelect(m.id); }}>
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isThinkingSelected ? 'bg-primary border-primary' : 'border-slate-300 bg-white/80'}`}>
+                                            {isThinkingSelected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                                        </div>
+                                    </div>
+                                )}
+                                <div className={selectionMode ? 'pointer-events-none' : ''}>
+                                    <ThinkingChainBlock chain={String(m.metadata.thinkingChain)} styleId={thinkingChainOptions?.styleId} customColors={thinkingChainOptions?.customColors} onOpenSettings={thinkingChainOptions?.onOpenSettings} />
+                                </div>
+                            </div>
+                        )}
+                        <div className={selectionMode ? 'pointer-events-none' : ''}>
+                            {content}
+                        </div>
+                        {isLastInGroup && showTimestamp !== 'never' && (
+                            <div className={`text-[9px] text-slate-400/80 px-1 mt-1 font-medium ${showTimestamp === 'hover' ? 'opacity-0 group-hover:opacity-100 transition-opacity' : ''}`}>{formatTime(m.timestamp)}</div>
+                        )}
+                    </div>
+
+                    {/* User Avatar */}
+                    {isUser && renderAvatar(userAvatar)}
                 </div>
 
-                {/* User Avatar */}
-                {isUser && renderAvatar(userAvatar)}
+                {/* Quote — outside alignment row, doesn't affect avatar/bubble centering */}
+                {m.replyTo && (
+                    <div className={`flex ${isUser ? 'justify-end' : ''} items-start mt-[3px]`}>
+                        {!isUser && <div className="w-10 shrink-0" />}
+                        <div className="max-w-[72%] min-w-0 mx-3">
+                            <div className="bg-white rounded text-[9px] text-slate-400/80 px-1.5 py-1 font-medium border border-current/30 max-w-full overflow-hidden">
+                                <span className="truncate">{m.replyTo.name}：{replyPreview.length > 20 ? replyPreview.slice(0, 20) + '...' : replyPreview}</span>
+                            </div>
+                        </div>
+                        {isUser && <div className="w-10 shrink-0" />}
+                    </div>
+                )}
             </div>
     );
 
@@ -2014,7 +2029,7 @@ const MessageItem = React.memo(({
             <div
                 className="absolute top-1/2 -translate-y-1/2 w-0 h-0"
                 style={{
-                    [isUser ? 'right' : 'left']: '-6px',
+                    [isUser ? 'right' : 'left']: '-5px',
                     borderTop: '5px solid transparent',
                     borderBottom: '5px solid transparent',
                     [isUser ? 'borderLeft' : 'borderRight']: `6px solid ${isUser ? '#A9EA7A' : '#FFFFFF'}`,
@@ -2048,15 +2063,7 @@ const MessageItem = React.memo(({
                 />
             )}
 
-            {/* Layer 3: Reply/Quote Block */}
-            {m.replyTo && (
-                <div className="relative z-10 mb-1 text-[10px] bg-black/5 p-1.5 rounded-md border-l-2 border-current opacity-60 flex flex-col gap-0.5 max-w-full overflow-hidden">
-                    <span className="font-bold opacity-90 truncate">{m.replyTo.name}</span>
-                    <span className="truncate italic">"{replyPreview.length > 10 ? replyPreview.slice(0, 10) + '...' : replyPreview}"</span>
-                </div>
-            )}
-
-            {/* Layer 4: Text Content — shown when there's visible text after stripping voice tags */}
+            {/* Layer 3: Text Content — shown when there's visible text after stripping voice tags */}
             {displayContent && (
             <div className="relative z-10 text-[15px] leading-relaxed whitespace-pre-wrap break-all select-text" style={{ color: '#000000' }}>
                 {renderContent(displayContent)}

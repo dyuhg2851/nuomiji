@@ -1096,7 +1096,7 @@ ${attachedImagesNote}
                 <div className="shrink-0 z-10 sticky top-0 bg-white/70">
                     <div className="bg-white/70" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
                     <div className="bg-white/70 backdrop-blur-md flex items-end pb-3 px-4 border-b border-white/40 h-20">
-                        <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
+                        <button onClick={closeApp} className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                     </button>
                     <span className="font-medium text-slate-700 text-lg tracking-wide pl-2">群聊列表</span>
@@ -1207,7 +1207,7 @@ ${attachedImagesNote}
                     </div>
                 ) : (
                     <div className="flex items-center gap-3 w-full">
-                        <button onClick={() => setView('list')} className="p-2 -ml-2 rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors">
+                        <button onClick={() => setView('list')} className="p-2 rounded-full hover:bg-slate-100 active:bg-slate-200 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                         </button>
                         <div className="flex-1 min-w-0" onClick={() => { setTempGroupName(activeGroup?.name || ''); setTempPrivateContextCap(activeGroup?.privateContextCap ?? 80); setModalType('settings'); }}>

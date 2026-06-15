@@ -270,7 +270,7 @@ const PixelHomeView: React.FC<Props> = ({ charId, charName, charAvatar, userName
             pendingSlotRef.current = null;
             setViewMode('map');
           }}
-          className="p-2 -ml-2 rounded-full hover:bg-slate-700 active:scale-90 transition-all">
+          className="p-2 rounded-full hover:bg-slate-700 active:scale-90 transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-slate-300">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>

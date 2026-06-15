@@ -320,7 +320,7 @@ const VRWorldApp: React.FC = () => {
             {/* 顶栏 —— 外壳不再统一加 safe-area padding，这里用 --chrome-top 让开
                 安全区 + SullyOS 状态栏（时间/电量），退出键落在其下方，不再怼到时钟上面。 */}
             <div className="relative flex items-center gap-2.5 px-5 pb-2.5 shrink-0 z-10" style={{ paddingTop: VR_TOP }}>
-                <button onClick={closeApp} className="p-1.5 -ml-1.5 rounded-full text-white/65 active:bg-white/10"><ArrowLeft size={21} weight="regular" /></button>
+                <button onClick={closeApp} className="p-1.5 rounded-full text-white/65 active:bg-white/10"><ArrowLeft size={21} weight="regular" /></button>
                 <div className="flex items-center gap-2">
                     <Planet size={17} weight="light" className="text-indigo-100/90" style={{ filter: 'drop-shadow(0 0 7px rgba(165,185,255,.7))' }} />
                     <span className="text-[22px] tracking-[0.42em] pl-1"
@@ -1613,7 +1613,7 @@ const RoomScene: React.FC<{
                 {/* 顶栏 */}
                 <div className="absolute top-0 left-0 right-0 flex items-center gap-2.5 px-4 pb-3 z-[120]"
                     style={{ background: 'linear-gradient(180deg,rgba(5,6,14,.55),transparent)', paddingTop: VR_TOP }}>
-                    <button onClick={onClose} className="h-10 w-10 -ml-2 rounded-full bg-white/10 backdrop-blur-md active:bg-white/20 text-white/90 border border-white/10 flex items-center justify-center"><CaretLeft size={20} weight="regular" /></button>
+                    <button onClick={onClose} className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-md active:bg-white/20 text-white/90 border border-white/10 flex items-center justify-center"><CaretLeft size={20} weight="regular" /></button>
                     <span className="text-[16px] text-white drop-shadow flex items-center gap-1.5 tracking-[0.14em]" style={{ fontFamily: `'Noto Serif SC',serif`, fontWeight: 500 }}>{room.name}</span>
                     <div className="ml-auto flex items-center gap-2">
                         {occupants.length > 0 && (
@@ -1970,7 +1970,7 @@ const ReaderModal: React.FC<{ novel: VRWorldNovel; characters: CharacterProfile[
         <div className="fixed inset-0 z-50 flex flex-col" style={{ background: theme.bg }}>
             {/* 顶栏 */}
             <div className="flex items-center gap-2 px-4 pb-2 shrink-0" style={{ borderBottom: `1px solid ${theme.accent}22`, paddingTop: VR_TOP }}>
-                <button onClick={onClose} className="p-1.5 -ml-1.5 rounded-full active:bg-black/5" style={{ color: theme.text }}><X size={20} weight="bold" /></button>
+                <button onClick={onClose} className="p-1.5 rounded-full active:bg-black/5" style={{ color: theme.text }}><X size={20} weight="bold" /></button>
                 <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-bold truncate" style={{ color: theme.text }}>{novel.title}</div>
                     <div className="text-[10px]" style={{ color: theme.sub }}>
@@ -2257,7 +2257,7 @@ const ChibiEditor: React.FC<{
         return (
             <div className="fixed inset-0 z-[60] flex flex-col bg-black">
                 <div className="flex items-center gap-2 px-4 pb-2 shrink-0 text-white" style={{ background: 'linear-gradient(180deg,#161c2e 0%,#0c1019 100%)', paddingTop: VR_TOP }}>
-                    <button onClick={() => existing?.img ? setCreating(false) : onClose()} className="p-1.5 -ml-1.5 rounded-full active:bg-white/10"><CaretLeft size={20} weight="bold" /></button>
+                    <button onClick={() => existing?.img ? setCreating(false) : onClose()} className="p-1.5 rounded-full active:bg-white/10"><CaretLeft size={20} weight="bold" /></button>
                     <span className="text-[14px] font-bold">捏 {char.name} 的小人</span>
                 </div>
                 <div className="flex-1 min-h-0">
