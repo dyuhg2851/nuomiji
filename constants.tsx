@@ -63,7 +63,6 @@ export const Icons: Record<string, React.FC<{ className?: string }>> = {
   Browser: ({ className }) => <GlobeSimple className={className} weight="bold" />,
   Music: ({ className }) => <MusicNotes className={className} weight="fill" />,
   Call: ({ className }) => <PhoneCall className={className} weight="bold" />,
-  Guidebook: ({ className }) => <Crosshair className={className} weight="bold" />,
   LifeSim: ({ className }) => <Smiley className={className} weight="bold" />,
   MemoryPalace: ({ className }) => <Brain className={className} weight="bold" />,
   Handbook: ({ className }) => <Notebook className={className} weight="bold" />,
@@ -78,7 +77,6 @@ export const INSTALLED_APPS: AppConfig[] = [
   { id: AppID.MemoryPalace, name: '记忆宫殿', icon: 'MemoryPalace', color: 'violet' },
   { id: AppID.Chat, name: 'Message', icon: 'Chat', color: 'green' },
   { id: AppID.Call, name: '电话', icon: 'Call', color: 'emerald' },
-  { id: AppID.GroupChat, name: '群聊', icon: 'GroupChat', color: 'violet' },
   { id: AppID.Room, name: '小小窝', icon: 'Room', color: 'rose' },
   { id: AppID.CheckPhone, name: '查手机', icon: 'CheckPhone', color: 'slate' },
   { id: AppID.Date, name: '见面', icon: 'Date', color: 'pink' },
@@ -89,13 +87,12 @@ export const INSTALLED_APPS: AppConfig[] = [
   { id: AppID.VRWorld, name: '彼方', icon: 'VRWorld', color: 'indigo' },
   { id: AppID.Worldbook, name: '世界书', icon: 'Worldbook', color: 'indigo' },
   { id: AppID.XhsFreeRoam, name: '自由活动', icon: 'XhsFreeRoam', color: 'rose' },
-  { id: AppID.ThemeMaker, name: '气泡工坊', icon: 'ThemeMaker', color: 'purple' },
+  { id: AppID.GroupChat, name: '群聊', icon: 'GroupChat', color: 'violet' },
   { id: AppID.Appearance, name: '外观', icon: 'Appearance', color: 'slate' },
   { id: AppID.Settings, name: '设置', icon: 'Settings', color: 'slate' },
-  { id: AppID.Guidebook, name: '攻略本', icon: 'Guidebook', color: 'slate' },
   { id: AppID.LifeSim, name: '都市人生', icon: 'LifeSim', color: 'purple' },
   { id: AppID.Music, name: '音乐', icon: 'Music', color: 'rose' },
   { id: AppID.CharCreatorDev, name: '捏脸·开发', icon: 'CharCreatorDev', color: 'amber' }, // 仅开发模式显示
 ];
 
-export const DOCK_APPS = [AppID.Chat, AppID.Call, AppID.Worldbook, AppID.GroupChat, AppID.Settings];
+export const DOCK_APPS = [AppID.Chat, AppID.Call, AppID.Worldbook, AppID.Settings];

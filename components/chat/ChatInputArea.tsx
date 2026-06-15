@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ShareNetwork, Trash, Plus, Smiley, PaperPlaneTilt, Money, BookOpenText, GearSix, Image, Lock, ArrowsClockwise, ChatCircleDots, CalendarBlank, ForkKnife, Code, Brain, PencilSimple } from '@phosphor-icons/react';
+import { ShareNetwork, Trash, Plus, Smiley, PaperPlaneTilt, Money, BookOpenText, GearSix, Image, Lock, ArrowsClockwise, ChatCircleDots, CalendarBlank, Code, Brain, PencilSimple } from '@phosphor-icons/react';
 import { CharacterProfile, ChatTheme, EmojiCategory, Emoji } from '../../types';
 import { PRESET_THEMES } from './ChatConstants';
 import { AcnhActionTile } from '../os/acnhIcons';
@@ -35,9 +35,6 @@ interface ChatInputAreaProps {
     canReroll: boolean;
     // Proactive messaging
     isProactiveActive?: boolean;
-    // 麦当劳 MCP
-    mcdConfigured?: boolean;   // 设置里 token 已填且启用
-    mcdActivated?: boolean;    // 当前会话已发"麦请求"
     // HTML 模块模式
     htmlModeEnabled?: boolean;
     // 思考过程展示（会话级）
@@ -59,8 +56,6 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     categories = [], activeCategory = 'default',
     onReroll, canReroll,
     isProactiveActive,
-    mcdConfigured = false,
-    mcdActivated = false,
     htmlModeEnabled = false,
     showThinkingChain = false,
     inputStyle = 'default',
@@ -362,7 +357,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         {emojiSelectionMode && (
             <div className={`fixed inset-0 z-[-1] ${isPixelStyle ? 'bg-[#eadfce]/70 backdrop-blur-[2px]' : isDiscordStyle ? 'bg-slate-950/70 backdrop-blur-[2px]' : 'bg-white/60 backdrop-blur-[2px]'}`} />
         )}
-        <div className={`sully-chat-inputbar ${shellClass} shrink-0 z-40 relative`}>
+        <div className={`sully-chat-inputbar ${shellClass} shrink-0 z-40 relative -mt-3 pt-3`}>
             
             {selectionMode ? (
                 <div className={`p-3 flex gap-2 ${isPixelStyle ? 'bg-[#f3e7d6]' : isDiscordStyle ? 'bg-slate-900/60 backdrop-blur-md' : 'bg-white/50 backdrop-blur-md'}`}>
@@ -385,14 +380,14 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                     </button>
                 </div>
             ) : (
-                <div className="p-2 pl-4 flex gap-1 items-center relative">
+                <div className="p-2 pl-4 flex gap-0 items-center relative">
                     {/* 语音按钮 */}
-                    <button className={`p-3 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+                    <button className={`p-2 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
                             <path fill="#000000" fillRule="evenodd" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m0-1.2a8.8 8.8 0 1 0 0-17.6a8.8 8.8 0 0 0 0 17.6m.308-3.992A6.77 6.77 0 0 0 14.3 12c0-1.83-.724-3.54-1.992-4.808l.849-.849A7.98 7.98 0 0 1 15.5 12c0 2.21-.895 4.21-2.343 5.657zm-1.98-1.98A3.98 3.98 0 0 0 11.5 12a3.98 3.98 0 0 0-1.172-2.828l.849-.849A5.18 5.18 0 0 1 12.7 12a5.18 5.18 0 0 1-1.523 3.677zm-1.13-1.13L7.5 12l1.697-1.697c.434.434.703 1.034.703 1.697s-.269 1.263-.703 1.697z"/>
                         </svg>
                     </button>
-                    <div className={`flex-1 min-w-0 flex items-center px-2 transition-all bg-white rounded-[4px] border border-slate-200/50 ${useIOSStandaloneInputFix ? 'overflow-visible' : 'overflow-hidden'}`}>
+                    <div className={`flex-1 min-w-0 flex items-center px-1.5 pr-0 transition-all bg-white rounded-[4px] border border-slate-200/50 ${useIOSStandaloneInputFix ? 'overflow-visible' : 'overflow-hidden'}`}>
                         <textarea 
                             ref={textareaRef}
                             rows={1} 
@@ -404,7 +399,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                             enterKeyHint="send"
                             autoCorrect="on"
                             autoCapitalize="sentences"
-                            className={`flex-1 min-w-0 bg-transparent px-3 py-2 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[14px]'} resize-none max-h-24 no-scrollbar text-slate-700`} 
+                            className={`flex-1 min-w-0 bg-transparent px-3 py-1 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[14px]'} resize-none max-h-24 no-scrollbar text-slate-700`} 
                             placeholder="" 
                             style={{ height: 'auto' }} 
                         />
@@ -421,8 +416,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                         )}
                     </div>
                     {/* 表情按钮 */}
-                    <button onClick={() => setShowPanel(showPanel === 'emojis' ? 'none' : 'emojis')} className={`p-3 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 21 21">
+                    <button onClick={() => setShowPanel(showPanel === 'emojis' ? 'none' : 'emojis')} className={`p-2 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 21 21">
                             <g fill="none" fillRule="evenodd" transform="translate(2 2)">
                                 <circle cx="8.5" cy="8.5" r="8" stroke="#000000" strokeLinecap="round" strokeLinejoin="round"/>
                                 <circle cx="6" cy="6" r="1" fill="#000000"/>
@@ -432,8 +427,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                         </svg>
                     </button>
                     {/* 加号按钮 */}
-                    <button onClick={() => setShowPanel(showPanel === 'actions' ? 'none' : 'actions')} className={`p-3 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+                    <button onClick={() => setShowPanel(showPanel === 'actions' ? 'none' : 'actions')} className={`p-2 shrink-0 text-slate-600 hover:text-primary hover:bg-slate-100 rounded-full`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
                             <path fill="#000000" d="M7 12h4V8h1v4h4v1h-4v4h-1v-4H7zm4.5-9a9.5 9.5 0 0 1 9.5 9.5a9.5 9.5 0 0 1-9.5 9.5A9.5 9.5 0 0 1 2 12.5A9.5 9.5 0 0 1 11.5 3m0 1A8.5 8.5 0 0 0 3 12.5a8.5 8.5 0 0 0 8.5 8.5a8.5 8.5 0 0 0 8.5-8.5A8.5 8.5 0 0 0 11.5 4"/>
                         </svg>
                     </button>
@@ -647,25 +642,6 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
 
                           {/* Page 1: 外部服务 */}
                           <div className={`p-6 grid grid-cols-4 gap-8 ${actionsPage === 1 ? '' : 'hidden'}`}>
-                            <button
-                              onClick={() => {
-                                if (!mcdConfigured) { onPanelAction('mcd-not-configured'); return; }
-                                onPanelAction(mcdActivated ? 'mcd-end' : 'mcd-request');
-                              }}
-                              className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'} ${!mcdConfigured ? 'opacity-50' : ''}`}
-                            >
-                              {acnh ? <div className="relative"><AcnhActionTile kind="mcd" />{mcdActivated && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#fc736d] border-2 border-white" />}</div> : (
-                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border relative ${
-                                  mcdActivated
-                                    ? (isDiscordStyle ? 'bg-yellow-500/20 text-yellow-300 border-yellow-400/40' : 'bg-yellow-100 text-yellow-700 border-yellow-300')
-                                    : (isDiscordStyle ? 'bg-slate-800 text-yellow-300 border-yellow-400/20' : 'bg-yellow-50 text-yellow-600 border-yellow-100')
-                              }`}>
-                                  <ForkKnife className="w-6 h-6" weight="bold" />
-                                  {mcdActivated && <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 ${isDiscordStyle ? 'bg-yellow-300 border-slate-900' : 'bg-yellow-500 border-white'}`} />}
-                              </div>)}
-                              <span className="text-xs font-bold">{mcdActivated ? '结束麦请求' : '麦当劳'}</span>
-                            </button>
-
                             {/* HTML 模块模式：tap = 切换开关 (注入提示词); 长按打开自定义提示词设置 */}
                             <button
                               onClick={() => onPanelAction('html-mode-toggle')}

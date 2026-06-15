@@ -12,17 +12,17 @@ export const AppHeader: React.FC<HeaderProps> = ({ title, onBack, right, showBac
   return (
     <div className="shrink-0 z-10 sticky top-0 bg-white/85">
       {/* 安全区顶部 - 状态栏高度 */}
-      <div 
-        className="bg-white/85" 
-        style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} 
+      <div
+        className="bg-white/85"
+        style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }}
       />
       {/* Header内容区域 - 增加高度让返回键和标题往下移 */}
-      <div className="h-20 bg-white/85 backdrop-blur-xl flex items-end pb-3 px-4 border-b border-white/40 shrink-0">
+      <div className="h-16 bg-white/85 backdrop-blur-xl flex items-center px-4 border-b border-white/40 shrink-0">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
             {showBack && (
-              <button 
-                onClick={onBack} 
+              <button
+                onClick={onBack}
                 className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-black/5 active:scale-90 transition-all"
               >
                 <ArrowLeft size={20} className="text-slate-600" weight="bold" />

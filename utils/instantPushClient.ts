@@ -650,6 +650,11 @@ export interface SendInstantPushResult {
   payloadTop?: InstantDiagnostics['payloadTop'];
 }
 
+// 可重试的 HTTP 状态码
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+// 最大重试次数
+const MAX_RETRIES = 3;
+
 export async function sendInstantPush(
   payload: InstantPushPayload,
   options: { keepalive?: boolean; onDispatched?: () => void } = {},
@@ -679,67 +684,106 @@ export async function sendInstantPush(
     extractHost(payload.apiUrl),
     extractHost(payload.pushSubscription?.endpoint),
   ].filter(Boolean);
-  try {
-    // fetch() 同步 return Promise 时，浏览器已把请求排进网络栈，keepalive:true
-    // 让浏览器在进程被杀后仍努力送达。这一刻就是"安全可杀"，立刻通知 UI；不能
-    // 等 await resolve —— worker 端 LLM + push 全跑完才回 200，那时 push 可能
-    // 比 response 更早到达浏览器，UI 会出现"AI 回复都到了气泡还半透明"。
-    const fetchPromise = fetch(url, { method: 'POST', headers, body, keepalive: useKeepalive });
-    options.onDispatched?.();
-    const res = await fetchPromise;
-    // res.text() 只能调一次 —— 拿原文后再 try parse JSON, 比先 json() 后 text() 灵活,
-    // 而且 CF 边缘错误页是 HTML, json() 会 throw 丢掉原文.
-    const { text: rawText, parsed } = await resolveSafeFetchText(res);
-    if (!res.ok) {
-      const snippet = rawText
-        ? maskHostsInText(rawText.slice(0, RESPONSE_SNIPPET_LIMIT), maskedHosts)
-        : undefined;
-      const cfRay = res.headers.get('cf-ray') || undefined;
-      const errMsg = parsed?.error?.message ?? `HTTP ${res.status}${res.statusText ? ' ' + res.statusText : ''}`;
-      // 完整 URL 等敏感字段不进弹窗, 但写到 console 给本地开发者
-      log.error('HTTP failure', { url, status: res.status, statusText: res.statusText, body: rawText });
+
+  let lastError: SendInstantPushResult | null = null;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      // fetch() 同步 return Promise 时，浏览器已把请求排进网络栈，keepalive:true
+      // 让浏览器在进程被杀后仍努力送达。这一刻就是"安全可杀"，立刻通知 UI；不能
+      // 等 await resolve —— worker 端 LLM + push 全跑完才回 200，那时 push 可能
+      // 比 response 更早到达浏览器，UI 会出现"AI 回复都到了气泡还半透明"。
+      // 只在第一次尝试时调用 onDispatched，避免多次调用
+      const fetchPromise = fetch(url, { method: 'POST', headers, body, keepalive: useKeepalive });
+      if (attempt === 0) {
+        options.onDispatched?.();
+      }
+      const res = await fetchPromise;
+      // res.text() 只能调一次 —— 拿原文后再 try parse JSON, 比先 json() 后 text() 灵活,
+      // 而且 CF 边缘错误页是 HTML, json() 会 throw 丢掉原文.
+      const { text: rawText, parsed } = await resolveSafeFetchText(res);
+
+      if (!res.ok) {
+        // 检查是否可以重试
+        if (RETRYABLE_STATUSES.has(res.status) && attempt < MAX_RETRIES) {
+          // 优先使用 Retry-After 响应头，其次使用指数退避
+          const retryAfterHeader = res.headers.get('Retry-After');
+          const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : null;
+          const delay = retryAfterSeconds !== null && !isNaN(retryAfterSeconds)
+            ? retryAfterSeconds * 1000
+            : Math.pow(2, attempt) * 1000;
+
+          log.warn('HTTP retry for instant push', { status: res.status, attempt: attempt + 1, maxRetries: MAX_RETRIES, delay, retryAfter: retryAfterSeconds });
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+
+        const snippet = rawText
+          ? maskHostsInText(rawText.slice(0, RESPONSE_SNIPPET_LIMIT), maskedHosts)
+          : undefined;
+        const cfRay = res.headers.get('cf-ray') || undefined;
+        const errMsg = parsed?.error?.message ?? `HTTP ${res.status}${res.statusText ? ' ' + res.statusText : ''}`;
+        // 完整 URL 等敏感字段不进弹窗, 但写到 console 给本地开发者
+        log.error('HTTP failure', { url, status: res.status, statusText: res.statusText, body: rawText });
+        return {
+          ok: false,
+          error: errMsg,
+          http: {
+            status: res.status,
+            statusText: res.statusText || undefined,
+            bodyBytes,
+            keepalive: useKeepalive,
+            keepaliveLimit: KEEPALIVE_MAX_BODY,
+            cfRay,
+            responseSnippet: snippet,
+          },
+          payloadTop: collectPayloadTop(wirePayload),
+        };
+      }
+
+      if (parsed?.success) return { ok: true, data: parsed.data };
       return {
         ok: false,
-        error: errMsg,
+        error: parsed?.error?.message ?? '发送失败',
         http: {
           status: res.status,
           statusText: res.statusText || undefined,
           bodyBytes,
           keepalive: useKeepalive,
           keepaliveLimit: KEEPALIVE_MAX_BODY,
-          cfRay,
-          responseSnippet: snippet,
+          cfRay: res.headers.get('cf-ray') || undefined,
+          responseSnippet: rawText
+            ? maskHostsInText(rawText.slice(0, RESPONSE_SNIPPET_LIMIT), maskedHosts)
+            : undefined,
         },
         payloadTop: collectPayloadTop(wirePayload),
       };
+    } catch (e) {
+      const err = e as { name?: string; message?: string } | null;
+      log.error('fetch threw', { url, err, attempt });
+
+      // 网络错误时重试
+      if (attempt < MAX_RETRIES && (err?.name === 'TypeError' || /aborted|timeout/i.test(err?.message || ''))) {
+        const delay = Math.pow(2, attempt) * 1000;
+        log.warn('Network error retry for instant push', { attempt: attempt + 1, maxRetries: MAX_RETRIES, delay });
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+
+      lastError = {
+        ok: false,
+        error: err?.message ?? String(e),
+        fetchError: { name: err?.name, message: err?.message ?? String(e) },
+        payloadTop: collectPayloadTop(wirePayload),
+      };
     }
-    if (parsed?.success) return { ok: true, data: parsed.data };
-    return {
-      ok: false,
-      error: parsed?.error?.message ?? '发送失败',
-      http: {
-        status: res.status,
-        statusText: res.statusText || undefined,
-        bodyBytes,
-        keepalive: useKeepalive,
-        keepaliveLimit: KEEPALIVE_MAX_BODY,
-        cfRay: res.headers.get('cf-ray') || undefined,
-        responseSnippet: rawText
-          ? maskHostsInText(rawText.slice(0, RESPONSE_SNIPPET_LIMIT), maskedHosts)
-          : undefined,
-      },
-      payloadTop: collectPayloadTop(wirePayload),
-    };
-  } catch (e) {
-    const err = e as { name?: string; message?: string } | null;
-    log.error('fetch threw', { url, err });
-    return {
-      ok: false,
-      error: err?.message ?? String(e),
-      fetchError: { name: err?.name, message: err?.message ?? String(e) },
-      payloadTop: collectPayloadTop(wirePayload),
-    };
   }
+
+  return lastError || {
+    ok: false,
+    error: '发送失败',
+    payloadTop: collectPayloadTop(wirePayload),
+  };
 }
 
 // ── 高阶：发 + 等 push 落库 ───────────────────────────────────────────────

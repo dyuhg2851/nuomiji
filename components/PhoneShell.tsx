@@ -62,7 +62,6 @@ const Settings = lazyApp(() => import('../apps/Settings'));
 const Character = lazyApp(() => import('../apps/Character'));
 const Chat = lazyApp(() => import('../apps/Chat'));
 const GroupChat = lazyApp(() => import('../apps/GroupChat'));
-const ThemeMaker = lazyApp(() => import('../apps/ThemeMaker'));
 const Appearance = lazyApp(() => import('../apps/Appearance'));
 const DateApp = lazyApp(() => import('../apps/DateApp'));
 const UserApp = lazyApp(() => import('../apps/UserApp'));
@@ -75,7 +74,6 @@ const BankApp = lazyApp(() => import('../apps/BankApp'));
 const XhsFreeRoamApp = lazyApp(() => import('../apps/XhsFreeRoamApp'));
 const MusicApp = lazyApp(() => import('../apps/MusicApp'));
 const CallApp = lazyApp(() => import('../apps/CallApp'));
-const GuidebookApp = lazyApp(() => import('../apps/GuidebookApp'));
 const LifeSimApp = lazyApp(() => import('../apps/LifeSimApp'));
 const MemoryPalaceApp = lazyApp(() => import('../apps/MemoryPalaceApp'));
 const QQBridge = lazyApp(() => import('../apps/QQBridge'));
@@ -87,8 +85,8 @@ const APP_PRELOAD_ORDER: PreloadableLazy[] = [
   Chat, Character, GroupChat, RoomApp, Settings, Appearance,
   CheckPhone, JournalApp, MusicApp, CallApp, DateApp, UserApp,
   StudyApp, BankApp, WorldbookApp, MemoryPalaceApp,
-  VRWorldApp, LifeSimApp, GuidebookApp,
-  XhsFreeRoamApp, ThemeMaker, QQBridge,
+  VRWorldApp, LifeSimApp,
+  XhsFreeRoamApp, QQBridge,
   CharCreatorDevApp,
 ];
 
@@ -96,7 +94,7 @@ const APP_PRELOAD_ORDER: PreloadableLazy[] = [
 // AppID 由下方 import 引入，ES 模块提升后全模块可用。
 const APP_BY_ID: Partial<Record<AppID, PreloadableLazy>> = {
   [AppID.Settings]: Settings, [AppID.Character]: Character, [AppID.Chat]: Chat,
-  [AppID.GroupChat]: GroupChat, [AppID.ThemeMaker]: ThemeMaker, [AppID.Appearance]: Appearance,
+  [AppID.GroupChat]: GroupChat, [AppID.Appearance]: Appearance,
   [AppID.Date]: DateApp, [AppID.User]: UserApp,
   [AppID.Journal]: JournalApp, [AppID.Room]: RoomApp,
   [AppID.CheckPhone]: CheckPhone, [AppID.Study]: StudyApp,
@@ -104,7 +102,7 @@ const APP_BY_ID: Partial<Record<AppID, PreloadableLazy>> = {
   [AppID.Bank]: BankApp,
   [AppID.XhsFreeRoam]: XhsFreeRoamApp,
   [AppID.Music]: MusicApp, [AppID.Call]: CallApp,
-  [AppID.Guidebook]: GuidebookApp, [AppID.LifeSim]: LifeSimApp, [AppID.MemoryPalace]: MemoryPalaceApp,
+  [AppID.LifeSim]: LifeSimApp, [AppID.MemoryPalace]: MemoryPalaceApp,
   [AppID.QQBridge]: QQBridge,
   [AppID.VRWorld]: VRWorldApp, [AppID.CharCreatorDev]: CharCreatorDevApp,
 };
@@ -718,7 +716,6 @@ const PhoneShell: React.FC = () => {
       case AppID.Character: return <Character />;
       case AppID.Chat: return <Chat />;
       case AppID.GroupChat: return <GroupChat />; 
-      case AppID.ThemeMaker: return <ThemeMaker />;
       case AppID.Appearance: return <Appearance />;
       case AppID.Date: return <DateApp />; 
       case AppID.User: return <UserApp />;
@@ -731,7 +728,6 @@ const PhoneShell: React.FC = () => {
       case AppID.XhsFreeRoam: return <XhsFreeRoamApp />;
       case AppID.Music: return <MusicApp />;
       case AppID.Call: return <CallApp />;
-      case AppID.Guidebook: return <GuidebookApp />;
       case AppID.LifeSim: return <LifeSimApp />;
       case AppID.MemoryPalace: return <MemoryPalaceApp />;
       case AppID.QQBridge: return <QQBridge />;

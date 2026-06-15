@@ -1044,7 +1044,7 @@ const CallApp: React.FC = () => {
   };
   if (viewMode === 'role-select') {
     return (
-      <div className="h-full w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white px-5 pt-10 pb-6 flex flex-col">
+      <div className="h-full w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white px-5 pt-6 pb-6 flex flex-col">
         <h1 className="text-2xl font-semibold">想找谁聊聊？</h1>
         <p className="text-sm text-slate-400 mt-1">选一个人，拨过去吧。</p>
         <div className="mt-5 space-y-3 flex-1 overflow-y-auto">
@@ -1072,7 +1072,7 @@ const CallApp: React.FC = () => {
   }
   if (viewMode === 'history') {
     return (
-      <div className="h-full w-full bg-slate-950 text-white px-5 pt-10 pb-6 flex flex-col">
+      <div className="h-full w-full bg-slate-950 text-white px-5 pt-6 pb-6 flex flex-col">
         <div className="flex items-center justify-between">
           <button onClick={() => setViewMode('role-select')} className="text-sm text-slate-400">← 返回</button>
           <h1 className="text-lg font-medium">通话记录</h1>
@@ -1122,7 +1122,7 @@ const CallApp: React.FC = () => {
   }
   if (viewMode === 'record-detail' && recordDetail) {
     return (
-      <div className="h-full w-full bg-slate-950 text-white px-5 pt-10 pb-6 flex flex-col">
+      <div className="h-full w-full bg-slate-950 text-white px-5 pt-6 pb-6 flex flex-col">
         <div className="flex items-center justify-between">
           <button onClick={() => setViewMode('history')} className="text-sm text-slate-400">← 返回</button>
           <div className="text-sm text-slate-200 font-medium">{recordDetail.characterName}</div>

@@ -7,7 +7,7 @@ import { safeFetchJson, safeResponseJson } from '../utils/safeApi';
 import { KeepAlive } from '../utils/keepAlive';
 import { ProactiveChat } from '../utils/proactiveChat';
 import { ContextBuilder } from '../utils/context';
-// 思考链 / HTML / MCD / memoryPalace 注入已下沉到 chatRequestPayload；这里不再直接调用
+// 思考链 / HTML / memoryPalace 注入已下沉到 chatRequestPayload；这里不再直接调用
 import { useMusic, loadMusicHooks } from '../context/MusicContext';
 import { processNewMessages, mergePalaceFragmentsIntoMemories, getMemoryPalaceHighWaterMark } from '../utils/memoryPalace/pipeline';
 import { incrementDigestRound, runCognitiveDigestion, detectPersonalityStyle } from '../utils/memoryPalace';
@@ -15,10 +15,6 @@ import { incrementDigestRound, runCognitiveDigestion, detectPersonalityStyle } f
 // import { evolveFlowNarrative } from '../utils/scheduleGenerator';
 import { isScheduleFeatureOn } from '../utils/scheduleGenerator';
 import type { DigestResult } from '../utils/memoryPalace';
-// 麦当劳: useChatAI 现在只读 McdMiniApp 当前快照注入 system prompt + 给 LLM 一个
-// UI 钩子工具 propose_cart_items。MCP 实际调用都在 McdMiniApp 组件内做, useChatAI
-// 不再 import callMcdTool / normalizeMcdToolName / isMcdConfigured / 旧 prompt。
-import { MCD_PROPOSE_TOOL, autoFixProposalCodesByName } from '../utils/mcdToolBridge';
 import { buildChatRequestPayload } from '../utils/chatRequestPayload';
 import {
     isInstantConfigReady,
@@ -338,8 +334,6 @@ interface UseChatAIProps {
     memoryPalaceConfig?: { embedding: { baseUrl: string; apiKey: string; model: string; dimensions: number }; lightLLM: { baseUrl: string; apiKey: string; model: string } };
     /** 从 OSContext 传入，用于 palace 自动归档写 char.memories + hideBeforeMessageId */
     updateCharacter?: (id: string, partial: Partial<CharacterProfile>) => void;
-    /** 麦当劳小程序当前快照 (cart/menu/nutrition); open=true 时把这段实时状态追加到 system prompt 末尾, 让 char 协同选餐 */
-    mcdMiniAppRef?: MutableRefObject<import('../utils/mcdToolBridge').McdMiniAppSnapshot | undefined>;
 }
 
 export const useChatAI = ({
@@ -356,7 +350,6 @@ export const useChatAI = ({
     translationConfig,
     memoryPalaceConfig,
     updateCharacter,
-    mcdMiniAppRef,
 }: UseChatAIProps) => {
     
     // 音乐上下文 — 用于聊天时注入"user 正在听什么 + 当前歌词窗口"
@@ -425,11 +418,11 @@ export const useChatAI = ({
     // 重建 listener (切角色), 避免 music 每秒 tick 一次都 remove+addEventListener.
     const emotionEvalDepsRef = useRef({
         userProfile, groups, emojis, categories, realtimeConfig, apiConfig,
-        translationConfig, music, mcdMiniAppRef, evolvedNarrative,
+        translationConfig, music, evolvedNarrative,
     });
     emotionEvalDepsRef.current = {
         userProfile, groups, emojis, categories, realtimeConfig, apiConfig,
-        translationConfig, music, mcdMiniAppRef, evolvedNarrative,
+        translationConfig, music, evolvedNarrative,
     };
 
     useEffect(() => {
@@ -460,8 +453,6 @@ export const useChatAI = ({
 
                 // 跟 sendMessage line 553 同一个 helper, 同一份 ctx → emotion eval 看到的 systemPrompt
                 // + cleanedApiMessages 跟 主 API 调用看到的几乎完全一致 (差别仅在 music live snapshot 时序).
-                const mcdMiniSnap = deps.mcdMiniAppRef?.current;
-                const mcdMiniOpen = !!mcdMiniSnap?.open;
                 const payload = await buildChatRequestPayload({
                     char,
                     userProfile: deps.userProfile,
@@ -483,7 +474,6 @@ export const useChatAI = ({
                     translationConfig: deps.translationConfig,
                     htmlMode: { enabled: !!(char as any).htmlModeEnabled, customPrompt: (char as any).htmlModeCustomPrompt },
                     thinkingChain: { enabled: !!(char as any).showThinkingChain, customPrompt: (char as any).thinkingChainCustomPrompt },
-                    mcdMiniSnap: mcdMiniOpen ? mcdMiniSnap : undefined,
                 });
 
                 if (payload.flags.promptBuildSkipped) {
@@ -620,12 +610,8 @@ export const useChatAI = ({
                 console.log(`📊 [Context] Loaded ${fullHistory.length} msgs from DB (React state had ${currentMsgs.length}, contextLimit=${limit})`);
             }
 
-            // 1. 构造完整 chat 请求载荷（memoryPalace 召回 + system prompt + 双语 / HTML / 思考链 / MCD + 历史）
+            // 1. 构造完整 chat 请求载荷（memoryPalace 召回 + system prompt + 双语 / HTML / 思考链 + 历史）
             //    — 主动消息和 emotion eval 走的是同一个 helper，保证三家拿到的"材料"完全一致。
-            const mcdMiniSnap = mcdMiniAppRef?.current;
-            const mcdMiniOpen = !!mcdMiniSnap?.open;
-            const mcdInheritMeta = mcdMiniOpen ? { fromMcdMiniApp: true } : undefined;
-
             const payload = await stageT('payload', buildChatRequestPayload({
                 char, userProfile, groups, emojis, categories,
                 historyMsgs: contextMsgs,
@@ -663,15 +649,11 @@ export const useChatAI = ({
                 translationConfig,
                 htmlMode: { enabled: !!(char as any).htmlModeEnabled, customPrompt: (char as any).htmlModeCustomPrompt },
                 thinkingChain: { enabled: !!(char as any).showThinkingChain, customPrompt: (char as any).thinkingChainCustomPrompt },
-                mcdMiniSnap: mcdMiniOpen ? mcdMiniSnap : undefined,
             }));
             const systemPrompt = payload.systemPrompt;
             const cleanedApiMessages = payload.cleanedApiMessages;
             const fullMessages = payload.fullMessages;
             const promptBuildSkipped = payload.flags.promptBuildSkipped;
-            if (payload.flags.mcdActive) {
-                console.log(`🍔 [MCD-MiniApp] 注入协同点餐上下文 step=${mcdMiniSnap?.step} cartItems=${mcdMiniSnap?.cart?.length || 0} menuItems=${mcdMiniSnap?.menuMeals ? Object.keys(mcdMiniSnap.menuMeals).length : 0} nutrition=${mcdMiniSnap?.nutritionData ? mcdMiniSnap.nutritionData.length : 0}字`);
-            }
             const bilingualActive = payload.flags.bilingualActive;
 
             // Debug: Log context composition
@@ -772,12 +754,6 @@ export const useChatAI = ({
             if (userStream) {
                 baseReqBody.stream_options = { include_usage: true };
             }
-            // 小程序模式: 给 LLM 一个 UI 钩子工具 propose_cart_items, 推荐时可调用,
-            // 工具不真改购物车也不调 MCP, 只是把推荐渲染成 + 加按钮卡片让用户决定
-            if (payload.flags.mcdActive) {
-                baseReqBody.tools = [MCD_PROPOSE_TOOL];
-                baseReqBody.tool_choice = 'auto';
-            }
 
             // ─── Instant Push 分支 ───
             // 与本地 fetch 对称：sendInstantPushAndAwaitReply 内部完成 sub 获取 / push 监听 /
@@ -836,109 +812,6 @@ export const useChatAI = ({
             console.log(`⏱ [API call] ${Math.round(performance.now() - apiT0)}ms`);
             updateTokenUsage(data, historyMsgCount, 'initial');
 
-            // 3.4 麦当劳小程序 propose_cart_items UI 钩子工具循环
-            //     不调 MCP, 只把模型的 args 作为 mcd_card kind=proposal 落库, 让小程序聊天面板渲染
-            //     成"+加进购物车"卡片。返回 ack 给模型继续走它的文字 reply。
-            if (payload.flags.mcdActive && data.choices?.[0]?.message?.tool_calls?.length) {
-                const MAX_PROPOSE_LOOPS = 3;
-                let loopMessages = [...fullMessages];
-                for (let it = 0; it < MAX_PROPOSE_LOOPS; it++) {
-                    const toolCalls = data.choices?.[0]?.message?.tool_calls;
-                    if (!toolCalls || !toolCalls.length) break;
-                    loopMessages.push({
-                        role: 'assistant',
-                        content: data.choices[0].message.content || '',
-                        tool_calls: toolCalls,
-                    } as any);
-                    for (const tc of toolCalls) {
-                        const fname: string = tc.function?.name || '';
-                        let args: any = {};
-                        try {
-                            const raw = tc.function?.arguments ?? tc.arguments;
-                            args = typeof raw === 'string' ? (raw ? JSON.parse(raw) : {}) : (raw || {});
-                        } catch (e) {
-                            console.warn('🍔 [MCD-MiniApp] propose 参数解析失败:', e);
-                        }
-                        if (fname === 'propose_cart_items' && Array.isArray(args.items) && args.items.length) {
-                            // 第一步: 菜单还没加载就直接拒, 不能让模型瞎编 code
-                            // 这是导致 calculate-price 返回空列表的根因之一: propose 在 pick 步骤被调用,
-                            // 此时 menuMeals 是空的, 旧版 menuKeys.length===0 会直接跳过校验, 烂 code 一路到 cart。
-                            const menu = mcdMiniSnap?.menuMeals || {};
-                            const menuKeys = Object.keys(menu);
-                            if (menuKeys.length === 0) {
-                                loopMessages.push({
-                                    role: 'tool',
-                                    tool_call_id: tc.id,
-                                    content: `菜单还没加载 (用户当前在选模式 / 选地址门店阶段, 还没进入菜单页)。请先用文字陪用户聊, 等用户在小程序里选完地址/门店、菜单加载出来后再调 propose_cart_items。所有 code 必须从加载后的"当前门店在售"清单里挑, 不能凭印象编。`,
-                                } as any);
-                                continue;
-                            }
-                            // 第二步: 全局名字匹配自动修 code (char 经常把"板烧鸡腿堡"当 code 传)
-                            const { fixed, fixes } = autoFixProposalCodesByName(args.items, menu);
-                            if (fixes.length) {
-                                console.log(`🍔 [MCD-MiniApp] propose 自动修 ${fixes.length} 个 code:`,
-                                    fixes.map(f => `'${f.from}' → '${f.to}' (${f.name})`).join(', '));
-                            }
-                            args.items = fixed;
-                            // 第三步: 修完后还有非法的就退回 char 重提 (严格模式: 任何不在 menu 字典里的 code 都拒)
-                            const invalidItems = args.items.filter((it: any) => !it?.code || !(menu as any)[it.code]);
-                            if (invalidItems.length > 0) {
-                                const sample = menuKeys.slice(0, 20).map(k => `${k}=${(menu as any)[k]?.name || ''}`).join(', ');
-                                const bad = invalidItems.map((i: any) => `'${i.code}'(${i.name || '?'})`).join(', ');
-                                loopMessages.push({
-                                    role: 'tool',
-                                    tool_call_id: tc.id,
-                                    content: `propose_cart_items 里这些 code/name 在菜单里都找不到匹配 (已尝试名字模糊匹配但失败): ${bad}。这些商品本店不卖, 别推。当前菜单可用 code 示例: ${sample}。请只从菜单里挑实际有的, 重新调一次 propose。`,
-                                } as any);
-                                continue;
-                            }
-                            try {
-                                await DB.saveMessage({
-                                    charId: char.id,
-                                    role: 'assistant',
-                                    type: 'mcd_card',
-                                    content: `${args.items.length} 件推荐`,
-                                    metadata: {
-                                        mcdCardKind: 'proposal',
-                                        mcdProposal: args,
-                                        fromMcdMiniApp: true,
-                                    },
-                                } as any);
-                                setMessages(await DB.getRecentMessagesByCharId(char.id, 200));
-                            } catch (e) {
-                                console.warn('🍔 [MCD-MiniApp] 保存 proposal 失败:', e);
-                            }
-                            const ackExtra = fixes.length
-                                ? ` (我帮你把 ${fixes.length} 个 code 按名字校准到了菜单里真实的 code, 下次 propose 时直接用菜单字典 key 别传名字, 省一步)`
-                                : '';
-                            loopMessages.push({
-                                role: 'tool',
-                                tool_call_id: tc.id,
-                                content: `OK 已把推荐展示给用户, 用户可以点 + 加进购物车${ackExtra}`,
-                            } as any);
-                        } else {
-                            // 未知工具 / 空 items, 给个温和的报错让模型自纠
-                            loopMessages.push({
-                                role: 'tool',
-                                tool_call_id: tc.id,
-                                content: `工具 ${fname} 调用形态不对, 期望 {items: [{code, name, qty, reason?}]}; 你这次给的是 ${JSON.stringify(args).slice(0, 200)}`,
-                            } as any);
-                        }
-                    }
-                    // 让 char 继续生成文字补充 (不再带 tools, 避免无限调)
-                    const followBody = { ...baseReqBody, messages: loopMessages };
-                    delete followBody.tools;
-                    delete followBody.tool_choice;
-                    data = await safeFetchJson(`${baseUrl}/chat/completions`, {
-                        method: 'POST', headers,
-                        body: JSON.stringify(followBody)
-                    });
-                    updateTokenUsage(data, historyMsgCount, `mcd-propose-${it + 1}`);
-                    // 第二轮跳过 (我们已经禁用了 tools)
-                    if (!data.choices?.[0]?.message?.tool_calls?.length) break;
-                }
-            }
-
             // DEBUG: Log full API response details for troubleshooting truncation issues
             console.log('🔍 [API Response Debug]', JSON.stringify({
                 finish_reason: data.choices?.[0]?.finish_reason,
@@ -972,7 +845,6 @@ export const useChatAI = ({
                 fullMessages,
                 initialData: data,
                 historyMsgCount,
-                mcdInheritMeta,
                 xhsCaches,
                 api: {
                     baseUrl,

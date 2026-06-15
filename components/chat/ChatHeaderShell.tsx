@@ -334,7 +334,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
         {/* safe-top spacer：使用灰色背景跟头部一致，顶部不留白 */}
         <div className="bg-[#f5f5f5]" style={{ height: 'var(--chrome-top, var(--safe-top, 44px))' }} />
         {/* header 主体：sully-chat-header 钩子 + 内容垂直居中（items-center）；safe-top 已由上面 spacer 让位 */}
-        <div className={`sully-chat-header ${headerDensityClass} flex items-center relative pt-3 ${headerToneClass}`} style={headerSafeStyle}>
+        <div className={`sully-chat-header ${headerDensityClass} flex items-center relative pt-2 ${headerToneClass}`} style={headerSafeStyle}>
             {/* 动森彩蛋：顶栏右下角纯色松树剪影（z-[-1] 在内容之下，不挡按钮）。塞在 header 主体内而非外层 spacer，否则会飘到刘海上 */}
             {acnh && !selectionMode && (
                 <svg viewBox="0 0 140 46" className="absolute right-2 bottom-[5px] h-9 w-auto pointer-events-none" style={{ zIndex: -1, opacity: 0.9 }} fill="#76b48f" aria-hidden>

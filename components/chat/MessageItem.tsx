@@ -4,7 +4,6 @@
 import React, { useRef, useState } from 'react';
 import { Message, ChatTheme } from '../../types';
 import { tryParseLifeSimResetCard } from '../../utils/lifeSimChatCard';
-import McdCard from './McdCard';
 
 // 思考链卡片支持的 4 种风格预设 — 同时被 MessageItem 与 ThinkingChainSettingsModal 复用
 export type ThinkingChainStyleId = 'echo' | 'whisper' | 'minimal' | 'custom';
@@ -673,9 +672,6 @@ interface MessageItemProps {
     isPending?: boolean;
     /** 是否开启 dot pulse 指示。关掉则 pending 期间不显示任何视觉 */
     pendingIndicator?: boolean;
-    /** 麦当劳菜单卡里点了"发送给角色"时调用 */
-    onMcdSendCart?: (items: import('./McdCard').McdCartItem[]) => void;
-    onMcdCandidate?: (item: import('./McdCard').McdCartItem) => void;
     /** 思考链卡片视觉与交互 */
     thinkingChainOptions?: {
         styleId?: ThinkingChainStyleId;
@@ -713,8 +709,6 @@ const MessageItem = React.memo(({
     showTimestamp = 'hover',
     isPending = false,
     pendingIndicator = true,
-    onMcdSendCart,
-    onMcdCandidate,
     thinkingChainOptions,
 }: MessageItemProps) => {
     const isUser = m.role === 'user';
@@ -808,7 +802,7 @@ const MessageItem = React.memo(({
             <div className={`relative ${avatarSizeClass} shrink-0`}>
                 <img
                     src={src}
-                    className={`w-full h-full ${avatarRadiusClass} object-cover shadow-sm ring-1 ring-black/5 relative z-0`}
+                    className={`w-full h-full ${avatarRadiusClass} object-cover relative z-0`}
                     alt="avatar"
                     loading="lazy"
                     decoding="async"
@@ -1356,58 +1350,6 @@ const MessageItem = React.memo(({
         );
     }
 
-    if (m.type === 'mcd_card') {
-        const meta = m.metadata || {};
-        const kind = meta.mcdCardKind;
-        // 来自小程序的卡片 (proposal / cart / candidate) → 主聊天里只渲染一张漂亮的"刷卡"占位
-        // 真实可交互内容只在小程序界面里展示, 主聊天里点小程序按钮回到那个界面看。
-        if (kind === 'proposal' || kind === 'cart' || kind === 'candidate' || meta.fromMcdMiniApp) {
-            const label = kind === 'proposal' ? '推荐了几样'
-                : kind === 'cart' ? '想下单的购物车'
-                : kind === 'candidate' ? '问问意见'
-                : '麦当劳卡片';
-            const summary = kind === 'proposal' && Array.isArray(meta.mcdProposal?.items)
-                ? `${meta.mcdProposal.items.length} 件: ${meta.mcdProposal.items.slice(0, 3).map((i: any) => i.name).join(' / ')}${meta.mcdProposal.items.length > 3 ? '…' : ''}`
-                : kind === 'cart' && Array.isArray(meta.mcdCartItems)
-                ? `${meta.mcdCartItems.length} 件: ${meta.mcdCartItems.slice(0, 3).map((i: any) => i.name).join(' / ')}${meta.mcdCartItems.length > 3 ? '…' : ''}`
-                : kind === 'candidate' && meta.mcdCandidate?.name
-                ? `「${meta.mcdCandidate.name}」`
-                : '';
-            return commonLayout(
-                <div className="w-60 rounded-2xl overflow-hidden border border-yellow-200 shadow-sm bg-gradient-to-br from-yellow-50 to-amber-50 select-none">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-yellow-300 to-amber-300">
-                        <span className="text-lg">🍟</span>
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] text-yellow-900/70 leading-none">麦当劳卡片</div>
-                            <div className="text-[11px] font-bold text-yellow-900 leading-tight">{label}</div>
-                        </div>
-                    </div>
-                    <div className="px-3 py-2 text-[10px] text-slate-500 leading-snug min-h-[28px]">
-                        {summary || '在麦当劳小程序里查看完整内容'}
-                    </div>
-                    <div className="px-3 pb-2 text-[9px] text-yellow-700/60 italic">
-                        💳 已记录在麦记录里
-                    </div>
-                </div>
-            );
-        }
-        // 老的 mcd_card (从旧 LLM 工具调用残留 / 无 kind), 保持原有 McdCard 渲染兼容
-        return commonLayout(
-            <McdCard
-                toolName={meta.mcdToolName || m.content || 'mcd_tool'}
-                args={meta.mcdToolArgs}
-                result={meta.mcdToolResult}
-                error={meta.mcdToolError}
-                rawText={meta.mcdToolRawText}
-                kind={kind || 'generic'}
-                onSendCart={onMcdSendCart}
-                onCandidate={onMcdCandidate}
-                cartItems={meta.mcdCartItems}
-                candidateItem={meta.mcdCandidate}
-            />
-        );
-    }
-
     if (m.type === 'vr_card') {
         const md: any = m.metadata || {};
         const roomNameMap: Record<string, string> = {
@@ -1920,12 +1862,12 @@ const MessageItem = React.memo(({
         backgroundColor: isUser ? '#A9EA7A' : '#FFFFFF',
         opacity: 1,
         borderRadius: '4px',
-        boxShadow: isUser ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-        border: isUser ? 'none' : '1px solid rgba(0,0,0,0.05)',
+        boxShadow: isUser ? 'none' : '0 1px 1px rgba(0,0,0,0.03)',
+        border: 'none',
     };
 
     // 气泡垂直内边距统一
-    const bubblePadding = 'px-4 py-1';
+    const bubblePadding = 'px-2 py-2';
 
     // --- Inline formatting parser: code → bold → italic → plain ---
     const renderInline = (text: string): React.ReactNode[] => {
@@ -2076,6 +2018,7 @@ const MessageItem = React.memo(({
                     borderTop: '5px solid transparent',
                     borderBottom: '5px solid transparent',
                     [isUser ? 'borderLeft' : 'borderRight']: `6px solid ${isUser ? '#A9EA7A' : '#FFFFFF'}`,
+                    filter: isUser ? 'none' : 'drop-shadow(1px 1px 1px rgba(0,0,0,0.03))',
                 }}
             />
 

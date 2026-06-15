@@ -8,10 +8,7 @@ import { safeResponseJson, extractContent } from '../utils/safeApi';
 import { generateDailyScheduleForChar, isScheduleFeatureOn } from '../utils/scheduleGenerator';
 import { formatMessageWithTime } from '../utils/messageFormat';
 import { XhsMcpClient, extractNotesFromMcpData, normalizeNote } from '../utils/xhsMcpClient';
-import { isMcdConfigured } from '../utils/mcdMcpClient';
-import { isMcdActivatedInMessages, MCD_ACTIVATE_TRIGGER, MCD_DEACTIVATE_TRIGGER } from '../utils/mcdToolBridge';
 import MessageItem from '../components/chat/MessageItem';
-import McdMiniApp from '../components/mcd/McdMiniApp';
 import { PRESET_THEMES, DEFAULT_ARCHIVE_PROMPTS } from '../components/chat/ChatConstants';
 import ChatHeader from '../components/chat/ChatHeaderShell';
 import CharacterEntryTransition from '../components/chat/CharacterEntryTransition';
@@ -171,9 +168,6 @@ const Chat: React.FC = () => {
 
 
 
-    // 小程序快照 ref: MiniApp 状态变化时塞进来, useChatAI 在 build system prompt 时读取并注入
-    const mcdMiniAppRef = useRef<import('../utils/mcdToolBridge').McdMiniAppSnapshot | undefined>(undefined);
-
     // --- Initialize Hook ---
     const { isTyping, recallStatus, searchStatus, diaryStatus, emotionStatus, memoryPalaceStatus, memoryPalaceResult, setMemoryPalaceResult, lastDigestResult, setLastDigestResult, lastTokenUsage, tokenBreakdown, setLastTokenUsage, triggerAI, startProactiveChat, stopProactiveChat, isProactiveActive } = useChatAI({
         char,
@@ -190,7 +184,6 @@ const Chat: React.FC = () => {
             ? { enabled: true, sourceLang: translateSourceLang, targetLang: translateTargetLang }
             : undefined,
         memoryPalaceConfig,
-        mcdMiniAppRef,
         updateCharacter,
     });
 
@@ -734,6 +727,38 @@ const Chat: React.FC = () => {
         return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
+    // 格式化时间戳显示（包含日期）
+    const formatTimestampDisplay = (ts: number) => {
+        const now = new Date();
+        const msgDate = new Date(ts);
+        const diffMs = now.getTime() - msgDate.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        // 如果是今天，只显示时间
+        if (diffDays === 0) {
+            return formatTime(ts);
+        }
+
+        // 如果是昨天，显示"昨天"
+        if (diffDays === 1) {
+            return `昨天 ${formatTime(ts)}`;
+        }
+
+        // 如果是上周或更早，显示 "May Mon" 格式
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const dayName = dayNames[msgDate.getDay()];
+        const monthName = monthNames[msgDate.getMonth()];
+        return `${monthName} ${dayName} ${formatTime(ts)}`;
+    };
+
+    // 判断是否需要显示时间戳（隔一段时间没回消息）
+    const shouldShowTimestamp = (currentMsg: Message, prevMsg: Message | null) => {
+        if (!prevMsg) return true;
+        const timeGap = 30 * 60 * 1000; // 30分钟
+        return Math.abs(currentMsg.timestamp - prevMsg.timestamp) > timeGap;
+    };
+
     // --- Actions ---
 
     const handleSendText = async (customContent?: string, customType?: MessageType, metadata?: any) => {
@@ -745,19 +770,6 @@ const Chat: React.FC = () => {
         if (windowedFocusMsgId !== null) {
             setWindowedFocusMsgId(null);
             setFlashMsgId(null);
-        }
-
-        // 用户手打"麦请求"三个字 → 等价于点击麦克风按钮 (拉起麦当劳菜单)
-        // 不落库, 跟按钮点击行为完全一致, 避免出现"banner 在但菜单没拉起"的诡异状态
-        if (!customContent && type === 'text' && text === MCD_ACTIVATE_TRIGGER) {
-            setInput(''); localStorage.removeItem(draftKey);
-            if (!isMcdConfigured()) {
-                addToast('请先到设置 → 麦当劳 启用并填入 MCP Token', 'info');
-                return;
-            }
-            setMcdAppOpen(true);
-            setShowPanel('none');
-            return;
         }
 
         if (!customContent) { setInput(''); localStorage.removeItem(draftKey); }
@@ -883,15 +895,6 @@ const Chat: React.FC = () => {
             case 'proactive': setShowProactiveModal(true); break;
             case 'emotion': setModalType('schedule'); break; // 情绪已并入日程，打开同一 modal
             case 'schedule': setModalType('schedule'); break;
-            case 'mcd-not-configured':
-                addToast('请先到设置 → 麦当劳 启用并填入 MCP Token', 'info');
-                break;
-            case 'mcd-request':
-                setMcdAppOpen(true);
-                break;
-            case 'mcd-end':
-                handleSendText(MCD_DEACTIVATE_TRIGGER, 'text', { mcdDeactivate: true });
-                break;
             case 'html-mode-toggle': {
                 if (!char) break;
                 const next = !((char as any).htmlModeEnabled);
@@ -916,108 +919,6 @@ const Chat: React.FC = () => {
             }
         }
     };
-
-    // 当前会话麦请求是否激活 (从消息历史推导, 无新存储)
-    const mcdActivated = useMemo(() => isMcdActivatedInMessages(messages), [messages]);
-    const [mcdAppOpen, setMcdAppOpen] = useState(false);
-    // mcdMiniAppRef 声明在文件靠前 (传给 useChatAI), 这里仅占位
-    const mcdConfiguredFlag = useMemo(() => isMcdConfigured(), [showPanel, mcdActivated]);
-
-    // 用户在菜单卡里点"发送给角色"时, 把购物车作为 user 消息插入
-    const handleMcdSendCart = useCallback(async (items: import('../components/chat/McdCard').McdCartItem[]) => {
-        if (!char || !items.length) return;
-        const summary = items.map(i => `${i.name}×${i.qty}`).join('、');
-        const total = items.reduce((s, c) => {
-            const p = typeof c.price === 'string' ? parseFloat(c.price) : (typeof c.price === 'number' ? c.price : 0);
-            return s + (isFinite(p) ? p * c.qty : 0);
-        }, 0);
-        const totalStr = total > 0 ? ` 共¥${total.toFixed(2)}` : '';
-        const content = `想要下单：${summary}${totalStr}`;
-        await DB.saveMessage({
-            charId: char.id,
-            role: 'user',
-            type: 'mcd_card',
-            content,
-            metadata: { mcdCardKind: 'cart', mcdCartItems: items },
-        } as any);
-        await reloadMessages(visibleCountRef.current);
-    }, [char, reloadMessages]);
-
-    // 用户在菜单卡某条单品上点 💭 → 立即把这条扔给角色让 ta 评价 (候选状态, 不进购物车)
-    const handleMcdCandidate = useCallback(async (item: import('../components/chat/McdCard').McdCartItem) => {
-        if (!char || !item) return;
-        const priceStr = typeof item.price === 'number' ? ` ¥${item.price}` : (typeof item.price === 'string' && item.price ? ` ¥${item.price}` : '');
-        const content = `「${item.name}」${priceStr}—— 这个怎么样？`;
-        await DB.saveMessage({
-            charId: char.id,
-            role: 'user',
-            type: 'mcd_card',
-            content,
-            metadata: { mcdCardKind: 'candidate', mcdCandidate: item },
-        } as any);
-        await reloadMessages(visibleCountRef.current);
-    }, [char, reloadMessages]);
-
-    // 小程序内输入 → 直接保存 user 消息 + 立即触发 AI (主聊天 handleSendText 不自动触发,
-    // 那是设计上的"手动 ⚡ 触发"流程, 但小程序里用户预期发完就有回复, 跳过那个步骤)。
-    // 走完整 pipeline: useChatAI 在 build prompt 时会读 mcdMiniAppRef 注入小程序状态。
-    const handleMcdMiniAppSend = useCallback(async (text: string) => {
-        if (!char || !text.trim() || isTyping) return;
-        const trimmed = text.trim();
-        await DB.saveMessage({
-            charId: char.id,
-            role: 'user',
-            type: 'text',
-            content: trimmed,
-            metadata: { fromMcdMiniApp: true },
-        } as any);
-        const recent = await DB.getRecentMessagesByCharId(char.id, 200);
-        setMessages(recent);
-        triggerAI(recent);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [char, isTyping, triggerAI]);
-
-    // 小程序状态实时同步到 ref, 让下次 send 走主 pipeline 时能注入到 system prompt
-    const handleMcdMiniAppStateChange = useCallback((state: import('../utils/mcdToolBridge').McdMiniAppSnapshot) => {
-        mcdMiniAppRef.current = state;
-    }, []);
-
-    // 小程序里"敲定"购物车 → 把购物车转成 cart 卡 (复用现有渲染), 之后 Phase 2
-    // 会在这里挂 calculate-price + create-order。当前先让 char 看到购物车评论。
-    const handleMcdAppConfirm = useCallback(async (
-        cart: import('../components/mcd/McdMiniApp').CartLine[],
-        ctx: import('../components/mcd/McdMiniApp').OrderContext,
-    ) => {
-        if (!char || !cart.length) return;
-        const items: import('../components/chat/McdCard').McdCartItem[] = cart.map(l => ({
-            code: l.code,
-            name: l.name,
-            price: l.price,
-            qty: l.qty,
-        }));
-        const summary = items.map(i => `${i.name}×${i.qty}`).join('、');
-        const total = items.reduce((s, c) => {
-            const p = typeof c.price === 'string' ? parseFloat(c.price) : (typeof c.price === 'number' ? c.price : 0);
-            return s + (isFinite(p) ? p * c.qty : 0);
-        }, 0);
-        const totalStr = total > 0 ? ` 共¥${total.toFixed(2)}` : '';
-        const where = ctx.orderType === 2
-            ? `外送至 ${ctx.addressLabel || ctx.addressId}`
-            : `到店取餐 (${ctx.storeName || ctx.storeCode})`;
-        const content = `${where} · ${summary}${totalStr}`;
-        await DB.saveMessage({
-            charId: char.id,
-            role: 'user',
-            type: 'mcd_card',
-            content,
-            metadata: {
-                mcdCardKind: 'cart',
-                mcdCartItems: items,
-                mcdOrderContext: ctx,
-            },
-        } as any);
-        await reloadMessages(visibleCountRef.current);
-    }, [char, reloadMessages]);
 
     // --- Schedule Handlers ---
     const loadSchedule = async () => {
@@ -2400,49 +2301,60 @@ const Chat: React.FC = () => {
                         !nextMessage ||
                         nextMessage.role !== m.role ||
                         Math.abs(nextMessage.timestamp - m.timestamp) > messageGroupGapMs;
+
+                    // 判断是否需要显示时间戳
+                    const showTimestamp = shouldShowTimestamp(m, prevMessage);
+
                     return (
-                        <div
-                            key={m.id || i}
-                            id={`chat-msg-${m.id}`}
-                            className={[
-                                flashMsgId === m.id ? 'ring-2 ring-yellow-300 bg-yellow-50/40 rounded-2xl mx-2' : '',
-                                'transition-all duration-300',
-                            ].filter(Boolean).join(' ')}
-                        >
-                        <MessageItem
-                            msg={m}
-                            isFirstInGroup={breaksWithPrevious}
-                            isLastInGroup={breaksWithNext}
-                            activeTheme={activeTheme}
-                            charAvatar={char.avatar}
-                            charName={char.name}
-                            userAvatar={userProfile.avatar}
-                            onLongPress={handleMessageLongPress}
-                            selectionMode={selectionMode}
-                            isSelected={selectedMsgIds.has(m.id)}
-                            onToggleSelect={toggleMessageSelection}
-                            isThinkingSelected={selectedThinkingMsgIds.has(m.id)}
-                            onToggleThinkingSelect={toggleThinkingSelection}
-                            translationEnabled={translationEnabled && m.type === 'text' && m.role === 'assistant'}
-                            isShowingTarget={showingTargetIds.has(m.id)}
-                            onTranslateToggle={handleTranslateToggle}
-                            voiceData={voiceDataMap[m.id]}
-                            voiceLoading={voiceLoading.has(m.id)}
-                            isVoicePlaying={playingMsgId === m.id}
-                            onPlayVoice={onPlayVoiceStable}
-                            avatarShape={osTheme.chatAvatarShape}
-                            avatarSize={osTheme.chatAvatarSize}
-                            avatarMode={osTheme.chatAvatarMode}
-                            bubbleVariant={osTheme.chatBubbleStyle}
-                            messageSpacing={osTheme.chatMessageSpacing}
-                            showTimestamp={osTheme.chatShowTimestamp}
-                            isPending={false}
-                            pendingIndicator={osTheme.chatPendingIndicator !== false}
-                            onMcdSendCart={handleMcdSendCart}
-                            onMcdCandidate={handleMcdCandidate}
-                            thinkingChainOptions={thinkingChainOptions}
-                        />
-                        </div>
+                        <React.Fragment key={m.id || i}>
+                            {/* 时间戳显示 */}
+                            {showTimestamp && (
+                                <div className="flex justify-center my-3">
+                                    <div className="bg-white border border-gray-200 px-1.5 py-0.5 rounded text-xs font-semibold text-gray-400 shadow-sm" style={{ borderRadius: '4px' }}>
+                                        {formatTimestampDisplay(m.timestamp)}
+                                    </div>
+                                </div>
+                            )}
+                            <div
+                                id={`chat-msg-${m.id}`}
+                                className={[
+                                    flashMsgId === m.id ? 'ring-2 ring-yellow-300 bg-yellow-50/40 rounded-2xl mx-2' : '',
+                                    'transition-all duration-300',
+                                ].filter(Boolean).join(' ')}
+                            >
+                            <MessageItem
+                                msg={m}
+                                isFirstInGroup={breaksWithPrevious}
+                                isLastInGroup={breaksWithNext}
+                                activeTheme={activeTheme}
+                                charAvatar={char.avatar}
+                                charName={char.name}
+                                userAvatar={userProfile.avatar}
+                                onLongPress={handleMessageLongPress}
+                                selectionMode={selectionMode}
+                                isSelected={selectedMsgIds.has(m.id)}
+                                onToggleSelect={toggleMessageSelection}
+                                isThinkingSelected={selectedThinkingMsgIds.has(m.id)}
+                                onToggleThinkingSelect={toggleThinkingSelection}
+                                translationEnabled={translationEnabled && m.type === 'text' && m.role === 'assistant'}
+                                isShowingTarget={showingTargetIds.has(m.id)}
+                                onTranslateToggle={handleTranslateToggle}
+                                voiceData={voiceDataMap[m.id]}
+                                voiceLoading={voiceLoading.has(m.id)}
+                                isVoicePlaying={playingMsgId === m.id}
+                                onPlayVoice={onPlayVoiceStable}
+                                avatarShape={osTheme.chatAvatarShape}
+                                avatarSize={osTheme.chatAvatarSize}
+                                avatarMode={osTheme.chatAvatarMode}
+                                bubbleVariant={osTheme.chatBubbleStyle}
+                                messageSpacing={osTheme.chatMessageSpacing}
+                                showTimestamp="never"
+                                isPending={false}
+                                pendingIndicator={osTheme.chatPendingIndicator !== false}
+                                thinkingChainOptions={thinkingChainOptions}
+                            />
+                            </div>
+                        </React.Fragment>
                     );
                 })}
                 
@@ -2465,11 +2377,11 @@ const Chat: React.FC = () => {
                 {instantToolStatus && !selectionMode && (
                     <div className="flex items-end gap-3 px-3 mb-4 animate-fade-in">
                         <img src={char.avatar} className={chatPendingAvatarClass} />
-                        <div className={`max-w-[78%] px-4 py-3 rounded-2xl shadow-sm border ${
+                        <div className={`max-w-[78%] px-4 py-3 shadow-sm border ${
                             instantToolStatus.phase === 'failed'
-                                ? 'bg-rose-50 border-rose-100 text-rose-700'
-                                : 'bg-white/95 border-white/70 text-slate-600'
-                        }`}>
+                                ? 'bg-white border-rose-100 text-rose-700'
+                                : 'bg-white/95 border-gray-200 text-slate-600'
+                        }`} style={{ borderRadius: '4px' }}>
                             <div className="flex items-center gap-2 text-xs font-semibold leading-relaxed">
                                 {instantToolStatus.phase === 'failed' ? (
                                     <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" />
@@ -2517,20 +2429,6 @@ const Chat: React.FC = () => {
             </div>
 
             <div className="relative z-40">
-                {mcdActivated && (
-                    <div className="flex items-center justify-between px-4 py-1.5 bg-yellow-50 border-b border-yellow-200 text-xs">
-                        <div className="flex items-center gap-1.5 text-yellow-700 font-bold">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"/>
-                            🍔 麦请求进行中
-                        </div>
-                        <button
-                          onClick={() => handleSendText(MCD_DEACTIVATE_TRIGGER, 'text', { mcdDeactivate: true })}
-                          className="px-2.5 py-0.5 bg-yellow-200/80 text-yellow-800 rounded-full text-[11px] font-bold active:scale-95"
-                        >
-                          结束
-                        </button>
-                    </div>
-                )}
                 {replyTarget && (
                     <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs text-slate-500">
                         <div className="flex items-center gap-2 truncate"><span className="font-bold text-slate-700">正在回复:</span><span className="truncate max-w-[200px]">{replyTarget.content.length > 10 ? replyTarget.content.slice(0, 10) + '...' : replyTarget.content}</span></div>
@@ -2559,8 +2457,6 @@ const Chat: React.FC = () => {
                     onReroll={handleReroll}
                     canReroll={canReroll}
                     isProactiveActive={isProactiveActive}
-                    mcdConfigured={mcdConfiguredFlag}
-                    mcdActivated={mcdActivated}
                     htmlModeEnabled={!!(char as any).htmlModeEnabled}
                     showThinkingChain={!!(char as any).showThinkingChain}
                     inputStyle={osTheme.chatInputStyle}
@@ -2663,19 +2559,6 @@ const Chat: React.FC = () => {
             )}
 
             {/* 情绪设置已嵌入日程 Modal（与日程强制同步开/关），不再单独渲染 */}
-
-            {/* 🍔 麦当劳小程序 - MCP 数据流按钮驱动, 协同聊天走主 pipeline (完整人设/记忆/日程) */}
-            <McdMiniApp
-                open={mcdAppOpen}
-                onClose={() => setMcdAppOpen(false)}
-                char={char}
-                userProfile={userProfile}
-                messages={messages}
-                isTyping={isTyping}
-                onSendMessage={handleMcdMiniAppSend}
-                onStateChange={handleMcdMiniAppStateChange}
-                onConfirmOrder={handleMcdAppConfirm}
-            />
 
 
             {/* Forward Modal */}

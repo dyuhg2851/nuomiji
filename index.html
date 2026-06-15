@@ -197,6 +197,16 @@
       .pb-safe {
         padding-bottom: var(--safe-bottom);
       }
+      /* 键盘弹出时的样式修复 - 防止底部空白 */
+      body.ios-keyboard-open {
+        height: var(--app-height);
+        min-height: var(--app-height);
+        overflow: hidden;
+      }
+      body.ios-keyboard-open #root {
+        height: var(--app-height);
+        min-height: var(--app-height);
+      }
       /* 移动端 100lvh 兜底：部分旧 WebView 不支持 lvh，JS 探测后回退 */
     </style>
     <script>

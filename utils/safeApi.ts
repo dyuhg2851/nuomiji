@@ -176,8 +176,14 @@ export async function safeFetchJson(
             if (!response.ok) {
                 // For retryable status codes, retry before giving up
                 if (retryableStatuses.has(response.status) && attempt < maxRetries) {
-                    const delay = Math.pow(2, attempt) * 1000; // 1s, 2s
-                    log.warn('HTTP retry', { status: response.status, attempt: attempt + 1, maxRetries, delay });
+                    // 优先使用 Retry-After 响应头，其次使用指数退避
+                    const retryAfterHeader = response.headers.get('Retry-After');
+                    const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : null;
+                    const delay = retryAfterSeconds !== null && !isNaN(retryAfterSeconds)
+                        ? retryAfterSeconds * 1000
+                        : Math.pow(2, attempt) * 1000;
+                    
+                    log.warn('HTTP retry', { status: response.status, attempt: attempt + 1, maxRetries, delay, retryAfter: retryAfterSeconds });
                     await new Promise(r => setTimeout(r, delay));
                     continue;
                 }

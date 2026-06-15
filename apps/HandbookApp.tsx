@@ -318,7 +318,7 @@ const HandbookApp: React.FC = () => {
         // tracker / list 视图保留原 header 风格(现在不挤,不需要折叠)
         return (
             <div
-                className="flex items-center justify-between px-4 pt-12 pb-2 shrink-0"
+                className="flex items-center justify-between px-4 pt-8 pb-2 shrink-0"
                 style={{ background: 'transparent' }}
             >
                 <button

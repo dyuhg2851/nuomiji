@@ -1497,7 +1497,7 @@ export const OSProvider: React.FC<{ children: React.ReactNode }> = ({ children }
                   // 实时音乐播放状态 —— OSContext 在 MusicProvider 上层用不了 useMusic()，
                   // 走 MusicContext 暴露的模块级快照（Provider mount 后会持续写入）
                   musicSnapshot: loadMusicPlaybackSnapshot(),
-                  // translationConfig / mcdMiniSnap 是 chat-app 会话级 UI 状态，主动消息触发时
+                  // translationConfig 是 chat-app 会话级 UI 状态，主动消息触发时
                   // 不存在；保持 undefined 即可，与"用户当时根本没在 chat 界面"的语义一致
                   htmlMode: { enabled: !!(char as any).htmlModeEnabled, customPrompt: (char as any).htmlModeCustomPrompt },
                   thinkingChain: { enabled: !!(char as any).showThinkingChain, customPrompt: (char as any).thinkingChainCustomPrompt },

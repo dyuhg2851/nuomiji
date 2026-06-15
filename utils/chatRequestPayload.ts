@@ -17,8 +17,6 @@ import { ChatPrompts } from './chatPrompts';
 import { injectMemoryPalace } from './memoryPalace/pipeline';
 import { buildHtmlPrompt } from './htmlPrompt';
 import { buildThinkingChainPrompt } from './thinkingChainPrompt';
-import { buildMcdMiniAppContextBlock } from './mcdToolBridge';
-import type { McdMiniAppSnapshot } from './mcdToolBridge';
 import type { MusicCfg, Song, LyricLine, MusicPlaybackSnapshot } from '../context/MusicContext';
 import { isPromptBuildSkipped } from './devDebug';
 
@@ -66,7 +64,6 @@ export interface BuildChatPayloadInput {
     translationConfig?: TranslationConfig | { enabled: boolean; sourceLang: string; targetLang: string };
     htmlMode?: { enabled: boolean; customPrompt?: string };
     thinkingChain?: { enabled: boolean; customPrompt?: string };
-    mcdMiniSnap?: McdMiniAppSnapshot;
 }
 
 export interface BuildChatPayloadResult {
@@ -76,10 +73,9 @@ export interface BuildChatPayloadResult {
     cleanedApiMessages: Array<{ role: string; content: any }>;
     /** [system, ...cleanedApiMessages, 末尾 bilingual reminder?] —— 主 API 直接发这个 */
     fullMessages: Array<{ role: string; content: any }>;
-    /** 调试用：bilingual / mcd 是否实际注入 */
+    /** 调试用：bilingual 是否实际注入 */
     flags: {
         bilingualActive: boolean;
-        mcdActive: boolean;
         htmlActive: boolean;
         thinkingActive: boolean;
         promptBuildSkipped: boolean;
@@ -162,7 +158,7 @@ export async function buildChatRequestPayload(input: BuildChatPayloadInput): Pro
     const {
         char, userProfile, groups, emojis, categories, historyMsgs, contextLimit,
         realtimeConfig, innerState,
-        translationConfig, htmlMode, thinkingChain, mcdMiniSnap,
+        translationConfig, htmlMode, thinkingChain,
     } = input;
     const recentMsgsHint = input.recentMsgsHint ?? historyMsgs;
 
@@ -176,7 +172,6 @@ export async function buildChatRequestPayload(input: BuildChatPayloadInput): Pro
             fullMessages: [...cleanedApiMessages],
             flags: {
                 bilingualActive: false,
-                mcdActive: false,
                 htmlActive: false,
                 thinkingActive: false,
                 promptBuildSkipped: true,
@@ -258,16 +253,7 @@ export async function buildChatRequestPayload(input: BuildChatPayloadInput): Pro
     // ── 8. 剥离历史里旧的双语标签 ─────────────────────────
     const cleanedApiMessages = cleanApiMessages(apiMessages);
 
-    // ── 9. 麦当劳小程序上下文（在 cleanedApiMessages 之后追加到 systemPrompt） ──
-    const mcdActive = !!mcdMiniSnap?.open;
-    if (mcdActive) {
-        const block = buildMcdMiniAppContextBlock(mcdMiniSnap, userProfile?.name || '用户');
-        if (block) {
-            systemPrompt += block;
-        }
-    }
-
-    // ── 10. 组装 fullMessages + 末尾双语 reminder ─────────
+    // ── 9. 组装 fullMessages + 末尾双语 reminder ─────────
     const fullMessages: Array<{ role: string; content: any }> = [
         { role: 'system', content: systemPrompt },
         ...cleanedApiMessages,
@@ -283,6 +269,6 @@ export async function buildChatRequestPayload(input: BuildChatPayloadInput): Pro
         systemPrompt,
         cleanedApiMessages,
         fullMessages,
-        flags: { bilingualActive, mcdActive, htmlActive, thinkingActive, promptBuildSkipped: false },
+        flags: { bilingualActive, htmlActive, thinkingActive, promptBuildSkipped: false },
     };
 }

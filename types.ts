@@ -6,7 +6,6 @@ export enum AppID {
   Chat = 'chat',
   GroupChat = 'group_chat', 
   Music = 'music',
-  ThemeMaker = 'thememaker',
   Appearance = 'appearance',
   Date = 'date',
   User = 'user',
@@ -18,7 +17,6 @@ export enum AppID {
   Bank = 'bank', // New App
   XhsFreeRoam = 'xhs_free_roam', // Character autonomous XHS activity
   Call = 'call', // 语音电话测试（MiniMax TTS）
-  Guidebook = 'guidebook', // 攻略本 — 角色攻略用户小游戏
   LifeSim = 'lifesim', // 模拟人生 — 与角色共同经营的小世界
   MemoryPalace = 'memory_palace', // 记忆宫殿 — 七个房间可视化
   QQBridge = 'qq_bridge', // QQ 桥接 — 通过 NapCat 把 QQ 私聊接入当前角色，共享 IndexedDB 上下文
@@ -1695,7 +1693,7 @@ export interface QuizSession {
     gradedAt?: number;
 }
 
-export type MessageType = 'text' | 'image' | 'emoji' | 'interaction' | 'transfer' | 'system' | 'social_card' | 'chat_forward' | 'xhs_card' | 'score_card' | 'music_card' | 'mcd_card' | 'html_card' | 'news_card' | 'vr_card' | 'trpg_card';
+export type MessageType = 'text' | 'image' | 'emoji' | 'interaction' | 'transfer' | 'system' | 'social_card' | 'chat_forward' | 'xhs_card' | 'score_card' | 'music_card' | 'html_card' | 'news_card' | 'vr_card' | 'trpg_card';
 
 export interface Message {
     id: number;
@@ -1792,9 +1790,6 @@ export interface FullBackupData {
     // Quiz / Practice Book
     quizSessions?: QuizSession[];
 
-    // Guidebook (攻略本)
-    guidebookSessions?: GuidebookSession[];
-
     // Chat delayed actions
     scheduledMessages?: {
         id: string;
@@ -1889,55 +1884,6 @@ export interface CloudBackupFile {
     size: number;
     lastModified: string;       // ISO date string
     href: string;               // WebDAV: remote path. GitHub: 'releaseId:assetId'
-}
-
-// --- GUIDEBOOK (攻略本) APP TYPES ---
-export interface GuidebookOption {
-    text: string;
-    affinity: number;
-}
-
-export interface GuidebookRound {
-    id: string;
-    roundNumber: number;
-    scenario: string;
-    options: GuidebookOption[];
-    gmNarration: string;
-    charInnerThought: string;
-    charChoice: number;
-    charReaction: string;
-    charExploration?: string;
-    charInsight?: string;      // what user's scoring reveals about their personality
-    affinityBefore: number;
-    affinityAfter: number;
-    timestamp: number;
-}
-
-export interface GuidebookEndCard {
-    finalAffinity: number;
-    charVerdict: string;
-    title: string;
-    highlights: string[];
-    charSummary?: string;
-    charNewInsight?: string;   // the one specific thing char learned about user this session
-}
-
-export interface GuidebookSession {
-    id: string;
-    charId: string;
-    initialAffinity: number;
-    currentAffinity: number;
-    maxRounds: number;
-    currentRound: number;
-    mode: 'manual' | 'auto';
-    scenarioHint?: string;
-    recentMessageCount?: number;
-    rounds: GuidebookRound[];
-    openingSequence?: string;
-    status: 'setup' | 'opening' | 'playing' | 'ended';
-    endCard?: GuidebookEndCard;
-    createdAt: number;
-    lastPlayedAt: number;
 }
 
 // --- XHS FREE ROAM / AUTONOMOUS ACTIVITY TYPES ---

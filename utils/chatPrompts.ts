@@ -31,7 +31,6 @@ function summarizeGroupMsgContent(m: Message): string {
         case 'xhs_card': return '[小红书笔记]';
         case 'score_card': return '[评分卡]';
         case 'music_card': return '[分享音乐]';
-        case 'mcd_card': return '[麦当劳点餐]';
         case 'html_card': return '[HTML卡片]';
         case 'news_card': return '[新闻卡片]';
         case 'trpg_card': return `[TRPG游戏片段${meta.trpg?.gameTitle ? '：《' + meta.trpg.gameTitle + '》' : ''}]`;
@@ -865,33 +864,6 @@ ${xhsEnabled ? `${[notionEnabled, feishuEnabled, notionNotesEnabled].filter(Bool
                     // 避免 LLM 把它当成"发卡片的正确写法"照抄（会导致它输出字面占位句 + 纯文字正文，
                     // 而不是真正的 [html]...[/html] 块）。配合 htmlPrompt 里的禁止照抄规则一起生效。
                     content = `${timeStr}（系统记录：${sender}先前发送过一张 HTML 卡片，已在界面渲染；卡片文字摘要——${preview || '纯视觉卡片'}。这只是历史占位，请勿复述本行；要再发卡片必须用 [html]...[/html] 包裹真正的 HTML。）`;
-                }
-                else if ((m.type as string) === 'mcd_card') {
-                    const meta: any = m.metadata || {};
-                    const userName = userProfile?.name || '用户';
-                    if (meta.mcdCardKind === 'cart' && Array.isArray(meta.mcdCartItems)) {
-                        const items: any[] = meta.mcdCartItems;
-                        const lines = items.map((c: any) => {
-                            const p = typeof c.price === 'string' ? parseFloat(c.price) : (typeof c.price === 'number' ? c.price : 0);
-                            const priceStr = isFinite(p) && p > 0 ? ` ¥${p.toFixed(2)}` : '';
-                            const codeStr = c.code ? ` (code:${c.code})` : '';
-                            return `  - ${c.name}${priceStr} ×${c.qty}${codeStr}`;
-                        }).join('\n');
-                        const total = items.reduce((s: number, c: any) => {
-                            const p = typeof c.price === 'string' ? parseFloat(c.price) : (typeof c.price === 'number' ? c.price : 0);
-                            return s + (isFinite(p) ? p * c.qty : 0);
-                        }, 0);
-                        const totalStr = total > 0 ? `\n  合计: ¥${total.toFixed(2)}` : '';
-                        content = `${timeStr} [${userName}在菜单上选了下面的商品发给你, 等你回应:]\n${lines}${totalStr}\n(${userName}的意图: 想看看你的意见, 比如热量怎样、要不要换搭配, 或者直接帮 ta 下单。请按你的人设自然回应, 别照搬我的描述。)`;
-                    } else if (meta.mcdCardKind === 'candidate' && meta.mcdCandidate) {
-                        const c: any = meta.mcdCandidate;
-                        const p = typeof c.price === 'string' ? parseFloat(c.price) : (typeof c.price === 'number' ? c.price : 0);
-                        const priceStr = isFinite(p) && p > 0 ? ` ¥${p.toFixed(2)}` : '';
-                        const codeStr = c.code ? ` (code:${c.code})` : '';
-                        content = `${timeStr} [${userName}在菜单上看到了「${c.name}」${priceStr}${codeStr}, 还没决定要不要点, 想先听听你的意见]\n(请按你的人设自然回一两句: 推荐 / 劝阻 / 调侃 / 建议搭配 / 提一下热量 都行。这只是候选, 别直接调下单工具, 等 ta 真说"那就这个"或者一并选完再下手。)`;
-                    } else if (meta.mcdToolName) {
-                        content = `${timeStr} [麦当劳工具结果: ${meta.mcdToolName}]`;
-                    }
                 }
                 else if (m.type === 'emoji') {
                      const stickerName = emojis.find(e => e.url === m.content)?.name || '未知表情';

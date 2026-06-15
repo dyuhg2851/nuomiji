@@ -156,11 +156,6 @@ const bookGlyph2 = <>
   <path d="M50 30 V77" stroke={BROWN} strokeWidth="3.5" />
 </>;
 
-const burgerGlyph = <>
-  <rect x="24" y="34" width="52" height="11" rx="5.5" fill={CREAM} />
-  <rect x="26" y="47" width="48" height="6" rx="3" fill="#a06a30" />
-  <rect x="24" y="55" width="52" height="11" rx="5.5" fill={CREAM} />
-</>;
 const codeGlyph = <>
   <path d="M40 36 L26 50 L40 64" stroke={CREAM} strokeWidth="7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
   <path d="M60 36 L74 50 L60 64" stroke={CREAM} strokeWidth="7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -173,7 +168,6 @@ const leafGlyph = <>
 </>;
 
 const ACTION_TILES: Record<string, { color: string; bbox: [number, number, number, number]; glyph: React.ReactNode }> = {
-  mcd: { color: '#F7CD67', bbox: [24, 34, 76, 66], glyph: burgerGlyph },
   html: { color: '#B77DEE', bbox: [24, 32, 74, 68], glyph: codeGlyph },
   thinking: { color: '#889DF0', bbox: [30, 14, 70, 84], glyph: leafGlyph },
   transfer: { color: '#F7CD67', bbox: [20, 27, 80, 87], glyph: bagGlyph },

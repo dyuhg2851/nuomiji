@@ -202,9 +202,9 @@ const processInboxMessageWithPostProcessing = async (message: ActiveMsg2InboxMes
     fullMessages: [],
     initialData: null,
     historyMsgCount: contextMsgs.length,
-    // 把 source / activeMsg2 元数据通过 mcdInheritMeta 继承到每条 assistant message, 这样
+    // 把 source / activeMsg2 元数据通过 inheritMeta 继承到每条 assistant message, 这样
     // UI 还能区分 "这条是 push 来的"。
-    mcdInheritMeta: {
+    inheritMeta: {
       source: 'active_msg_2',
       activeMsg2: {
         messageId: message.messageId,

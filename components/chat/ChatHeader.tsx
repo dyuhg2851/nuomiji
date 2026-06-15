@@ -145,7 +145,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                         : chromeStyle === 'floating'
                           ? 'bg-white/85 backdrop-blur-xl border-b border-white/70 shadow-sm'
                           : 'bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm';
-    const headerDensityClass = headerDensity === 'compact' ? 'h-20 px-4 pb-3' : headerDensity === 'airy' ? 'h-28 px-6 pb-5' : 'h-24 px-5 pb-4';
+    const headerDensityClass = headerDensity === 'compact' ? 'h-[70px] px-4 pb-5' : headerDensity === 'airy' ? 'h-[90px] px-6 pb-7' : 'h-[82px] px-5 pb-6';
     const primaryTextClass = isDarkHeader ? 'text-white' : isPixelHeader ? 'text-[#fff7ed]' : 'text-slate-800';
     const secondaryTextClass = isDarkHeader ? 'text-slate-400' : isPixelHeader ? 'text-[#f3ddc7]' : 'text-slate-400';
     const iconButtonClass = isDarkHeader
