@@ -956,8 +956,8 @@ ${isInitialGeneration ? `
        {view === 'list' ? (
            <div className="flex flex-col h-full animate-fade-in">
                {/* Header */}
-               <div className="shrink-0 z-10 sticky top-0 bg-white/80">
-                   <div className="px-6 pt-4 pb-4 shrink-0 flex items-center justify-between bg-white/80 backdrop-blur-md">
+               <div className="shrink-0 z-10 sticky top-0">
+                   <div className="px-6 pt-4 pb-4 shrink-0 flex items-center justify-between backdrop-blur-md">
                        <div><h1 className="text-2xl font-light text-slate-800 tracking-tight">神经链接</h1><p className="text-xs text-slate-400 mt-1">已建立 {characters.length} 个角色连接</p></div>
                        <div className="flex gap-2">
                             <button onClick={() => cardImportRef.current?.click()} className="p-2 rounded-full bg-white/40 hover:bg-white/80 transition-colors text-slate-600" title="导入角色卡">

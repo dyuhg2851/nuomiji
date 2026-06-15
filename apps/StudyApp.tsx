@@ -1411,7 +1411,6 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
             <div className="h-full w-full bg-[#fdfbf7] flex flex-col font-sans relative">
                 {/* Header */}
                 <div className="shrink-0 z-20 sticky top-0 bg-[#fdfbf7]/90">
-                    <div className="bg-[#fdfbf7]/90" style={{ height: 'env(safe-area-inset-top, 44px)' }} />
                     <div className="h-16 bg-[#fdfbf7]/90 backdrop-blur-md flex items-center px-6 border-b border-[#e5e5e5] shrink-0">
                         <div className="flex justify-between items-center w-full">
                             <button onClick={() => {
@@ -1520,7 +1519,6 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
         return (
             <div className="h-full w-full bg-[#fdfbf7] flex flex-col font-sans relative">
                 <div className="shrink-0 sticky top-0 z-20">
-                    <div className="bg-[#fdfbf7]/90" style={{ height: 'env(safe-area-inset-top, 44px)' }} />
                     <div className="h-16 bg-[#fdfbf7]/90 backdrop-blur-md flex items-center px-6 border-b border-[#e5e5e5] shrink-0">
                         <div className="flex justify-between items-center w-full">
                             <button onClick={closeApp} className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">

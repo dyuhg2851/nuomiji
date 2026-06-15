@@ -743,7 +743,7 @@ const PhoneShell: React.FC = () => {
   const shellHandlesSafeArea = true;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-slate-900 text-slate-900 font-sans select-none overscroll-none">
+    <div className="relative w-full h-full overflow-hidden bg-transparent font-sans select-none overscroll-none">
        {/* Optimized Background Layer - 仅在 Launcher 页面显示背景图 */}
        {activeApp === AppID.Launcher && (
          <div 
@@ -759,7 +759,10 @@ const PhoneShell: React.FC = () => {
        {/* 外壳统一处理顶部安全区，确保所有应用在灵动岛设备上都能正确显示 */}
       <div
         className="absolute inset-0 z-10 overflow-hidden bg-transparent overscroll-none flex flex-col"
-        style={{ paddingTop: 'max(env(safe-area-inset-top, 44px), 52px)' }}
+        style={{ 
+          paddingTop: 'max(env(safe-area-inset-top, 44px), 52px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+        }}
       >
           {/* App Container */}
           <div className="flex-1 relative overflow-hidden" style={{ contain: useIOSStandaloneLayout ? undefined : 'layout style paint' }}>
